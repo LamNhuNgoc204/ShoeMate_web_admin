@@ -13,8 +13,6 @@ import AuthCardWrapper from '../AuthCardWrapper';
 import Logo from 'ui-component/Logo';
 import AuthRegister from '../authentication/auth-forms/AuthRegister';
 
-// assets
-
 // ===============================|| AUTH3 - REGISTER ||=============================== //
 
 const Register = () => {

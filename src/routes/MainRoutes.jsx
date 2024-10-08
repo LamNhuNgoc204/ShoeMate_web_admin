@@ -7,7 +7,7 @@ import Loadable from 'ui-component/Loadable';
 // dashboard routing
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard')));
 
-// utilities routing
+// sp routing
 const Qlsp = Loadable(lazy(() => import('views/products/Products')));
 const Qltonkho = Loadable(lazy(() => import('views/products/Warehouse')));
 const Qlgiamgia = Loadable(lazy(() => import('views/products/Discount')));
