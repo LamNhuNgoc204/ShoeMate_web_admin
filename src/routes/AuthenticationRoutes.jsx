@@ -15,10 +15,6 @@ const AuthenticationRoutes = {
   element: <MinimalLayout />,
   children: [
     {
-      path: '',
-      element: <Navigate to="/pages/login/login3" replace /> // Redirect đến trang login
-    },
-    {
       path: '/pages/login/login3',
       element: <AuthLogin3 />
     },
