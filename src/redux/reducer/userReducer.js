@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { logIn } from './userThunk';
+import { logIn } from '../thunks/userThunk';
 
 const userSlice = createSlice({
   name: 'users',

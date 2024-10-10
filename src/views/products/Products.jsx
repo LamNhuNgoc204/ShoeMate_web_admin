@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import {
   Table,
@@ -19,25 +19,60 @@ import {
   FormControl,
   InputLabel
 } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProducts } from 'redux/thunks/productsThunk';
+import { getAllBrands, getAllCategories } from 'api/getAllData';
 
 const Typography = () => {
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Product A', price: 100, stock: 10, description: '', discount: 0, brand: '', category: '', assets: [] },
-    { id: 2, name: 'Product B', price: 200, stock: 5, description: '', discount: 0, brand: '', category: '', assets: [] }
-  ]);
+  const [listProducts, setListProducts] = useState([]);
+  const [ListBrands, setListBrands] = useState([]);
+  const [ListCategories, setListCategories] = useState([]);
 
-  const brands = ['Brand A', 'Brand B', 'Brand C'];
-  const categories = ['Category A', 'Category B', 'Category C'];
+  const dispatch = useDispatch();
+  const products = useSelector((state) => state.products);
+
+  useEffect(() => {
+    const fetchdata = async () => {
+      await dispatch(fetchProducts());
+    };
+    fetchdata();
+  }, []);
+
+  // console.log('products data: ', products);
+
+  useEffect(() => {
+    if (products && products.products && products.products.length > 0) {
+      setListProducts(products.products);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    const fetchdata = async () => {
+      const result = await getAllBrands();
+      const cate = await getAllCategories();
+      if (result) {
+        setListBrands(result);
+      }
+      if (cate) {
+        setListCategories(cate);
+      }
+    };
+    fetchdata();
+  }, []);
+
+  // console.log('listProducts', listProducts);
+  // console.log('ListBrands', ListBrands);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    stock: '',
+    quantity: '',
     description: '',
     discount: '',
     brand: '',
+    size: [],
     category: '',
     assets: []
   });
@@ -49,9 +84,31 @@ const Typography = () => {
 
   const handleOpenDialog = (product = null) => {
     setSelectedProduct(product);
-    setFormData(
-      product ? { ...product } : { name: '', price: '', stock: '', description: '', discount: '', brand: '', category: '', assets: [] }
-    );
+    if (product) {
+      setFormData({
+        name: product.name || '',
+        price: product.price || '',
+        quantity: product.quantity || '',
+        description: product.description || '',
+        discount: product.discount || '',
+        brand: product.brand ? product.brand._id : '',
+        size: product.size || [],
+        category: product.category ? product.category._id : '',
+        assets: product.assets || []
+      });
+    } else {
+      setFormData({
+        name: '',
+        price: '',
+        quantity: '',
+        description: '',
+        discount: '',
+        brand: '',
+        size: [],
+        category: '',
+        assets: []
+      });
+    }
     setOpenDialog(true);
   };
 
@@ -62,15 +119,15 @@ const Typography = () => {
 
   const handleSaveProduct = () => {
     if (selectedProduct) {
-      setProducts(products.map((p) => (p.id === selectedProduct.id ? { ...formData, id: p.id } : p)));
+      setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? { ...formData, _id: p._id } : p)));
     } else {
-      setProducts([...products, { ...formData, id: products.length + 1 }]);
+      setListProducts([...listProducts, { ...formData, _id: listProducts.length + 1 }]);
     }
     handleCloseDialog();
   };
 
   const handleDeleteProduct = (id) => {
-    setProducts(products.filter((product) => product.id !== id));
+    setListProducts(listProducts.filter((product) => product._id !== id));
   };
 
   const handleInputChange = (e) => {
@@ -83,13 +140,35 @@ const Typography = () => {
     setFormData({ ...formData, assets: files });
   };
 
-  const filteredProducts = products.filter((product) => {
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData((prev) => ({
+      ...prev,
+      assets: [...prev.assets.filter((file) => file.type.startsWith('video/') || file.type.startsWith('image/')), ...files]
+    }));
+  };
+
+  const handleVideoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        assets: [...prev.assets.filter((file) => file.type.startsWith('video/')), file]
+      }));
+    }
+  };
+
+  const filteredProducts = listProducts.filter((product) => {
     const matchesPrice = (minPrice === '' || product.price >= minPrice) && (maxPrice === '' || product.price <= maxPrice);
     const matchesCategory = category === '' || product.category === category;
     const matchesStockStatus =
-      stockStatus === '' || (stockStatus === 'in-stock' && product.stock > 0) || (stockStatus === 'out-of-stock' && product.stock === 0);
+      stockStatus === '' ||
+      (stockStatus === 'in-stock' && product.quantity > 0) ||
+      (stockStatus === 'out-of-stock' && product.quantity === 0);
     return matchesPrice && matchesCategory && matchesStockStatus;
   });
+
+  console.log('filteredProducts', filteredProducts);
 
   return (
     <MainCard title="QUẢN LÝ SẢN PHẨM">
@@ -136,29 +215,51 @@ const Typography = () => {
               <TableCell>Giá</TableCell>
               <TableCell>Số lượng</TableCell>
               <TableCell>Danh mục</TableCell>
+              <TableCell>Thương hiệu</TableCell>
+              <TableCell>Size</TableCell>
+              <TableCell>Đã bán</TableCell>
               <TableCell>Trạng thái</TableCell>
               <TableCell>Hành động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredProducts.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.price}</TableCell>
-                <TableCell>{product.stock}</TableCell>
-                <TableCell>{product.category}</TableCell>
-                <TableCell>{product.stock > 0 ? 'Còn hàng' : 'Hết hàng'}</TableCell>
-                <TableCell>
-                  <Button variant="contained" color="secondary" onClick={() => handleOpenDialog(product)} style={{ marginRight: 10 }}>
-                    Chỉnh sửa
-                  </Button>
-                  <Button variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
-                    Xóa
-                  </Button>
-                </TableCell>
+            {filteredProducts ? (
+              filteredProducts.map((product, index) => (
+                <TableRow key={product._id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{product.price}</TableCell>
+                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
+                  <TableCell>{product.brand ? product.brand.name : 'Không có thương hiệu'}</TableCell>
+                  <TableCell>
+                    {product.size && product.size.length > 0
+                      ? product.size.map((s, index) => (
+                          <span key={s._id}>
+                            {s.name}
+                            {index < product.size.length - 1 && ', '}
+                          </span>
+                        ))
+                      : 'Không có kích thước'}
+                  </TableCell>
+                  <TableCell>{product.sold}</TableCell>
+                  <TableCell>{product.status}</TableCell>
+                  {/* <TableCell>{product.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}</TableCell> */}
+                  <TableCell>
+                    <Button variant="contained" color="secondary" onClick={() => handleOpenDialog(product)} style={{ marginRight: 10 }}>
+                      Chỉnh sửa
+                    </Button>
+                    <Button variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
+                      Xóa
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -170,11 +271,11 @@ const Typography = () => {
           <TextField label="Giá" name="price" fullWidth margin="normal" type="number" value={formData.price} onChange={handleInputChange} />
           <TextField
             label="Số lượng"
-            name="stock"
+            name="quantity"
             fullWidth
             margin="normal"
             type="number"
-            value={formData.stock}
+            value={formData.quantity}
             onChange={handleInputChange}
           />
           <TextField label="Mô tả" name="description" fullWidth margin="normal" value={formData.description} onChange={handleInputChange} />
@@ -187,30 +288,49 @@ const Typography = () => {
             value={formData.discount}
             onChange={handleInputChange}
           />
+
           {/* Thương hiệu Select */}
           <FormControl fullWidth margin="normal">
             <InputLabel>Thương hiệu</InputLabel>
             <Select name="brand" value={formData.brand} onChange={handleInputChange}>
-              {brands.map((brand, index) => (
-                <MenuItem key={index} value={brand}>
-                  {brand}
+              {ListBrands.map((brand) => (
+                <MenuItem key={brand._id} value={brand._id}>
+                  {brand.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
+
           {/* Danh mục Select */}
           <FormControl fullWidth margin="normal">
             <InputLabel>Danh mục</InputLabel>
             <Select name="category" value={formData.category} onChange={handleInputChange}>
-              {categories.map((category, index) => (
-                <MenuItem key={index} value={category}>
-                  {category}
+              {ListCategories.map((category) => (
+                <MenuItem key={category._id} value={category._id}>
+                  {category.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          {/* Input cho hình ảnh và video */}
-          <input type="file" accept="image/*,video/*" multiple onChange={handleFileChange} style={{ marginTop: 20, width: '100%' }} />
+
+          <div style={{ display: 'flex', marginTop: 20 }}>
+            {/* Input cho hình ảnh */}
+            <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10 }}>
+              <Button variant="outlined" component="span">
+                Chọn ảnh
+              </Button>
+              <input id="image-upload" type="file" accept="image/*" multiple onChange={handleImageChange} style={{ display: 'none' }} />
+            </label>
+
+            {/* Input cho video */}
+            <label htmlFor="video-upload" style={{ display: 'block' }}>
+              <Button variant="outlined" component="span">
+                Chọn video
+              </Button>
+              <input id="video-upload" type="file" accept="video/*" onChange={handleVideoChange} style={{ display: 'none' }} />
+            </label>
+          </div>
+
           <div style={{ marginTop: 10 }}>
             <strong>Các file đã chọn:</strong>
             <ul>{formData.assets.length > 0 && formData.assets.map((file, index) => <li key={index}>{file.name}</li>)}</ul>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -27,7 +27,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logIn } from 'redux/userThunk';
+import { logIn } from 'redux/thunks/userThunk';
 
 // ============================||  LOGIN ||============================ //
 
@@ -55,7 +55,7 @@ const AuthLogin = ({ ...others }) => {
       <Formik
         initialValues={{
           email: 'lamlamnhungoc@gmail.com',
-          password: 'Ngoc@0801200',
+          password: 'Ngoc@08012004',
           submit: null
         }}
         validationSchema={Yup.object().shape({
