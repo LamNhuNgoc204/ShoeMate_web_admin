@@ -5,7 +5,7 @@ import { IconAlignBoxBottomRight, IconTruck } from '@tabler/icons-react';
 const icons = { IconAlignBoxBottomRight, IconTruck };
 
 const order = {
-  id: 'sample-docs-roadmap',
+  id: 'order',
   title: 'Quản lý đơn hàng',
   type: 'group',
   children: [

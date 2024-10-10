@@ -14,19 +14,27 @@ const User = Loadable(lazy(() => import('views/users/User')));
 const Reviews = Loadable(lazy(() => import('views/users/Reviews')));
 
 // ==============================|| MAIN ROUTING ||============================== //
-const isAuthenticated = true;
+// const isAuthenticated = false;
 
 const MainRoutes = {
   path: '/',
   element: <MainLayout />,
   children: [
+    // {
+    //   path: '/',
+    //   element: isAuthenticated ? <DashboardDefault /> : <Navigate to="/pages/login/login3" />
+    // },
+    // {
+    //   path: 'dashboard',
+    //   element: isAuthenticated ? <DashboardDefault /> : <Navigate to="/pages/login/login3" />
+    // },
     {
       path: '/',
-      element: isAuthenticated ? <DashboardDefault /> : <Navigate to="/pages/login/login3" />
+      element: <DashboardDefault />
     },
     {
       path: 'dashboard',
-      element: isAuthenticated ? <DashboardDefault /> : <Navigate to="/pages/login/login3" />
+      element: <DashboardDefault />
     },
     {
       path: 'sanpham',

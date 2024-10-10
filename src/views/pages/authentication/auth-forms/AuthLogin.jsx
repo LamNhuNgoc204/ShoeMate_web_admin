@@ -8,7 +8,6 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
-import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
@@ -26,6 +25,9 @@ import AnimateButton from 'ui-component/extended/AnimateButton';
 // assets
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { logIn } from 'redux/userThunk';
 
 // ============================||  LOGIN ||============================ //
 
@@ -42,6 +44,13 @@ const AuthLogin = ({ ...others }) => {
     event.preventDefault();
   };
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { users } = useSelector((state) => state.users);
+  const user = useSelector((state) => state.users);
+
+  console.log('User after login:', user.isAuthenticated);
+
   return (
     <>
       <Formik
@@ -54,6 +63,18 @@ const AuthLogin = ({ ...others }) => {
           email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
           password: Yup.string().max(255).required('Password is required')
         })}
+        onSubmit={async (values, { setSubmitting, setErrors }) => {
+          try {
+            await dispatch(logIn({ email: values.email, password: values.password }));
+            // Điều hướng tới trang home khi đăng nhập thành công
+            console.log('data login', users);
+            navigate('/dashboard');
+          } catch (error) {
+            setErrors({ submit: error.message });
+          } finally {
+            setSubmitting(false);
+          }
+        }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
@@ -135,6 +156,7 @@ const AuthLogin = ({ ...others }) => {
                   style={{ backgroundColor: '#2196f3' }}
                   variant="contained"
                   color="secondary"
+                  onClick={() => handleSubmit()}
                 >
                   Sign in
                 </Button>
