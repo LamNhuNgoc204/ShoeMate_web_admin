@@ -4,7 +4,7 @@ import { logIn } from './userThunk';
 const userSlice = createSlice({
   name: 'users',
   initialState: {
-    users: [],
+    users: {},
     loading: false,
     error: null,
     isAuthenticated: false
@@ -15,8 +15,7 @@ const userSlice = createSlice({
         state.loading = true;
       })
       .addCase(logIn.fulfilled, (state, action) => {
-        console.log('------------------fullilled---------------------');
-
+        // console.log('------------------fullilled---------------------');
         state.loading = false;
         state.users = action.payload;
         state.isAuthenticated = true;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -46,17 +46,16 @@ const AuthLogin = ({ ...others }) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { users } = useSelector((state) => state.users);
   const user = useSelector((state) => state.users);
 
-  console.log('User after login:', user.isAuthenticated);
+  console.log('User after login:', user);
 
   return (
     <>
       <Formik
         initialValues={{
-          email: '',
-          password: '',
+          email: 'HongLinh@gmail.com',
+          password: 'Linh@08012004',
           submit: null
         }}
         validationSchema={Yup.object().shape({
@@ -65,10 +64,18 @@ const AuthLogin = ({ ...others }) => {
         })}
         onSubmit={async (values, { setSubmitting, setErrors }) => {
           try {
-            await dispatch(logIn({ email: values.email, password: values.password }));
+            const result = await dispatch(logIn({ email: values.email, password: values.password })).unwrap();
             // Điều hướng tới trang home khi đăng nhập thành công
-            console.log('data login', users);
-            navigate('/dashboard');
+            console.log('data login', result);
+
+            if (result.user.role === 'admin') {
+              console.log('Admin login successful:', result.user.role);
+              navigate('/dashboard');
+            } else {
+              console.log('Admin login successful:', result.user.role);
+              console.log('Access denied. Not an admin.');
+              setErrors({ submit: 'You do not have permission to access this page.' });
+            }
           } catch (error) {
             setErrors({ submit: error.message });
           } finally {
