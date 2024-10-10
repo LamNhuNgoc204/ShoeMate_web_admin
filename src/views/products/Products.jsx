@@ -22,6 +22,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from 'redux/thunks/productsThunk';
 import { getAllBrands, getAllCategories } from 'api/getAllData';
+import { addProduct, updateProduct } from 'api/products';
 
 const Typography = () => {
   const [listProducts, setListProducts] = useState([]);
@@ -58,7 +59,7 @@ const Typography = () => {
       }
     };
     fetchdata();
-  }, []);
+  });
 
   // console.log('listProducts', listProducts);
   // console.log('ListBrands', ListBrands);
@@ -117,13 +118,27 @@ const Typography = () => {
     setSelectedProduct(null);
   };
 
-  const handleSaveProduct = () => {
-    if (selectedProduct) {
-      setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? { ...formData, _id: p._id } : p)));
-    } else {
-      setListProducts([...listProducts, { ...formData, _id: listProducts.length + 1 }]);
+  const handleSaveProduct = async () => {
+    // if (selectedProduct) {
+    //   setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? { ...formData, _id: p._id } : p)));
+    // } else {
+    //   setListProducts([...listProducts, { ...formData, _id: listProducts.length + 1 }]);
+    // }
+    // handleCloseDialog();
+    try {
+      if (selectedProduct) {
+        // Cập nhật sản phẩm hiện tại
+        const updatedProduct = await updateProduct(selectedProduct._id, formData);
+        setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct : p)));
+      } else {
+        // Thêm sản phẩm mới
+        const newProduct = await addProduct(formData);
+        setListProducts([...listProducts, newProduct]);
+      }
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Có lỗi xảy ra khi lưu sản phẩm:', error);
     }
-    handleCloseDialog();
   };
 
   const handleDeleteProduct = (id) => {
