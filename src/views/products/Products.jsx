@@ -21,13 +21,14 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from 'redux/thunks/productsThunk';
-import { getAllBrands, getAllCategories } from 'api/getAllData';
+import { getAllBrands, getAllCategories, getAllSizes } from 'api/getAllData';
 import { addProduct, updateProduct } from 'api/products';
 
 const Typography = () => {
   const [listProducts, setListProducts] = useState([]);
   const [ListBrands, setListBrands] = useState([]);
   const [ListCategories, setListCategories] = useState([]);
+  const [ListSizes, setListSizes] = useState([]);
 
   const dispatch = useDispatch();
   const products = useSelector((state) => state.products);
@@ -37,7 +38,7 @@ const Typography = () => {
       await dispatch(fetchProducts());
     };
     fetchdata();
-  }, []);
+  });
 
   // console.log('products data: ', products);
 
@@ -51,18 +52,23 @@ const Typography = () => {
     const fetchdata = async () => {
       const result = await getAllBrands();
       const cate = await getAllCategories();
+      const sizes = await getAllSizes();
       if (result) {
         setListBrands(result);
       }
       if (cate) {
         setListCategories(cate);
       }
+      if (sizes) {
+        setListSizes(sizes);
+      }
     };
     fetchdata();
-  });
+  }, []);
 
   // console.log('listProducts', listProducts);
   // console.log('ListBrands', ListBrands);
+  console.log('ListSizes', ListSizes);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -119,12 +125,6 @@ const Typography = () => {
   };
 
   const handleSaveProduct = async () => {
-    // if (selectedProduct) {
-    //   setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? { ...formData, _id: p._id } : p)));
-    // } else {
-    //   setListProducts([...listProducts, { ...formData, _id: listProducts.length + 1 }]);
-    // }
-    // handleCloseDialog();
     try {
       if (selectedProduct) {
         // Cập nhật sản phẩm hiện tại
@@ -323,6 +323,30 @@ const Typography = () => {
               {ListCategories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
                   {category.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Size</InputLabel>
+            <Select
+              name="size"
+              multiple
+              value={formData.size}
+              onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+              renderValue={(selected) =>
+                selected
+                  .map((id) => {
+                    const size = ListSizes.find((s) => s._id === id);
+                    return size ? size.name : '';
+                  })
+                  .join(', ')
+              }
+            >
+              {ListSizes.map((size) => (
+                <MenuItem key={size._id} value={size._id}>
+                  {size.name}
                 </MenuItem>
               ))}
             </Select>

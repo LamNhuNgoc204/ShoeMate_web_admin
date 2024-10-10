@@ -9,3 +9,8 @@ export const getAllCategories = async () => {
   const response = await AxiosInstance().get('/products/list-categories');
   return response;
 };
+
+export const getAllSizes = async () => {
+    const response = await AxiosInstance().get('/products/list-sizes');
+    return response;
+  };
