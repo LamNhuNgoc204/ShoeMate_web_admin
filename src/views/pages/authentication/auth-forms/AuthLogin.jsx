@@ -54,8 +54,8 @@ const AuthLogin = ({ ...others }) => {
     <>
       <Formik
         initialValues={{
-          email: 'HongLinh@gmail.com',
-          password: 'Linh@08012004',
+          email: 'lamlamnhungoc@gmail.com',
+          password: 'Ngoc@0801200',
           submit: null
         }}
         validationSchema={Yup.object().shape({
@@ -68,7 +68,7 @@ const AuthLogin = ({ ...others }) => {
             // Điều hướng tới trang home khi đăng nhập thành công
             console.log('data login', result);
 
-            if (result.user.role === 'admin') {
+            if (result.user.role === 'admin' || result.user.role === 'employee') {
               console.log('Admin login successful:', result.user.role);
               navigate('/dashboard');
             } else {
