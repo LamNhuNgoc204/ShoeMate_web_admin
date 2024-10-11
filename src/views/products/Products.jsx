@@ -20,7 +20,8 @@ import {
   InputLabel,
   FormControlLabel,
   Checkbox,
-  FormLabel
+  FormLabel,
+  Input
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from 'redux/thunks/productsThunk';
@@ -41,7 +42,7 @@ const Typography = () => {
       await dispatch(fetchProducts());
     };
     fetchdata();
-  });
+  }, []);
 
   // console.log('products data: ', products);
 
@@ -71,7 +72,7 @@ const Typography = () => {
 
   // console.log('listProducts', listProducts);
   // console.log('ListBrands', ListBrands);
-  console.log('ListSizes', ListSizes);
+  // console.log('ListSizes', ListSizes);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -129,13 +130,23 @@ const Typography = () => {
 
   const handleSaveProduct = async () => {
     try {
+      const updatedFormData = {
+        ...formData,
+        size: formData.size.map((size) => ({
+          sizeId: size._id,
+          quantity: size.quantity || 0
+        }))
+      };
+
+      console.log('updatedFormData', updatedFormData);
+
       if (selectedProduct) {
         // Cập nhật sản phẩm hiện tại
-        const updatedProduct = await updateProduct(selectedProduct._id, formData);
+        const updatedProduct = await updateProduct(selectedProduct._id, updatedFormData);
         setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct : p)));
       } else {
         // Thêm sản phẩm mới
-        const newProduct = await addProduct(formData);
+        const newProduct = await addProduct(updatedFormData);
         setListProducts([...listProducts, newProduct]);
       }
       handleCloseDialog();
@@ -153,27 +164,74 @@ const Typography = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    setFormData({ ...formData, assets: files });
+  const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/dt7755ppx/upload`;
+  const cloudinaryUploadPreset = 'shoe_mate_shop';
+
+  const uploadToCloundinary = async (file) => {
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      data.append('upload_preset', cloudinaryUploadPreset);
+      const response = await fetch(CLOUDINARY_URL, {
+        method: 'POST',
+        body: data
+      });
+      const result = await response.json();
+      console.log(result);
+      return result.secure_url;
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
+    const uploadedAssets = [];
+
+    for (const file of files) {
+      if (file && file.type && (file.type.startsWith('video/') || file.type.startsWith('image/'))) {
+        const secureUrl = await uploadToCloundinary(file);
+        if (secureUrl) {
+          uploadedAssets.push(secureUrl);
+        }
+      }
+    }
+
+    // console.log('Images upload: ', uploadedAssets);
+
     setFormData((prev) => ({
       ...prev,
-      assets: [...prev.assets.filter((file) => file.type.startsWith('video/') || file.type.startsWith('image/')), ...files]
+      assets: [...prev.assets, ...uploadedAssets]
     }));
   };
 
-  const handleVideoChange = (e) => {
+  const handleVideoChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        assets: [...prev.assets.filter((file) => file.type.startsWith('video/')), file]
-      }));
+
+    if (file && file.type) {
+      const secureUrl = await uploadToCloundinary(file);
+      // console.log('Video upload: ', secureUrl);
+
+      if (secureUrl) {
+        setFormData((prev) => ({
+          ...prev,
+          assets: [...prev.assets, secureUrl]
+        }));
+      }
     }
+  };
+
+  const handleRemoveFile = (file) => {
+    console.log('File remove:', file);
+    console.log('Current assets:', formData.assets);
+
+    const newAssets = formData.assets.filter((item) => item.trim() !== file.trim());
+    setFormData({
+      ...formData,
+      assets: newAssets
+    });
+
+    console.log('New assets:', newAssets);
   };
 
   const filteredProducts = listProducts.filter((product) => {
@@ -187,6 +245,27 @@ const Typography = () => {
   });
 
   console.log('filteredProducts', filteredProducts);
+  // console.log('assets', formData.assets);
+
+  const handleSizeChange = (sizeId) => {
+    const existingSize = formData.size.find((size) => size.sizeIDD === sizeId);
+
+    if (!existingSize) {
+      // Thêm kích thước nếu chưa chọn, với quantity mặc định là 0
+      const newSize = { sizeIDD: sizeId, quantity: 0 };
+      setFormData({ ...formData, size: [...formData.size, newSize] });
+    }
+  };
+
+  const handleQuantityChange = (sizeId, value) => {
+    const newSizes = formData.size.map((size) => {
+      if (size.sizeIDD === sizeId) {
+        return { ...size, quantity: value }; // Cập nhật số lượng cho kích thước đã chọn
+      }
+      return size; // Giữ nguyên kích thước khác
+    });
+    setFormData({ ...formData, size: newSizes });
+  };
 
   return (
     <MainCard title="QUẢN LÝ SẢN PHẨM">
@@ -231,10 +310,10 @@ const Typography = () => {
               <TableCell>ID</TableCell>
               <TableCell>Tên</TableCell>
               <TableCell>Giá</TableCell>
+              <TableCell>Size</TableCell>
               <TableCell>Số lượng</TableCell>
               <TableCell>Danh mục</TableCell>
               <TableCell>Brand</TableCell>
-              <TableCell>Size</TableCell>
               <TableCell>Đã bán</TableCell>
               <TableCell>Trạng thái</TableCell>
               <TableCell>Hành động</TableCell>
@@ -247,19 +326,18 @@ const Typography = () => {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
-                  <TableCell>{product.quantity}</TableCell>
-                  <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
-                  <TableCell>{product.brand ? product.brand.name : 'Không có thương hiệu'}</TableCell>
                   <TableCell>
                     {product.size && product.size.length > 0
-                      ? product.size.map((s, index) => (
-                          <span key={s._id}>
-                            {s.name}
-                            {index < product.size.length - 1 && ', '}
-                          </span>
-                        ))
+                      ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId ? s.sizeId.name : 'Không có kích thước'}</TableRow>)
                       : 'Không có kích thước'}
                   </TableCell>
+                  <TableCell>
+                    {product.size && product.size.length > 0
+                      ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                      : 'Không có số lượng'}
+                  </TableCell>
+                  <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
+                  <TableCell>{product.brand ? product.brand.name : 'Không có thương hiệu'}</TableCell>
                   <TableCell>{product.sold}</TableCell>
                   <TableCell>{product.status}</TableCell>
                   {/* <TableCell>{product.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}</TableCell> */}
@@ -331,7 +409,7 @@ const Typography = () => {
             </Select>
           </FormControl>
 
-          <FormControl component="fieldset" margin="normal">
+          {/* <FormControl component="fieldset" margin="normal">
             <FormLabel>Kích thước</FormLabel>
             <div>
               {ListSizes.map((size) => (
@@ -349,6 +427,40 @@ const Typography = () => {
                   label={size.name}
                 />
               ))}
+            </div>
+          </FormControl> */}
+
+          <FormControl component="fieldset" margin="normal">
+            <FormLabel component="legend">Kích thước</FormLabel>
+            <div>
+              {ListSizes.map((size) => {
+                const isChecked = formData.size.some((s) => s.sizeId === size._id);
+                const currentQuantity = formData.size.find((s) => s.sizeId === size._id)?.quantity || '';
+
+                return (
+                  <div key={size._id}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={isChecked}
+                          onChange={() => handleSizeChange(size._id)}
+                          style={{ color: isChecked ? 'gray' : undefined }}
+                        />
+                      }
+                      label={size.name}
+                    />
+                    {isChecked && (
+                      <Input
+                        type="number"
+                        value={currentQuantity}
+                        onChange={(e) => handleQuantityChange(size._id, e.target.value)}
+                        placeholder="Số lượng"
+                        style={{ marginLeft: '8px' }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </FormControl>
 
@@ -372,9 +484,28 @@ const Typography = () => {
 
           <div style={{ marginTop: 10 }}>
             <strong>Các file đã chọn:</strong>
-            <ul>{formData.assets.length > 0 && formData.assets.map((file, index) => <li key={index}>{file.name}</li>)}</ul>
+            <ul>
+              {formData.assets.length > 0 &&
+                formData.assets.map((url, index) => (
+                  <li key={index} style={{ listStyle: 'none' }}>
+                    {url.endsWith('.mp4') ? (
+                      <video src={url} controls style={{ width: '100px', height: 'auto', marginRight: '10px' }} />
+                    ) : url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') ? (
+                      <img
+                        src={url}
+                        alt={`Image ${index + 1}`}
+                        style={{ width: 100, height: 100, margin: 10, position: 'relative', marginRight: '10px' }}
+                      />
+                    ) : null}
+                    <button onClick={() => handleRemoveFile(url)} style={{ marginLeft: '10px' }}>
+                      Xóa
+                    </button>
+                  </li>
+                ))}
+            </ul>
           </div>
         </DialogContent>
+
         <DialogActions>
           <Button onClick={handleCloseDialog} color="primary">
             Hủy
