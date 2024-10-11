@@ -99,11 +99,10 @@ const Typography = () => {
       setFormData({
         name: product.name || '',
         price: product.price || '',
-        quantity: product.quantity || '',
         description: product.description || '',
         discount: product.discount || '',
         brand: product.brand ? product.brand._id : '',
-        size: product.size ? product.size.map((s) => s._id) : [],
+        size: product.size ? product.size.map((s) => ({ sizeId: s.sizeId._id, quantity: s.quantity })) : [],
         category: product.category ? product.category._id : '',
         assets: product.assets || []
       });
@@ -111,7 +110,6 @@ const Typography = () => {
       setFormData({
         name: '',
         price: '',
-        quantity: '',
         description: '',
         discount: '',
         brand: '',
@@ -130,23 +128,15 @@ const Typography = () => {
 
   const handleSaveProduct = async () => {
     try {
-      const updatedFormData = {
-        ...formData,
-        size: formData.size.map((size) => ({
-          sizeId: size._id,
-          quantity: size.quantity || 0
-        }))
-      };
-
-      console.log('updatedFormData', updatedFormData);
+      console.log('formdata', formData);
 
       if (selectedProduct) {
         // Cập nhật sản phẩm hiện tại
-        const updatedProduct = await updateProduct(selectedProduct._id, updatedFormData);
+        const updatedProduct = await updateProduct(selectedProduct._id, formData);
         setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct : p)));
       } else {
         // Thêm sản phẩm mới
-        const newProduct = await addProduct(updatedFormData);
+        const newProduct = await addProduct(formData);
         setListProducts([...listProducts, newProduct]);
       }
       handleCloseDialog();
@@ -248,21 +238,25 @@ const Typography = () => {
   // console.log('assets', formData.assets);
 
   const handleSizeChange = (sizeId) => {
-    const existingSize = formData.size.find((size) => size.sizeIDD === sizeId);
+    const existingSize = formData.size.find((size) => size.sizeId === sizeId);
 
     if (!existingSize) {
-      // Thêm kích thước nếu chưa chọn, với quantity mặc định là 0
-      const newSize = { sizeIDD: sizeId, quantity: 0 };
+      // Add the new size with default quantity of 1
+      const newSize = { sizeId, quantity: 1 };
       setFormData({ ...formData, size: [...formData.size, newSize] });
+    } else {
+      // Remove size if it was already selected
+      const newSizes = formData.size.filter((size) => size.sizeId !== sizeId);
+      setFormData({ ...formData, size: newSizes });
     }
   };
 
   const handleQuantityChange = (sizeId, value) => {
     const newSizes = formData.size.map((size) => {
-      if (size.sizeIDD === sizeId) {
-        return { ...size, quantity: value }; // Cập nhật số lượng cho kích thước đã chọn
+      if (size.sizeId === sizeId) {
+        return { ...size, quantity: value }; // Update quantity for the selected size
       }
-      return size; // Giữ nguyên kích thước khác
+      return size;
     });
     setFormData({ ...formData, size: newSizes });
   };
@@ -315,8 +309,8 @@ const Typography = () => {
               <TableCell>Danh mục</TableCell>
               <TableCell>Brand</TableCell>
               <TableCell>Đã bán</TableCell>
-              <TableCell>Trạng thái</TableCell>
-              <TableCell>Hành động</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -324,7 +318,7 @@ const Typography = () => {
               filteredProducts.map((product, index) => (
                 <TableRow key={product._id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{product?.name || 'N/A'}</TableCell>
                   <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
                   <TableCell>
                     {product.size && product.size.length > 0
@@ -365,7 +359,7 @@ const Typography = () => {
         <DialogContent>
           <TextField label="Tên sản phẩm" name="name" fullWidth margin="normal" value={formData.name} onChange={handleInputChange} />
           <TextField label="Giá" name="price" fullWidth margin="normal" type="number" value={formData.price} onChange={handleInputChange} />
-          <TextField
+          {/* <TextField
             label="Số lượng"
             name="quantity"
             fullWidth
@@ -373,7 +367,7 @@ const Typography = () => {
             type="number"
             value={formData.quantity}
             onChange={handleInputChange}
-          />
+          /> */}
           <TextField label="Mô tả" name="description" fullWidth margin="normal" value={formData.description} onChange={handleInputChange} />
           <TextField
             label="Giảm giá"
@@ -409,59 +403,30 @@ const Typography = () => {
             </Select>
           </FormControl>
 
-          {/* <FormControl component="fieldset" margin="normal">
-            <FormLabel>Kích thước</FormLabel>
-            <div>
-              {ListSizes.map((size) => (
-                <FormControlLabel
-                  key={size._id}
-                  control={
-                    <Checkbox
-                      checked={formData.size.includes(size._id)}
-                      onChange={(e) => {
-                        const newSize = e.target.checked ? [...formData.size, size._id] : formData.size.filter((id) => id !== size._id);
-                        setFormData({ ...formData, size: newSize });
-                      }}
-                    />
-                  }
-                  label={size.name}
-                />
-              ))}
-            </div>
-          </FormControl> */}
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Sizes</FormLabel>
+            {ListSizes.map((size) => {
+              const isChecked = formData.size.some((selectedSize) => selectedSize.sizeId === size._id);
+              const selectedSize = formData.size.find((selectedSize) => selectedSize.sizeId === size._id);
 
-          <FormControl component="fieldset" margin="normal">
-            <FormLabel component="legend">Kích thước</FormLabel>
-            <div>
-              {ListSizes.map((size) => {
-                const isChecked = formData.size.some((s) => s.sizeId === size._id);
-                const currentQuantity = formData.size.find((s) => s.sizeId === size._id)?.quantity || '';
-
-                return (
-                  <div key={size._id}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={isChecked}
-                          onChange={() => handleSizeChange(size._id)}
-                          style={{ color: isChecked ? 'gray' : undefined }}
-                        />
-                      }
-                      label={size.name}
+              return (
+                <div key={size._id}>
+                  <FormControlLabel
+                    control={<Checkbox checked={isChecked} onChange={() => handleSizeChange(size._id)} name={`size-${size._id}`} />}
+                    label={size.name}
+                  />
+                  {isChecked && (
+                    <TextField
+                      label="Quantity"
+                      type="number"
+                      value={selectedSize?.quantity}
+                      onChange={(e) => handleQuantityChange(size._id, e.target.value)}
+                      style={{ width: '100px', marginLeft: '10px', marginTop: 10, marginBottom: 10 }}
                     />
-                    {isChecked && (
-                      <Input
-                        type="number"
-                        value={currentQuantity}
-                        onChange={(e) => handleQuantityChange(size._id, e.target.value)}
-                        placeholder="Số lượng"
-                        style={{ marginLeft: '8px' }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </FormControl>
 
           <div style={{ display: 'flex', marginTop: 20 }}>
