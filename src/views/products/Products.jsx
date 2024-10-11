@@ -359,15 +359,6 @@ const Typography = () => {
         <DialogContent>
           <TextField label="Tên sản phẩm" name="name" fullWidth margin="normal" value={formData.name} onChange={handleInputChange} />
           <TextField label="Giá" name="price" fullWidth margin="normal" type="number" value={formData.price} onChange={handleInputChange} />
-          {/* <TextField
-            label="Số lượng"
-            name="quantity"
-            fullWidth
-            margin="normal"
-            type="number"
-            value={formData.quantity}
-            onChange={handleInputChange}
-          /> */}
           <TextField label="Mô tả" name="description" fullWidth margin="normal" value={formData.description} onChange={handleInputChange} />
           <TextField
             label="Giảm giá"
