@@ -328,7 +328,7 @@ const Typography = () => {
                   <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
                   <TableCell>
                     {product.size && product.size.length > 0
-                      ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId ? s.sizeId.name : 'Không có kích thước'}</TableRow>)
+                      ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
                       : 'Không có kích thước'}
                   </TableCell>
                   <TableCell>
