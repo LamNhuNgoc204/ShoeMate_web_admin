@@ -17,7 +17,10 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  FormControlLabel,
+  Checkbox,
+  FormLabel
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from 'redux/thunks/productsThunk';
@@ -99,7 +102,7 @@ const Typography = () => {
         description: product.description || '',
         discount: product.discount || '',
         brand: product.brand ? product.brand._id : '',
-        size: product.size || [],
+        size: product.size ? product.size.map((s) => s._id) : [],
         category: product.category ? product.category._id : '',
         assets: product.assets || []
       });
@@ -230,7 +233,7 @@ const Typography = () => {
               <TableCell>Giá</TableCell>
               <TableCell>Số lượng</TableCell>
               <TableCell>Danh mục</TableCell>
-              <TableCell>Thương hiệu</TableCell>
+              <TableCell>Brand</TableCell>
               <TableCell>Size</TableCell>
               <TableCell>Đã bán</TableCell>
               <TableCell>Trạng thái</TableCell>
@@ -243,7 +246,7 @@ const Typography = () => {
                 <TableRow key={product._id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.price}</TableCell>
+                  <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
                   <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
                   <TableCell>{product.brand ? product.brand.name : 'Không có thương hiệu'}</TableCell>
@@ -262,9 +265,9 @@ const Typography = () => {
                   {/* <TableCell>{product.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}</TableCell> */}
                   <TableCell>
                     <Button variant="contained" color="secondary" onClick={() => handleOpenDialog(product)} style={{ marginRight: 10 }}>
-                      Chỉnh sửa
+                      Sửa
                     </Button>
-                    <Button variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
+                    <Button style={{ marginTop: 10 }} variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
                       Xóa
                     </Button>
                   </TableCell>
@@ -328,28 +331,25 @@ const Typography = () => {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Size</InputLabel>
-            <Select
-              name="size"
-              multiple
-              value={formData.size}
-              onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-              renderValue={(selected) =>
-                selected
-                  .map((id) => {
-                    const size = ListSizes.find((s) => s._id === id);
-                    return size ? size.name : '';
-                  })
-                  .join(', ')
-              }
-            >
+          <FormControl component="fieldset" margin="normal">
+            <FormLabel>Kích thước</FormLabel>
+            <div>
               {ListSizes.map((size) => (
-                <MenuItem key={size._id} value={size._id}>
-                  {size.name}
-                </MenuItem>
+                <FormControlLabel
+                  key={size._id}
+                  control={
+                    <Checkbox
+                      checked={formData.size.includes(size._id)}
+                      onChange={(e) => {
+                        const newSize = e.target.checked ? [...formData.size, size._id] : formData.size.filter((id) => id !== size._id);
+                        setFormData({ ...formData, size: newSize });
+                      }}
+                    />
+                  }
+                  label={size.name}
+                />
               ))}
-            </Select>
+            </div>
           </FormControl>
 
           <div style={{ display: 'flex', marginTop: 20 }}>
