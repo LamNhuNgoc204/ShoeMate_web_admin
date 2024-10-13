@@ -20,7 +20,7 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import { getAllBrands, getAllCategories, getAllSizes } from 'api/getAllData';
+import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand } from 'api/getAllData';
 import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
@@ -31,6 +31,7 @@ const InventoryManagement = () => {
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
   const [openBrandDialog, setOpenBrandDialog] = useState(false);
   const [openSizeDialog, setOpenSizeDialog] = useState(false);
+  const [openSizeDetailDialog, setopenSizeDetailDialog] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -71,9 +72,16 @@ const InventoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [sizes, setSizes] = useState([]);
+  const [productOfBrands, setProductOfBrands] = useState([]);
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  // State for filtering
+  const [filterBrand, setFilterBrand] = useState('');
+  const [selectedBrandsName, setSelectedBrandsName] = useState(null);
+  const [selectedBrandId, setSelectedBrandId] = useState(null);
+  const [filterSize, setFilterSize] = useState('');
 
   useEffect(() => {
     const fetchdata = async () => {
@@ -92,6 +100,21 @@ const InventoryManagement = () => {
     };
     fetchdata();
   }, []);
+
+  useEffect(() => {
+    const fetchdata = async () => {
+      const response = await getProductOfBrand(selectedBrandId);
+      console.log('Response:', response);
+      if (!response || !response.data) {
+        setSnackbarMessage('Lấy dữ liệu thất bại!');
+        setOpenSnackbar(true);
+        return;
+      }
+      setProductOfBrands(response.data);
+    };
+
+    fetchdata();
+  }, [selectedBrandId]);
 
   const handleOpenProductDialog = (product = null) => {
     setSelectedProduct(product);
@@ -133,6 +156,26 @@ const InventoryManagement = () => {
   const handleCloseSizeDialog = () => {
     setOpenSizeDialog(false);
     setNewSize('');
+  };
+
+  const handleOpenSizeDetailDialog = async (id, name) => {
+    setSelectedBrandId(id);
+    setSelectedBrandsName(name);
+    try {
+      if (!productOfBrands) {
+        setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+      setOpenSnackbar(true);
+    } finally {
+      setopenSizeDetailDialog(true);
+    }
+  };
+
+  const handleCloseSizeDetailDialog = () => {
+    setopenSizeDetailDialog(false);
   };
 
   const handleSaveProduct = () => {
@@ -279,7 +322,8 @@ const InventoryManagement = () => {
         Thêm kích thước
       </Button>
 
-      <TableContainer component={Paper} style={{ marginTop: 20 }}>
+      <TableContainer component={Paper} style={{ marginTop: 20, marginBottom: 20 }}>
+        <h2>Quản lý sản phẩm</h2>
         <Table>
           <TableHead>
             <TableRow>
@@ -321,6 +365,133 @@ const InventoryManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Brands Table */}
+      <div style={{ marginTop: 20 }}>
+        <h2>Quản lý thương hiệu</h2>
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Tìm kiếm thương hiệu</InputLabel>
+          <Select name="brands" value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)}>
+            {brands.map((brand) => (
+              <MenuItem key={brand._id} value={brand._id}>
+                {brand.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Logo</TableCell>
+                <TableCell>Tên thương hiệu</TableCell>
+                <TableCell>Hành động</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {brands
+                .filter((brand) => brand.name.toLowerCase().includes(filterBrand.toLowerCase()))
+                .map((brand, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <image style={{ width: '100px', height: '100px' }} src={brand.image} />
+                    </TableCell>
+                    <TableCell>{brand.name}</TableCell>
+                    <TableCell>
+                      <Button onClick={() => handleOpenSizeDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
+                      <Button onClick={() => handleDeleteBrand(brand.id)}>Chỉnh sửa</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+
+      {/* Sizes Table */}
+      <div>
+        <h2>Quản lý kích thước</h2>
+        <TextField
+          label="Tìm kiếm kích thước"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          value={filterSize}
+          onChange={(e) => setFilterSize(e.target.value)}
+        />
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Kích thước</TableCell>
+                <TableCell>Hành động</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              abg
+              {/* {sizes
+        .filter((size) => size.toLowerCase().includes(filterSize.toLowerCase()))
+        .map((size, index) => (
+          <TableRow key={index}>
+            <TableCell>{size}</TableCell>
+            <TableCell>
+              <Button onClick={() => handleDeleteSize(size.id)}>Xóa</Button>
+            </TableCell>
+          </TableRow>
+        ))} */}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+
+      {/* Diaglog thông tin chi tiết thương hiệu */}
+      <Dialog open={openSizeDetailDialog} onClose={handleCloseSizeDetailDialog}>
+        <DialogTitle>Chi tiết thương hiệu {selectedBrandsName}</DialogTitle>
+        <TableContainer component={Paper}>
+          <Table style={{ width: '80%', maxWidth: 800 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Tên</TableCell>
+                <TableCell>Giá</TableCell>
+                <TableCell>Size</TableCell>
+                <TableCell>Số lượng</TableCell>
+                <TableCell>Danh mục</TableCell>
+                <TableCell>Đã bán</TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {productOfBrands && productOfBrands.length > 0 ? (
+                productOfBrands.map((product, index) => (
+                  <TableRow key={product._id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{product?.name || 'N/A'}</TableCell>
+                    <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>
+                      {product.size && product.size.length > 0
+                        ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
+                        : 'Không có kích thước'}
+                    </TableCell>
+                    <TableCell>
+                      {product.size && product.size.length > 0
+                        ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                        : 'Không có số lượng'}
+                    </TableCell>
+                    <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
+                    <TableCell>{product.sold}</TableCell>
+                    <TableCell>{product.status}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Dialog>
 
       {/* Dialog for Product */}
       <Dialog open={openProductDialog} onClose={handleCloseProductDialog}>
