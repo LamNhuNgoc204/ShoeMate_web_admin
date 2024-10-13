@@ -27,6 +27,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from 'redux/thunks/productsThunk';
 import { getAllBrands, getAllCategories, getAllSizes } from 'api/getAllData';
 import { addProduct, updateProduct } from 'api/products';
+import { uploadToCloundinary } from 'functions/processingFunction';
 
 const Typography = () => {
   const [listProducts, setListProducts] = useState([]);
@@ -153,26 +154,6 @@ const Typography = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-  };
-
-  const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/dt7755ppx/upload`;
-  const cloudinaryUploadPreset = 'shoe_mate_shop';
-
-  const uploadToCloundinary = async (file) => {
-    try {
-      const data = new FormData();
-      data.append('file', file);
-      data.append('upload_preset', cloudinaryUploadPreset);
-      const response = await fetch(CLOUDINARY_URL, {
-        method: 'POST',
-        body: data
-      });
-      const result = await response.json();
-      console.log(result);
-      return result.secure_url;
-    } catch (error) {
-      console.log(error);
-    }
   };
 
   const handleImageChange = async (e) => {

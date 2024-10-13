@@ -21,7 +21,9 @@ import {
   Alert
 } from '@mui/material';
 import { getAllBrands, getAllCategories, getAllSizes } from 'api/getAllData';
-import { createSize } from 'api/createNew';
+import { createCate, createSize } from 'api/createNew';
+import MainCard from 'ui-component/cards/MainCard';
+import { uploadToCloundinary } from 'functions/processingFunction';
 
 const InventoryManagement = () => {
   const [products, setProducts] = useState([]);
@@ -41,6 +43,20 @@ const InventoryManagement = () => {
   });
 
   const [newCategory, setNewCategory] = useState('');
+  const [newCateDes, setNewCateDes] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState('');
+
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const secureUrl = await uploadToCloundinary(file);
+      // console.log('secureUrl', secureUrl);
+      if (secureUrl) {
+        setNewCategoryImage(secureUrl);
+      }
+    }
+  };
+
   const [newBrand, setNewBrand] = useState('');
   const [newSize, setNewSize] = useState('');
 
@@ -88,6 +104,8 @@ const InventoryManagement = () => {
   const handleCloseCategoryDialog = () => {
     setOpenCategoryDialog(false);
     setNewCategory('');
+    setNewCateDes('');
+    setNewCategoryImage('');
   };
 
   const handleOpenBrandDialog = () => {
@@ -126,11 +144,52 @@ const InventoryManagement = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleAddNewCategory = () => {
-    if (newCategory && !categories.includes(newCategory)) {
-      setCategories([...categories, newCategory]);
+  // console.log('cate body: ', newCategory, '-', newCategoryImage, '-', newCateDes);
+
+  const handleAddNewCategory = async () => {
+    if (!newCategory || !newCategoryImage) {
+      setSnackbarMessage(!newCategory ? 'Nhập tên danh mục' : 'Chọn ảnh danh mục');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (newCategory && categories.includes(newCategory)) {
+      setSnackbarMessage('Danh mục đã tồn tại');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    try {
+      const body = {
+        name: newCategory,
+        image: newCategoryImage,
+        description: newCateDes
+      };
+
+      console.log('body: ', body);
+
+      if (!body.name || !body.image || !body.description) {
+        setSnackbarMessage('Dữ liệu không đầy đủ, vui lòng kiểm tra lại');
+        return;
+      }
+
+      const response = await createCate(body);
+
+      if (response) {
+        setCategories([...categories, { name: newCategory, image: newCategoryImage, description: newCateDes }]);
+        setSnackbarMessage('Thêm danh mục thành công');
+      } else {
+        setSnackbarMessage('Thêm danh mục thất bại, thử lại sau');
+      }
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
+    } finally {
       setNewCategory('');
+      setNewCateDes('');
+      setNewCategoryImage('');
       handleCloseCategoryDialog();
+      setOpenSnackbar(true);
     }
   };
 
@@ -162,8 +221,7 @@ const InventoryManagement = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Quản lý kho hàng</h2>
+    <MainCard title="QUẢN LÝ KHO HÀNG" style={{ padding: 20 }}>
       <Button variant="contained" color="primary" onClick={() => handleOpenProductDialog()}>
         Thêm sản phẩm
       </Button>
@@ -281,6 +339,29 @@ const InventoryManagement = () => {
         <DialogTitle>Thêm danh mục mới</DialogTitle>
         <DialogContent>
           <TextField label="Tên danh mục" fullWidth value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
+
+          <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+            <Button variant="outlined" component="span">
+              Chọn ảnh
+            </Button>
+            <input id="image-upload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+          </label>
+
+          <div style={{ marginTop: 10, marginBottom: 10 }}>
+            <strong>File đã chọn:</strong>
+            <br />
+            {newCategoryImage && (
+              <div style={{ marginTop: 10 }}>
+                <img
+                  src={newCategoryImage}
+                  alt="Hình ảnh danh mục"
+                  style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 10 }}
+                />
+              </div>
+            )}
+          </div>
+
+          <TextField label="Mô tả" fullWidth value={newCateDes} onChange={(e) => setNewCateDes(e.target.value)} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCategoryDialog} color="primary">
@@ -330,7 +411,7 @@ const InventoryManagement = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </MainCard>
   );
 };
 
