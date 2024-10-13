@@ -26,3 +26,15 @@ export const createCate = async (body) => {
     console.error('error category: ', error);
   }
 };
+
+export const createNewBrand = async (body) => {
+  try {
+    const response = await AxiosInstance().post('/brands/add-new-brand', body);
+    if (!response) {
+      console.log('lOI: KHONG TAO DUOC Brands');
+    }
+    return response;
+  } catch (error) {
+    console.error('error category: ', error);
+  }
+};

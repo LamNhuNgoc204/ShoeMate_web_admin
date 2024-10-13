@@ -21,7 +21,7 @@ import {
   Alert
 } from '@mui/material';
 import { getAllBrands, getAllCategories, getAllSizes } from 'api/getAllData';
-import { createCate, createSize } from 'api/createNew';
+import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
 
@@ -35,30 +35,38 @@ const InventoryManagement = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    quantity: '',
     price: '',
-    category: '',
+    quantity: '',
+    description: '',
+    discount: '',
     brand: '',
-    size: ''
+    size: [],
+    category: '',
+    assets: []
   });
 
   const [newCategory, setNewCategory] = useState('');
   const [newCateDes, setNewCateDes] = useState('');
   const [newCategoryImage, setNewCategoryImage] = useState('');
 
-  const handleImageChange = async (event) => {
+  const [newBrand, setNewBrand] = useState('');
+  const [newBrandImg, setNewBrandImg] = useState('');
+  const [newSize, setNewSize] = useState('');
+
+  const handleImageChange = async (event, type) => {
     const file = event.target.files[0];
     if (file) {
       const secureUrl = await uploadToCloundinary(file);
       // console.log('secureUrl', secureUrl);
       if (secureUrl) {
-        setNewCategoryImage(secureUrl);
+        if (type == 'category') {
+          setNewCategoryImage(secureUrl);
+        } else if (type == 'brand') {
+          setNewBrandImg(secureUrl);
+        }
       }
     }
   };
-
-  const [newBrand, setNewBrand] = useState('');
-  const [newSize, setNewSize] = useState('');
 
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -115,6 +123,7 @@ const InventoryManagement = () => {
   const handleCloseBrandDialog = () => {
     setOpenBrandDialog(false);
     setNewBrand('');
+    setNewBrandImg('');
   };
 
   const handleOpenSizeDialog = () => {
@@ -143,8 +152,6 @@ const InventoryManagement = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
-  // console.log('cate body: ', newCategory, '-', newCategoryImage, '-', newCateDes);
 
   const handleAddNewCategory = async () => {
     if (!newCategory || !newCategoryImage) {
@@ -193,11 +200,48 @@ const InventoryManagement = () => {
     }
   };
 
-  const handleAddNewBrand = () => {
-    if (newBrand && !brands.includes(newBrand)) {
-      setBrands([...brands, newBrand]);
+  const handleAddNewBrand = async () => {
+    if (!newBrand || !newBrandImg) {
+      setSnackbarMessage(!newBrand ? 'Nhập tên thương hiệu' : 'Chọn ảnh thương hiệu');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    try {
+      const body = {
+        name: newBrand,
+        image: newBrandImg
+      };
+
+      if (!body) {
+        setSnackbarMessage('Không được để trống form');
+        setOpenSnackbar(true);
+        return;
+      }
+
+      console.log('Brand body: ', body);
+
+      if (newBrand && !brands.includes(newBrand)) {
+        const response = await createNewBrand(body);
+        if (response) {
+          setBrands([...brands, { name: newBrand, image: newBrandImg }]);
+          setSnackbarMessage('Thêm thương hiệu thành công');
+        } else {
+          setSnackbarMessage('Thêm thương hiệu thất bại, thử lại sau');
+        }
+      } else {
+        setSnackbarMessage('Thương hiệu đã tồn tại');
+        setOpenSnackbar(true);
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
+    } finally {
       setNewBrand('');
+      setNewBrandImg('');
       handleCloseBrandDialog();
+      setOpenSnackbar(true);
     }
   };
 
@@ -344,7 +388,13 @@ const InventoryManagement = () => {
             <Button variant="outlined" component="span">
               Chọn ảnh
             </Button>
-            <input id="image-upload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+            <input
+              id="image-upload"
+              type="file"
+              accept="image/*"
+              onChange={(event) => handleImageChange(event, 'category')}
+              style={{ display: 'none' }}
+            />
           </label>
 
           <div style={{ marginTop: 10, marginBottom: 10 }}>
@@ -378,6 +428,28 @@ const InventoryManagement = () => {
         <DialogTitle>Thêm thương hiệu mới</DialogTitle>
         <DialogContent>
           <TextField label="Tên thương hiệu" fullWidth value={newBrand} onChange={(e) => setNewBrand(e.target.value)} />
+          <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+            <Button variant="outlined" component="span">
+              Chọn ảnh
+            </Button>
+            <input
+              id="image-upload"
+              type="file"
+              accept="image/*"
+              onChange={(event) => handleImageChange(event, 'brand')}
+              style={{ display: 'none' }}
+            />
+          </label>
+
+          <div style={{ marginTop: 10, marginBottom: 10 }}>
+            <strong>File đã chọn:</strong>
+            <br />
+            {newBrandImg && (
+              <div style={{ marginTop: 10 }}>
+                <img src={newBrandImg} alt="Hình ảnh danh mục" style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 10 }} />
+              </div>
+            )}
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseBrandDialog} color="primary">
