@@ -91,6 +91,7 @@ const Typography = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [category, setCategory] = useState('');
+  const [brands, setBrands] = useState('');
   const [stockStatus, setStockStatus] = useState('');
 
   const handleOpenDialog = (product = null) => {
@@ -226,12 +227,13 @@ const Typography = () => {
 
   const filteredProducts = listProducts.filter((product) => {
     const matchesPrice = (minPrice === '' || product.price >= minPrice) && (maxPrice === '' || product.price <= maxPrice);
-    const matchesCategory = category === '' || product.category === category;
+    const matchesCategory = category === '' || product.category._id === category;
+    const matchesBrands = brands === '' || product.brand._id === brands;
     const matchesStockStatus =
       stockStatus === '' ||
       (stockStatus === 'in-stock' && product.quantity > 0) ||
       (stockStatus === 'out-of-stock' && product.quantity === 0);
-    return matchesPrice && matchesCategory && matchesStockStatus;
+    return matchesPrice && matchesCategory && matchesBrands && matchesStockStatus;
   });
 
   console.log('filteredProducts', filteredProducts);
@@ -268,7 +270,7 @@ const Typography = () => {
       </Button>
 
       {/* Filter Section */}
-      <div style={{ marginTop: 20 }}>
+      <div style={{ display: 'flex', marginTop: 20, alignItems: 'center' }}>
         <TextField
           label="Giá nhỏ nhất"
           type="number"
@@ -283,7 +285,30 @@ const Typography = () => {
           onChange={(e) => setMaxPrice(e.target.value)}
           style={{ marginRight: 20 }}
         />
-        <TextField label="Danh mục" value={category} onChange={(e) => setCategory(e.target.value)} style={{ marginRight: 20 }} />
+
+        {/* <TextField label="Danh mục" value={category} onChange={(e) => setCategory(e.target.value)} style={{ marginRight: 20 }} /> */}
+        <FormControl style={{ width: '150px', marginRight: '20px', marginBottom: '15px' }} margin="normal">
+          <InputLabel>Danh mục</InputLabel>
+          <Select name="category" value={category} onChange={(e) => setCategory(e.target.value)}>
+            {ListCategories.map((category) => (
+              <MenuItem key={category._id} value={category._id}>
+                {category.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl style={{ width: '150px', marginRight: '20px', marginBottom: '15px' }} margin="normal">
+          <InputLabel>Thương hiệu</InputLabel>
+          <Select name="category" value={brands} onChange={(e) => setBrands(e.target.value)}>
+            {ListBrands.map((brand) => (
+              <MenuItem key={brand._id} value={brand._id}>
+                {brand.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <Select
           label="Trạng thái tồn kho"
           value={stockStatus}

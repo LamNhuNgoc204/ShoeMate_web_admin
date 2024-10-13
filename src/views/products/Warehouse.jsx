@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -16,8 +16,12 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Snackbar,
+  Alert
 } from '@mui/material';
+import { getAllBrands, getAllCategories, getAllSizes } from 'api/getAllData';
+import { createSize } from 'api/createNew';
 
 const InventoryManagement = () => {
   const [products, setProducts] = useState([]);
@@ -25,7 +29,7 @@ const InventoryManagement = () => {
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
   const [openBrandDialog, setOpenBrandDialog] = useState(false);
   const [openSizeDialog, setOpenSizeDialog] = useState(false);
-  
+
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -39,10 +43,31 @@ const InventoryManagement = () => {
   const [newCategory, setNewCategory] = useState('');
   const [newBrand, setNewBrand] = useState('');
   const [newSize, setNewSize] = useState('');
-  
-  const [categories, setCategories] = useState(['Điện tử', 'Thời trang', 'Thực phẩm', 'Nhà cửa', 'Thể thao']);
-  const [brands, setBrands] = useState(['Apple', 'Samsung', 'Nike', 'Adidas', 'Sony']);
-  const [sizes, setSizes] = useState(['S', 'M', 'L', 'XL', 'XXL']);
+
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [sizes, setSizes] = useState([]);
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  useEffect(() => {
+    const fetchdata = async () => {
+      const sizes = await getAllSizes();
+      const result = await getAllBrands();
+      const cate = await getAllCategories();
+      if (result) {
+        setBrands(result);
+      }
+      if (cate) {
+        setCategories(cate);
+      }
+      if (sizes) {
+        setSizes(sizes);
+      }
+    };
+    fetchdata();
+  }, []);
 
   const handleOpenProductDialog = (product = null) => {
     setSelectedProduct(product);
@@ -117,10 +142,15 @@ const InventoryManagement = () => {
     }
   };
 
-  const handleAddNewSize = () => {
+  const handleAddNewSize = async () => {
     if (newSize && !sizes.includes(newSize)) {
-      setSizes([...sizes, newSize]);
-      setNewSize('');
+      const response = await createSize(newSize);
+      if (response) {
+        setSizes([...sizes, newSize]);
+        setNewSize('');
+        setSnackbarMessage('Thêm kích thước thành công!');
+        setOpenSnackbar(true);
+      }
       handleCloseSizeDialog();
     }
   };
@@ -172,7 +202,12 @@ const InventoryManagement = () => {
                 <TableCell>{product.brand}</TableCell>
                 <TableCell>{product.size}</TableCell>
                 <TableCell>
-                  <Button variant="contained" color="secondary" onClick={() => handleOpenProductDialog(product)} style={{ marginRight: 10 }}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => handleOpenProductDialog(product)}
+                    style={{ marginRight: 10 }}
+                  >
                     Chỉnh sửa
                   </Button>
                   <Button variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
@@ -245,16 +280,15 @@ const InventoryManagement = () => {
       <Dialog open={openCategoryDialog} onClose={handleCloseCategoryDialog}>
         <DialogTitle>Thêm danh mục mới</DialogTitle>
         <DialogContent>
-          <TextField 
-            label="Tên danh mục" 
-            fullWidth 
-            value={newCategory} 
-            onChange={(e) => setNewCategory(e.target.value)} 
-          />
+          <TextField label="Tên danh mục" fullWidth value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseCategoryDialog} color="primary">Hủy</Button>
-          <Button onClick={handleAddNewCategory} color="primary">Thêm</Button>
+          <Button onClick={handleCloseCategoryDialog} color="primary">
+            Hủy
+          </Button>
+          <Button onClick={handleAddNewCategory} color="primary">
+            Thêm
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -262,16 +296,15 @@ const InventoryManagement = () => {
       <Dialog open={openBrandDialog} onClose={handleCloseBrandDialog}>
         <DialogTitle>Thêm thương hiệu mới</DialogTitle>
         <DialogContent>
-          <TextField 
-            label="Tên thương hiệu" 
-            fullWidth 
-            value={newBrand} 
-            onChange={(e) => setNewBrand(e.target.value)} 
-          />
+          <TextField label="Tên thương hiệu" fullWidth value={newBrand} onChange={(e) => setNewBrand(e.target.value)} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseBrandDialog} color="primary">Hủy</Button>
-          <Button onClick={handleAddNewBrand} color="primary">Thêm</Button>
+          <Button onClick={handleCloseBrandDialog} color="primary">
+            Hủy
+          </Button>
+          <Button onClick={handleAddNewBrand} color="primary">
+            Thêm
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -279,18 +312,24 @@ const InventoryManagement = () => {
       <Dialog open={openSizeDialog} onClose={handleCloseSizeDialog}>
         <DialogTitle>Thêm kích thước mới</DialogTitle>
         <DialogContent>
-          <TextField 
-            label="Tên kích thước" 
-            fullWidth 
-            value={newSize} 
-            onChange={(e) => setNewSize(e.target.value)} 
-          />
+          <TextField label="Tên kích thước" fullWidth value={newSize} onChange={(e) => setNewSize(e.target.value)} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseSizeDialog} color="primary">Hủy</Button>
-          <Button onClick={handleAddNewSize} color="primary">Thêm</Button>
+          <Button onClick={handleCloseSizeDialog} color="primary">
+            Hủy
+          </Button>
+          <Button onClick={handleAddNewSize} color="primary">
+            Thêm
+          </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Thông báo */}
+      <Snackbar open={openSnackbar} autoHideDuration={3000} onClose={() => setOpenSnackbar(false)}>
+        <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
