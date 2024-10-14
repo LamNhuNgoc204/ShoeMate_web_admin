@@ -24,16 +24,44 @@ import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand } from '
 import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
+import { updateLogoBrand } from 'api/updateData';
 
 const InventoryManagement = () => {
+  //PRODUCTS
   const [products, setProducts] = useState([]);
   const [openProductDialog, setOpenProductDialog] = useState(false);
-  const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
-  const [openBrandDialog, setOpenBrandDialog] = useState(false);
-  const [openSizeDialog, setOpenSizeDialog] = useState(false);
-  const [openSizeDetailDialog, setopenSizeDetailDialog] = useState(false);
-
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  //CATEGORIES
+  const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [newCateDes, setNewCateDes] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState('');
+  const [categories, setCategories] = useState([]);
+
+  //BRANDS
+  const [newBrand, setNewBrand] = useState('');
+  const [newBrandImg, setNewBrandImg] = useState('');
+  const [openBrandDialog, setOpenBrandDialog] = useState(false);
+  const [openBrandDetailDialog, setopenBrandDetailDialog] = useState(false);
+  const [brands, setBrands] = useState([]);
+  const [productOfBrands, setProductOfBrands] = useState([]);
+  const [filterBrand, setFilterBrand] = useState('');
+  const [selectedBrandsName, setSelectedBrandsName] = useState(null);
+  const [selectedBrandId, setSelectedBrandId] = useState(null);
+  const [currBrandLogo, setCurrBrandLogo] = useState('');
+  const [newBrandLogo, setNewBrandLogo] = useState('');
+  const [openEditBrandDialog, setopenEditBrandDialog] = useState(false);
+
+  //SIZES
+  const [sizes, setSizes] = useState([]);
+  const [newSize, setNewSize] = useState('');
+  const [openSizeDialog, setOpenSizeDialog] = useState(false);
+  const [filterSize, setFilterSize] = useState('');
+
+  //COMMON
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -46,14 +74,6 @@ const InventoryManagement = () => {
     assets: []
   });
 
-  const [newCategory, setNewCategory] = useState('');
-  const [newCateDes, setNewCateDes] = useState('');
-  const [newCategoryImage, setNewCategoryImage] = useState('');
-
-  const [newBrand, setNewBrand] = useState('');
-  const [newBrandImg, setNewBrandImg] = useState('');
-  const [newSize, setNewSize] = useState('');
-
   const handleImageChange = async (event, type) => {
     const file = event.target.files[0];
     if (file) {
@@ -64,25 +84,14 @@ const InventoryManagement = () => {
           setNewCategoryImage(secureUrl);
         } else if (type == 'brand') {
           setNewBrandImg(secureUrl);
+        } else if (type == 'newBrandLogo') {
+          setNewBrandLogo(secureUrl);
         }
       }
     }
   };
 
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [sizes, setSizes] = useState([]);
-  const [productOfBrands, setProductOfBrands] = useState([]);
-
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-
-  // State for filtering
-  const [filterBrand, setFilterBrand] = useState('');
-  const [selectedBrandsName, setSelectedBrandsName] = useState(null);
-  const [selectedBrandId, setSelectedBrandId] = useState(null);
-  const [filterSize, setFilterSize] = useState('');
-
+  //CALL API
   useEffect(() => {
     const fetchdata = async () => {
       const sizes = await getAllSizes();
@@ -116,66 +125,16 @@ const InventoryManagement = () => {
     fetchdata();
   }, [selectedBrandId]);
 
+  //FUN PRODUCTS
   const handleOpenProductDialog = (product = null) => {
     setSelectedProduct(product);
     setFormData(product ? { ...product } : { name: '', quantity: '', price: '', category: '', brand: '', size: '' });
     setOpenProductDialog(true);
   };
-
   const handleCloseProductDialog = () => {
     setOpenProductDialog(false);
     setSelectedProduct(null);
     resetFormData();
-  };
-
-  const handleOpenCategoryDialog = () => {
-    setOpenCategoryDialog(true);
-  };
-
-  const handleCloseCategoryDialog = () => {
-    setOpenCategoryDialog(false);
-    setNewCategory('');
-    setNewCateDes('');
-    setNewCategoryImage('');
-  };
-
-  const handleOpenBrandDialog = () => {
-    setOpenBrandDialog(true);
-  };
-
-  const handleCloseBrandDialog = () => {
-    setOpenBrandDialog(false);
-    setNewBrand('');
-    setNewBrandImg('');
-  };
-
-  const handleOpenSizeDialog = () => {
-    setOpenSizeDialog(true);
-  };
-
-  const handleCloseSizeDialog = () => {
-    setOpenSizeDialog(false);
-    setNewSize('');
-  };
-
-  const handleOpenSizeDetailDialog = async (id, name) => {
-    setSelectedBrandId(id);
-    setSelectedBrandsName(name);
-    try {
-      if (!productOfBrands) {
-        setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
-        setOpenSnackbar(true);
-      }
-    } catch (error) {
-      setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
-      setOpenSnackbar(true);
-    } finally {
-      setopenSizeDetailDialog(true);
-    }
-  };
-
-  const handleCloseSizeDetailDialog = () => {
-    setopenSizeDetailDialog(false);
   };
 
   const handleSaveProduct = () => {
@@ -191,11 +150,92 @@ const InventoryManagement = () => {
     setProducts(products.filter((product) => product.id !== id));
   };
 
+  //FUN CATE
+  const handleOpenCategoryDialog = () => {
+    setOpenCategoryDialog(true);
+  };
+  const handleCloseCategoryDialog = () => {
+    setOpenCategoryDialog(false);
+    setNewCategory('');
+    setNewCateDes('');
+    setNewCategoryImage('');
+  };
+
+  //FUN BRANDS
+  const handleOpenBrandDialog = () => {
+    setOpenBrandDialog(true);
+  };
+  const handleCloseBrandDialog = () => {
+    setOpenBrandDialog(false);
+    setNewBrand('');
+    setNewBrandImg('');
+  };
+  const handleOpenBrandDetailDialog = async (id, name) => {
+    setSelectedBrandId(id);
+    setSelectedBrandsName(name);
+    try {
+      if (!productOfBrands) {
+        setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+      setOpenSnackbar(true);
+    } finally {
+      setopenBrandDetailDialog(true);
+    }
+  };
+  const handleCloseBrandDetailDialog = () => {
+    setopenBrandDetailDialog(false);
+  };
+  const handleCloseEditBrandDialog = () => {
+    setopenEditBrandDialog(false);
+  };
+  const handleOpenEditDialog = (id, name, img) => {
+    setSelectedBrandId(id);
+    setCurrBrandLogo(img);
+    setSelectedBrandsName(name);
+    setopenEditBrandDialog(true);
+  };
+  const handleEditBrand = async () => {
+    if (!currBrandLogo) {
+      setSnackbarMessage('Vui long chon anh');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    try {
+      const response = await updateLogoBrand(selectedBrandId, currBrandLogo);
+      if (response.data) {
+        setSnackbarMessage('Chỉnh sửa logo thành công');
+      } else {
+        setSnackbarMessage('Chỉnh sửa logo xảy ra lỗi');
+      }
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage('Đã xảy ra lỗi khi chinh sua logo brand, thử lại sau');
+    } finally {
+      handleCloseEditBrandDialog();
+      setOpenSnackbar(true);
+    }
+  };
+
+  //FUN SIZES
+  const handleOpenSizeDialog = () => {
+    setOpenSizeDialog(true);
+  };
+  const handleCloseSizeDialog = () => {
+    setOpenSizeDialog(false);
+    setNewSize('');
+  };
+
+  //INPUT
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  //CREATE NEW
   const handleAddNewCategory = async () => {
     if (!newCategory || !newCategoryImage) {
       setSnackbarMessage(!newCategory ? 'Nhập tên danh mục' : 'Chọn ảnh danh mục');
@@ -242,7 +282,6 @@ const InventoryManagement = () => {
       setOpenSnackbar(true);
     }
   };
-
   const handleAddNewBrand = async () => {
     if (!newBrand || !newBrandImg) {
       setSnackbarMessage(!newBrand ? 'Nhập tên thương hiệu' : 'Chọn ảnh thương hiệu');
@@ -287,7 +326,6 @@ const InventoryManagement = () => {
       setOpenSnackbar(true);
     }
   };
-
   const handleAddNewSize = async () => {
     if (newSize && !sizes.includes(newSize)) {
       const response = await createSize(newSize);
@@ -301,6 +339,7 @@ const InventoryManagement = () => {
     }
   };
 
+  //RESET FORM
   const resetFormData = () => {
     setNewCategory('');
     setNewBrand('');
@@ -394,12 +433,12 @@ const InventoryManagement = () => {
                 .map((brand, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <image style={{ width: '100px', height: '100px' }} src={brand.image} />
+                      <img style={{ width: '100px', height: '100px' }} src={brand.image} />
                     </TableCell>
                     <TableCell>{brand.name}</TableCell>
                     <TableCell>
-                      <Button onClick={() => handleOpenSizeDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
-                      <Button onClick={() => handleDeleteBrand(brand.id)}>Chỉnh sửa</Button>
+                      <Button onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
+                      <Button onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}>Chỉnh sửa</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -445,7 +484,7 @@ const InventoryManagement = () => {
       </div>
 
       {/* Diaglog thông tin chi tiết thương hiệu */}
-      <Dialog open={openSizeDetailDialog} onClose={handleCloseSizeDetailDialog}>
+      <Dialog open={openBrandDetailDialog} onClose={handleCloseBrandDetailDialog}>
         <DialogTitle>Chi tiết thương hiệu {selectedBrandsName}</DialogTitle>
         <TableContainer component={Paper}>
           <Table style={{ width: '80%', maxWidth: 800 }}>
@@ -491,6 +530,36 @@ const InventoryManagement = () => {
             </TableBody>
           </Table>
         </TableContainer>
+      </Dialog>
+
+      {/* Dialog Chinh sua logo thuong hieu */}
+      <Dialog style={{ padding: 10, textAlign: 'center' }} fullWidth open={openEditBrandDialog} onClose={handleCloseEditBrandDialog}>
+        <DialogTitle>Chỉnh sửa logo thương hiệu {selectedBrandsName}</DialogTitle>
+        <div style={{ padding: 10 }}>
+          <p>Logo hiện tại</p>
+          <img style={{ width: '100px', height: '100px' }} src={currBrandLogo} />
+        </div>
+        <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+          <Button variant="outlined" component="span">
+            Chọn ảnh
+          </Button>
+          <input
+            id="image-upload"
+            type="file"
+            accept="image/*"
+            onChange={(event) => handleImageChange(event, 'newBrandLogo')}
+            style={{ display: 'none' }}
+          />
+        </label>
+
+        <div style={{ padding: 10 }}>
+          <p>Logo mới</p>
+          <img style={{ width: '100px', height: '100px' }} src={newBrandLogo} />
+        </div>
+
+        <Button type="primary" onClick={() => handleEditBrand()}>
+          Lưu
+        </Button>
       </Dialog>
 
       {/* Dialog for Product */}
