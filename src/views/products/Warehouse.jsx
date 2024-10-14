@@ -18,7 +18,8 @@ import {
   Select,
   MenuItem,
   Snackbar,
-  Alert
+  Alert,
+  Pagination
 } from '@mui/material';
 import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand } from 'api/getAllData';
 import { createCate, createNewBrand, createSize } from 'api/createNew';
@@ -52,6 +53,8 @@ const InventoryManagement = () => {
   const [currBrandLogo, setCurrBrandLogo] = useState('');
   const [newBrandLogo, setNewBrandLogo] = useState('');
   const [openEditBrandDialog, setopenEditBrandDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   //SIZES
   const [sizes, setSizes] = useState([]);
@@ -136,7 +139,6 @@ const InventoryManagement = () => {
     setSelectedProduct(null);
     resetFormData();
   };
-
   const handleSaveProduct = () => {
     if (selectedProduct) {
       setProducts(products.map((p) => (p.id === selectedProduct.id ? { ...formData, id: p.id } : p)));
@@ -145,7 +147,6 @@ const InventoryManagement = () => {
     }
     handleCloseProductDialog();
   };
-
   const handleDeleteProduct = (id) => {
     setProducts(products.filter((product) => product.id !== id));
   };
@@ -198,15 +199,17 @@ const InventoryManagement = () => {
     setopenEditBrandDialog(true);
   };
   const handleEditBrand = async () => {
-    if (!currBrandLogo) {
+    if (!newBrandLogo) {
       setSnackbarMessage('Vui long chon anh');
       setOpenSnackbar(true);
       return;
     }
 
     try {
-      const response = await updateLogoBrand(selectedBrandId, currBrandLogo);
-      if (response.data) {
+      const response = await updateLogoBrand(selectedBrandId, newBrandLogo);
+      console.log('response new logo brands: ', response);
+
+      if (response.status) {
         setSnackbarMessage('Chỉnh sửa logo thành công');
       } else {
         setSnackbarMessage('Chỉnh sửa logo xảy ra lỗi');
@@ -219,6 +222,11 @@ const InventoryManagement = () => {
       setOpenSnackbar(true);
     }
   };
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+  const filteredBrands = brands.filter((brand) => brand.name.toLowerCase().includes(filterBrand.toLowerCase()));
+  const paginatedBrands = filteredBrands.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   //FUN SIZES
   const handleOpenSizeDialog = () => {
@@ -428,23 +436,27 @@ const InventoryManagement = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {brands
-                .filter((brand) => brand.name.toLowerCase().includes(filterBrand.toLowerCase()))
-                .map((brand, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <img style={{ width: '100px', height: '100px' }} src={brand.image} />
-                    </TableCell>
-                    <TableCell>{brand.name}</TableCell>
-                    <TableCell>
-                      <Button onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
-                      <Button onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}>Chỉnh sửa</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {paginatedBrands.map((brand, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <img style={{ width: '100px', height: '100px' }} src={brand.image} />
+                  </TableCell>
+                  <TableCell>{brand.name}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
+                    <Button onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}>Chỉnh sửa</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
+        <Pagination
+          count={Math.ceil(filteredBrands.length / itemsPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
+        />
       </div>
 
       {/* Sizes Table */}
