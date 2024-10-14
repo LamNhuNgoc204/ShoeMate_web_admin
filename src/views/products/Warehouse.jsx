@@ -28,40 +28,6 @@ import { uploadToCloundinary } from 'functions/processingFunction';
 import { updateLogoBrand } from 'api/updateData';
 
 const InventoryManagement = () => {
-  //PRODUCTS
-  const [products, setProducts] = useState([]);
-  const [openProductDialog, setOpenProductDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-
-  //CATEGORIES
-  const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
-  const [newCategory, setNewCategory] = useState('');
-  const [newCateDes, setNewCateDes] = useState('');
-  const [newCategoryImage, setNewCategoryImage] = useState('');
-  const [categories, setCategories] = useState([]);
-
-  //BRANDS
-  const [newBrand, setNewBrand] = useState('');
-  const [newBrandImg, setNewBrandImg] = useState('');
-  const [openBrandDialog, setOpenBrandDialog] = useState(false);
-  const [openBrandDetailDialog, setopenBrandDetailDialog] = useState(false);
-  const [brands, setBrands] = useState([]);
-  const [productOfBrands, setProductOfBrands] = useState([]);
-  const [filterBrand, setFilterBrand] = useState('');
-  const [selectedBrandsName, setSelectedBrandsName] = useState(null);
-  const [selectedBrandId, setSelectedBrandId] = useState(null);
-  const [currBrandLogo, setCurrBrandLogo] = useState('');
-  const [newBrandLogo, setNewBrandLogo] = useState('');
-  const [openEditBrandDialog, setopenEditBrandDialog] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  //SIZES
-  const [sizes, setSizes] = useState([]);
-  const [newSize, setNewSize] = useState('');
-  const [openSizeDialog, setOpenSizeDialog] = useState(false);
-  const [filterSize, setFilterSize] = useState('');
-
   //COMMON
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -76,6 +42,66 @@ const InventoryManagement = () => {
     category: '',
     assets: []
   });
+
+  //PRODUCTS
+  const [products, setProducts] = useState([]);
+  const [openProductDialog, setOpenProductDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  //CATEGORIES
+  const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [newCateDes, setNewCateDes] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [openCateDetailDialog, setopenCateDetailDialog] = useState(false);
+  const [selectedCatesName, setSelectedCatesName] = useState(null);
+  const [selectedCateId, setSelectedsCateId] = useState(null);
+  const [productOfCate, setproductOfCate] = useState([]);
+  const [filterCate, setfilterCate] = useState('');
+  const [currentPageCate, setCurrentPageCate] = useState(1);
+  const itemsPerPageCate = 5;
+  // Lọc danh sách danh mục
+  const listCateFilter = categories.filter((cate) => {
+    return filterCate === '' || filterCate === cate._id;
+  });
+  // Phân trang dựa trên danh sách đã lọc
+  const paginateCate = listCateFilter.slice((currentPageCate - 1) * itemsPerPageCate, currentPageCate * itemsPerPageCate);
+  const handlePageCateChange = (_, value) => {
+    setCurrentPageCate(value);
+  };
+
+  //BRANDS
+  const [newBrand, setNewBrand] = useState('');
+  const [newBrandImg, setNewBrandImg] = useState('');
+  const [openBrandDialog, setOpenBrandDialog] = useState(false);
+  const [openBrandDetailDialog, setopenBrandDetailDialog] = useState(false);
+  const [brands, setBrands] = useState([]);
+  const [productOfBrands, setProductOfBrands] = useState([]);
+  const [selectedBrandsName, setSelectedBrandsName] = useState(null);
+  const [selectedBrandId, setSelectedBrandId] = useState(null);
+  const [currBrandLogo, setCurrBrandLogo] = useState('');
+  const [newBrandLogo, setNewBrandLogo] = useState('');
+  const [openEditBrandDialog, setopenEditBrandDialog] = useState(false);
+  const [currentBrandPage, setcurrentBrandPage] = useState(1);
+  const itemsPerPagebrand = 5;
+  const [filterBrand, setFilterBrand] = useState('');
+  // Lọc danh sách thương hiệu theo filterBrand
+  const listBrandFilter = brands.filter((brand) => {
+    return filterBrand === '' || filterBrand === brand._id;
+  });
+  // Phân trang dựa trên danh sách đã lọc
+  const paginatedBrands = listBrandFilter.slice((currentBrandPage - 1) * itemsPerPagebrand, currentBrandPage * itemsPerPagebrand);
+  // Xử lý khi người dùng thay đổi trang
+  const handlePageBrandChange = (_, value) => {
+    setcurrentBrandPage(value);
+  };
+
+  //SIZES
+  const [sizes, setSizes] = useState([]);
+  const [newSize, setNewSize] = useState('');
+  const [openSizeDialog, setOpenSizeDialog] = useState(false);
+  const [filterSize, setFilterSize] = useState('');
 
   const handleImageChange = async (event, type) => {
     const file = event.target.files[0];
@@ -161,6 +187,24 @@ const InventoryManagement = () => {
     setNewCateDes('');
     setNewCategoryImage('');
   };
+  const handleCloseCateDetailDialog = () => {
+    setopenCateDetailDialog(false);
+  };
+  const handleOpenCateDetailDialog = async (id, name) => {
+    setSelectedsCateId(id);
+    setSelectedCatesName(name);
+    try {
+      if (!productOfCate) {
+        setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+      setOpenSnackbar(true);
+    } finally {
+      setopenBrandDetailDialog(true);
+    }
+  };
 
   //FUN BRANDS
   const handleOpenBrandDialog = () => {
@@ -222,11 +266,6 @@ const InventoryManagement = () => {
       setOpenSnackbar(true);
     }
   };
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-  };
-  const filteredBrands = brands.filter((brand) => brand.name.toLowerCase().includes(filterBrand.toLowerCase()));
-  const paginatedBrands = filteredBrands.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   //FUN SIZES
   const handleOpenSizeDialog = () => {
@@ -359,72 +398,80 @@ const InventoryManagement = () => {
       <Button variant="contained" color="primary" onClick={() => handleOpenProductDialog()}>
         Thêm sản phẩm
       </Button>
-      <Button variant="contained" color="secondary" onClick={handleOpenCategoryDialog} style={{ marginLeft: 10 }}>
-        Thêm danh mục
-      </Button>
-      <Button variant="contained" color="success" onClick={handleOpenBrandDialog} style={{ marginLeft: 10 }}>
-        Thêm thương hiệu
-      </Button>
-      <Button variant="contained" color="warning" onClick={handleOpenSizeDialog} style={{ marginLeft: 10 }}>
-        Thêm kích thước
-      </Button>
 
-      <TableContainer component={Paper} style={{ marginTop: 20, marginBottom: 20 }}>
-        <h2>Quản lý sản phẩm</h2>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Tên sản phẩm</TableCell>
-              <TableCell>Số lượng</TableCell>
-              <TableCell>Giá</TableCell>
-              <TableCell>Danh mục</TableCell>
-              <TableCell>Thương hiệu</TableCell>
-              <TableCell>Kích thước</TableCell>
-              <TableCell>Hành động</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.quantity}</TableCell>
-                <TableCell>{product.price}</TableCell>
-                <TableCell>{product.category}</TableCell>
-                <TableCell>{product.brand}</TableCell>
-                <TableCell>{product.size}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => handleOpenProductDialog(product)}
-                    style={{ marginRight: 10 }}
-                  >
-                    Chỉnh sửa
-                  </Button>
-                  <Button variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
-                    Xóa
-                  </Button>
-                </TableCell>
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <h2>Quản lý danh mục</h2>
+        <Button variant="contained" color="secondary" onClick={handleOpenCategoryDialog} style={{ marginTop: 10 }}>
+          Thêm danh mục
+        </Button>
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Lọc danh mục</InputLabel>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <Select fullWidth name="categories" value={filterCate} onChange={(e) => setfilterCate(e.target.value)}>
+              {categories.map((cate) => (
+                <MenuItem key={cate._id} value={cate._id}>
+                  {cate.name}
+                </MenuItem>
+              ))}
+            </Select>
+            <Button variant="contained" color="warning" onClick={() => setfilterCate('')} style={{ marginLeft: 10, width: 200, flex: 1 }}>
+              Bỏ lọc
+            </Button>
+          </div>
+        </FormControl>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Logo</TableCell>
+                <TableCell>Tên danh mục</TableCell>
+                <TableCell>Hành động</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {paginateCate.map((category, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <img style={{ width: '100px', height: '100px' }} src={category.image} />
+                  </TableCell>
+                  <TableCell>{category.name}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleOpenCategoryDetailDialog(category._id, category.name)}>Xem chi tiết</Button>
+                    <Button onClick={() => handleOpenEditCateDialog(category._id, category.name, category.image)}>Chỉnh sửa</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Pagination
+          count={Math.ceil(listCateFilter.length / itemsPerPageCate)}
+          page={currentPageCate}
+          onChange={handlePageCateChange}
+          style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
+        />
+      </div>
 
       {/* Brands Table */}
       <div style={{ marginTop: 20 }}>
         <h2>Quản lý thương hiệu</h2>
+        <Button variant="contained" color="success" onClick={handleOpenBrandDialog}>
+          Thêm thương hiệu
+        </Button>
         <FormControl fullWidth margin="normal">
           <InputLabel>Tìm kiếm thương hiệu</InputLabel>
-          <Select name="brands" value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)}>
-            {brands.map((brand) => (
-              <MenuItem key={brand._id} value={brand._id}>
-                {brand.name}
-              </MenuItem>
-            ))}
-          </Select>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <Select fullWidth name="brands" value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)}>
+              {brands.map((brand) => (
+                <MenuItem key={brand._id} value={brand._id}>
+                  {brand.name}
+                </MenuItem>
+              ))}
+            </Select>
+            <Button variant="contained" color="warning" onClick={() => setFilterBrand('')} style={{ marginLeft: 10, width: 200, flex: 1 }}>
+              Bỏ lọc
+            </Button>
+          </div>
         </FormControl>
         <TableContainer component={Paper}>
           <Table>
@@ -452,9 +499,9 @@ const InventoryManagement = () => {
           </Table>
         </TableContainer>
         <Pagination
-          count={Math.ceil(filteredBrands.length / itemsPerPage)}
-          page={currentPage}
-          onChange={handlePageChange}
+          count={Math.ceil(listBrandFilter.length / itemsPerPagebrand)}
+          page={currentBrandPage}
+          onChange={handlePageBrandChange}
           style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
         />
       </div>
@@ -462,6 +509,9 @@ const InventoryManagement = () => {
       {/* Sizes Table */}
       <div>
         <h2>Quản lý kích thước</h2>
+        <Button variant="contained" color="warning" onClick={handleOpenSizeDialog}>
+          Thêm kích thước
+        </Button>
         <TextField
           label="Tìm kiếm kích thước"
           variant="outlined"

@@ -169,8 +169,6 @@ const Typography = () => {
       }
     }
 
-    // console.log('Images upload: ', uploadedAssets);
-
     setFormData((prev) => ({
       ...prev,
       assets: [...prev.assets, ...uploadedAssets]
