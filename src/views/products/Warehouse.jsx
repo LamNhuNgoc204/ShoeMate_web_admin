@@ -101,6 +101,20 @@ const InventoryManagement = () => {
   const [newSize, setNewSize] = useState('');
   const [openSizeDialog, setOpenSizeDialog] = useState(false);
   const [filterSize, setFilterSize] = useState('');
+  const [currentSizePage, setcurrentSizePage] = useState(1);
+  const itemsPerPageSize = 5;
+  // Lọc danh sách thương hiệu theo filtercurrentSize
+  const listSizeFilter = Array.isArray(sizes)
+    ? sizes.filter((size) => {
+        return filterSize === '' || filterSize === size._id;
+      })
+    : [];
+  // Phân trang dựa trên danh sách đã lọc
+  const paginatedSizes = listSizeFilter.slice((currentSizePage - 1) * itemsPerPageSize, currentSizePage * itemsPerPageSize);
+  // Xử lý khi người dùng thay đổi trang
+  const handlePageSizeChange = (_, value) => {
+    setcurrentSizePage(value);
+  };
 
   const handleImageChange = async (event, type) => {
     const file = event.target.files[0];
@@ -1041,37 +1055,49 @@ const InventoryManagement = () => {
         <Button variant="contained" color="warning" onClick={handleOpenSizeDialog}>
           Thêm kích thước
         </Button>
-        <TextField
-          label="Tìm kiếm kích thước"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          value={filterSize}
-          onChange={(e) => setFilterSize(e.target.value)}
-        />
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Tìm kiếm thương hiệu</InputLabel>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+              <Select fullWidth name="brands" value={filterSize} onChange={(e) => setFilterSize(e.target.value)}>
+                {ListSizes.map((size) => (
+                  <MenuItem key={size._id} value={size._id}>
+                    {size.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              <Button style={{ marginLeft: 15, flex: 1 }} variant="contained" color="warning" onClick={() => setFilterSize('')}>
+                Bỏ lọc
+              </Button>
+            </div>
+          </FormControl>
+        </div>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Kích thước</TableCell>
-                <TableCell>Hành động</TableCell>
+                <TableCell align="center">Kích thước</TableCell>
+                <TableCell align="center">Hành động</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              abg
-              {/* {sizes
-        .filter((size) => size.toLowerCase().includes(filterSize.toLowerCase()))
-        .map((size, index) => (
-          <TableRow key={index}>
-            <TableCell>{size}</TableCell>
-            <TableCell>
-              <Button onClick={() => handleDeleteSize(size.id)}>Xóa</Button>
-            </TableCell>
-          </TableRow>
-        ))} */}
+              {paginatedSizes.map((size, index) => (
+                <TableRow key={index}>
+                  <TableCell align="center">{size.name}</TableCell>
+                  <TableCell align="center">
+                    <Button onClick={() => handleDeleteSize(size.id)}>Xóa</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
+        <Pagination
+          count={Math.ceil(listSizeFilter.length / itemsPerPageSize)}
+          page={currentSizePage}
+          onChange={handlePageSizeChange}
+          style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
+        />
       </div>
 
       {/* Diaglog thông tin chi tiết danh mục */}
