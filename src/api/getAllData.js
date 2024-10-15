@@ -19,3 +19,8 @@ export const getProductOfBrand = async (brandId) => {
   const response = await AxiosInstance().get(`/brands/get-product-of-brand/${brandId}`);
   return response;
 };
+
+export const getProductOfCate = async (categoryId) => {
+  const response = await AxiosInstance().get(`/categories/get-product-of-cate/${categoryId}`);
+  return response;
+};

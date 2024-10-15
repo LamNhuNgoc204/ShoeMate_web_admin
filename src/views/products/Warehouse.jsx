@@ -25,7 +25,7 @@ import {
   Checkbox
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand } from 'api/getAllData';
+import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand, getProductOfCate } from 'api/getAllData';
 import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
@@ -49,10 +49,12 @@ const InventoryManagement = () => {
   const [selectedCatesName, setSelectedCatesName] = useState(null);
   const [selectedCateId, setSelectedsCateId] = useState(null);
   const [selectedCateImg, setSelectedsCateImg] = useState(null);
+  const [catenamefordetail, setCatenamefordetail] = useState('');
   const [newCatelogo, setNewCatelogo] = useState('');
   const [newCateName, setnewCateName] = useState('');
   const [newCateDescription, setnewCateDescription] = useState('');
   const [productOfCate, setproductOfCate] = useState([]);
+  const [selectIdForDetailCate, setselectIdForDetailCate] = useState('');
   const [filterCate, setfilterCate] = useState('');
   const [currentPageCate, setCurrentPageCate] = useState(1);
   const itemsPerPageCate = 5;
@@ -166,9 +168,11 @@ const InventoryManagement = () => {
   const handleCloseCateDetailDialog = () => {
     setopenCateDetailDialog(false);
   };
+
   const handleOpenCategoryDetailDialog = async (id, name) => {
-    setSelectedsCateId(id);
-    setSelectedCatesName(name);
+    setselectIdForDetailCate(id);
+    console.log('selectIdForDetailCate', selectIdForDetailCate, '--', id);
+    setCatenamefordetail(name);
     try {
       if (!productOfCate) {
         setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
@@ -178,9 +182,26 @@ const InventoryManagement = () => {
       setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
       setOpenSnackbar(true);
     } finally {
-      setopenBrandDetailDialog(true);
+      setopenCateDetailDialog(true);
     }
   };
+
+  useEffect(() => {
+    const fetchdataDetailCate = async () => {
+      const response = await getProductOfCate(selectIdForDetailCate);
+      console.log('Response:', response);
+      if (!response || !response.data) {
+        setSnackbarMessage('Lấy dữ sản phẩm của danh mục thất bại!');
+        setOpenSnackbar(true);
+        return;
+      }
+      setproductOfCate(response.data);
+    };
+
+    fetchdataDetailCate();
+  }, [selectIdForDetailCate]);
+
+  console.log('productOfCate', productOfCate);
 
   const handleOpenEditCateDialog = async (id, name, img, description) => {
     setSelectedsCateId(id);
@@ -1054,8 +1075,8 @@ const InventoryManagement = () => {
       </div>
 
       {/* Diaglog thông tin chi tiết danh mục */}
-      <Dialog open={openBrandDetailDialog} onClose={handleCloseBrandDetailDialog}>
-        <DialogTitle>Chi tiết danh mục {selectedBrandsName}</DialogTitle>
+      <Dialog open={openCateDetailDialog} onClose={handleCloseCateDetailDialog}>
+        <DialogTitle>Chi tiết danh mục {catenamefordetail}</DialogTitle>
         <TableContainer component={Paper}>
           <Table style={{ width: '80%', maxWidth: 800 }}>
             <TableHead>
@@ -1071,8 +1092,8 @@ const InventoryManagement = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {productOfBrands && productOfBrands.length > 0 ? (
-                productOfBrands.map((product, index) => (
+              {productOfCate && productOfCate.length > 0 ? (
+                productOfCate.map((product, index) => (
                   <TableRow key={product._id}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{product?.name || 'N/A'}</TableCell>
@@ -1087,7 +1108,7 @@ const InventoryManagement = () => {
                         ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
                         : 'Không có số lượng'}
                     </TableCell>
-                    <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
+                    <TableCell>{product.brand ? product.brand.name : 'Không có danh mục'}</TableCell>
                     <TableCell>{product.sold}</TableCell>
                     <TableCell>{product.status}</TableCell>
                   </TableRow>
