@@ -5,7 +5,7 @@ import { Navigate } from 'react-router-dom';
 
 // Loadable component cho các view
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard')));
-const Qlsp = Loadable(lazy(() => import('views/products/Products')));
+const QlKH = Loadable(lazy(() => import('views/products/Customer')));
 const Qltonkho = Loadable(lazy(() => import('views/products/Warehouse')));
 const Qlgiamgia = Loadable(lazy(() => import('views/products/Discount')));
 const Orders = Loadable(lazy(() => import('views/order/Orders')));
@@ -40,8 +40,8 @@ const MainRoutes = {
       path: 'sanpham',
       children: [
         {
-          path: 'qlsp',
-          element: <Qlsp />
+          path: 'qlkh',
+          element: <QlKH />
         },
         {
           path: 'qltonkho',

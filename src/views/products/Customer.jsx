@@ -20,8 +20,7 @@ import {
   InputLabel,
   FormControlLabel,
   Checkbox,
-  FormLabel,
-  Input
+  FormLabel
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from 'redux/thunks/productsThunk';

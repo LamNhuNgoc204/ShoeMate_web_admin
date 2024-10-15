@@ -8,17 +8,16 @@ const icons = {
   IconShoppingCartDiscount
 };
 
-
 const utilities = {
   id: 'utilities',
   title: 'Sản phẩm',
   type: 'group',
   children: [
     {
-      id: 'qlsp',
-      title: 'Quản lý sản phẩm',
+      id: 'qlkh',
+      title: 'Hỗ trợ khách hàng',
       type: 'item',
-      url: '/sanpham/qlsp',
+      url: '/sanpham/qlkh',
       icon: icons.IconFolders,
       breadcrumbs: false
     },
