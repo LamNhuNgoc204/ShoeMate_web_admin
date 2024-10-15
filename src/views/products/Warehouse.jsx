@@ -29,7 +29,7 @@ import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand } from '
 import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
-import { updateLogoBrand } from 'api/updateData';
+import { updateCate, updateLogoBrand } from 'api/updateData';
 import { fetchProducts } from 'redux/thunks/productsThunk';
 import { addProduct, updateProduct } from 'api/products';
 
@@ -44,9 +44,14 @@ const InventoryManagement = () => {
   const [newCateDes, setNewCateDes] = useState('');
   const [newCategoryImage, setNewCategoryImage] = useState('');
   const [categories, setCategories] = useState([]);
+  const [openCateEditDialog, setopenCateEditDialog] = useState(false);
   const [openCateDetailDialog, setopenCateDetailDialog] = useState(false);
   const [selectedCatesName, setSelectedCatesName] = useState(null);
   const [selectedCateId, setSelectedsCateId] = useState(null);
+  const [selectedCateImg, setSelectedsCateImg] = useState(null);
+  const [newCatelogo, setNewCatelogo] = useState('');
+  const [newCateName, setnewCateName] = useState('');
+  const [newCateDescription, setnewCateDescription] = useState('');
   const [productOfCate, setproductOfCate] = useState([]);
   const [filterCate, setfilterCate] = useState('');
   const [currentPageCate, setCurrentPageCate] = useState(1);
@@ -107,6 +112,8 @@ const InventoryManagement = () => {
           setNewBrandImg(secureUrl);
         } else if (type == 'newBrandLogo') {
           setNewBrandLogo(secureUrl);
+        } else if (type == 'newCateLogo') {
+          setNewCatelogo(secureUrl);
         }
       }
     }
@@ -159,7 +166,7 @@ const InventoryManagement = () => {
   const handleCloseCateDetailDialog = () => {
     setopenCateDetailDialog(false);
   };
-  const handleOpenCateDetailDialog = async (id, name) => {
+  const handleOpenCategoryDetailDialog = async (id, name) => {
     setSelectedsCateId(id);
     setSelectedCatesName(name);
     try {
@@ -172,6 +179,48 @@ const InventoryManagement = () => {
       setOpenSnackbar(true);
     } finally {
       setopenBrandDetailDialog(true);
+    }
+  };
+
+  const handleOpenEditCateDialog = async (id, name, img, description) => {
+    setSelectedsCateId(id);
+    setSelectedCatesName(name);
+    setnewCateName(name);
+    setSelectedsCateImg(img);
+    setnewCateDescription(description);
+    setopenCateEditDialog(true);
+  };
+  const handleCloseEditCateDialog = async () => {
+    setopenCateEditDialog(false);
+  };
+  const handleEditCate = async () => {
+    if (!newCatelogo) {
+      setSnackbarMessage('Vui lòng chọn ảnh');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (!newCateName) {
+      setSnackbarMessage('Vui lòng nhập tên');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    try {
+      const response = await updateCate(selectedCateId, newCateName, newCatelogo, newCateDescription);
+      console.log('response new cate: ', response);
+
+      if (response.status) {
+        setSnackbarMessage('Chỉnh sửa category thành công');
+      } else {
+        setSnackbarMessage('Chỉnh sửa category xảy ra lỗi');
+      }
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage('Đã xảy ra lỗi khi chỉnh sửa category, thử lại sau');
+    } finally {
+      handleCloseEditCateDialog();
+      setOpenSnackbar(true);
     }
   };
 
@@ -412,7 +461,14 @@ const InventoryManagement = () => {
   const [brand, setBrand] = useState('');
   const [stockStatus, setStockStatus] = useState('');
 
-  const [filterProduct, setfilterProduct] = useState('');
+  const resetFilterProduct = () => {
+    setMinPrice('');
+    setMaxPrice('');
+    setCategory('');
+    setBrand('');
+    setStockStatus('');
+  };
+
   const [currentPageProduct, setCurrentPageProduct] = useState(1);
   const itemsPerPageProduct = 5;
 
@@ -484,7 +540,11 @@ const InventoryManagement = () => {
       } else {
         // Thêm sản phẩm mới
         const newProduct = await addProduct(formData);
-        setListProducts([...listProducts, newProduct]);
+        if (newProduct) {
+          setListProducts([...listProducts, newProduct]);
+          setSnackbarMessage('Thêm sản phẩm thành công!');
+          setOpenSnackbar(true);
+        }
       }
       handleCloseDialog();
     } catch (error) {
@@ -632,6 +692,10 @@ const InventoryManagement = () => {
             <MenuItem value="in-stock">Còn hàng</MenuItem>
             <MenuItem value="out-of-stock">Hết hàng</MenuItem>
           </Select>
+
+          <Button style={{ marginLeft: 20 }} variant="contained" color="primary" onClick={() => resetFilterProduct()}>
+            Bỏ lọc
+          </Button>
         </div>
 
         <div>
@@ -879,7 +943,9 @@ const InventoryManagement = () => {
                   <TableCell>{category.name}</TableCell>
                   <TableCell>
                     <Button onClick={() => handleOpenCategoryDetailDialog(category._id, category.name)}>Xem chi tiết</Button>
-                    <Button onClick={() => handleOpenEditCateDialog(category._id, category.name, category.image)}>Chỉnh sửa</Button>
+                    <Button onClick={() => handleOpenEditCateDialog(category._id, category.name, category.image, category.description)}>
+                      Chỉnh sửa
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -986,6 +1052,93 @@ const InventoryManagement = () => {
           </Table>
         </TableContainer>
       </div>
+
+      {/* Diaglog thông tin chi tiết danh mục */}
+      <Dialog open={openBrandDetailDialog} onClose={handleCloseBrandDetailDialog}>
+        <DialogTitle>Chi tiết danh mục {selectedBrandsName}</DialogTitle>
+        <TableContainer component={Paper}>
+          <Table style={{ width: '80%', maxWidth: 800 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Tên</TableCell>
+                <TableCell>Giá</TableCell>
+                <TableCell>Size</TableCell>
+                <TableCell>Số lượng</TableCell>
+                <TableCell>Danh mục</TableCell>
+                <TableCell>Đã bán</TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {productOfBrands && productOfBrands.length > 0 ? (
+                productOfBrands.map((product, index) => (
+                  <TableRow key={product._id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{product?.name || 'N/A'}</TableCell>
+                    <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>
+                      {product.size && product.size.length > 0
+                        ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
+                        : 'Không có kích thước'}
+                    </TableCell>
+                    <TableCell>
+                      {product.size && product.size.length > 0
+                        ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                        : 'Không có số lượng'}
+                    </TableCell>
+                    <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
+                    <TableCell>{product.sold}</TableCell>
+                    <TableCell>{product.status}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Dialog>
+
+      {/* Dialog Chinh sua logo danh muc */}
+      <Dialog style={{ padding: 10, textAlign: 'center' }} fullWidth open={openCateEditDialog} onClose={handleCloseEditCateDialog}>
+        <div style={{ padding: 20 }}>
+          <DialogTitle>Chỉnh sửa danh mục {selectedCatesName}</DialogTitle>
+          <TextField label="Tên danh mục" fullWidth value={newCateName} onChange={(e) => setnewCateName(e.target.value)} />
+          <TextField
+            style={{ marginTop: 10 }}
+            label="Mô tả danh mục"
+            fullWidth
+            value={newCateDescription}
+            onChange={(e) => setnewCateDescription(e.target.value)}
+          />
+          <div style={{ padding: 10 }}>
+            <p>Logo hiện tại</p>
+            <img style={{ width: '100px', height: '100px' }} src={selectedCateImg} />
+          </div>
+          <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+            <Button variant="outlined" component="span">
+              Chọn ảnh
+            </Button>
+            <input
+              id="image-upload"
+              type="file"
+              accept="image/*"
+              onChange={(event) => handleImageChange(event, 'newCateLogo')}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <div style={{ padding: 10 }}>
+            <p>Logo mới</p>
+            <img style={{ width: '100px', height: '100px' }} src={newCatelogo} />
+          </div>
+          <Button type="primary" onClick={() => handleEditCate()}>
+            Lưu
+          </Button>
+        </div>
+      </Dialog>
 
       {/* Diaglog thông tin chi tiết thương hiệu */}
       <Dialog open={openBrandDetailDialog} onClose={handleCloseBrandDetailDialog}>
