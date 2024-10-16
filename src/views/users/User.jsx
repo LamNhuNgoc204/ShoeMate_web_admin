@@ -24,64 +24,6 @@ import MainCard from 'ui-component/cards/MainCard';
 import { ROLE } from 'constants/mockData';
 import { getAllUsers } from 'api/getAllData';
 
-const sampleUsers = [
-  {
-    _id: '1',
-    email: 'nguyenvanA@gmail.com',
-    phoneNumber: '0901234567',
-    avatar: 'https://via.placeholder.com/150',
-    name: 'Nguyễn Văn A',
-    password: '123456',
-    role: 'user',
-    isVerified: true,
-    isActive: true
-  },
-  {
-    _id: '2',
-    email: 'tranthithuy@gmail.com',
-    phoneNumber: '0912345678',
-    avatar: 'https://via.placeholder.com/150',
-    name: 'Trần Thị Thủy',
-    password: '123456',
-    role: 'employee',
-    isVerified: false,
-    isActive: true
-  },
-  {
-    _id: '3',
-    email: 'lehoang@gmail.com',
-    phoneNumber: '0923456789',
-    avatar: 'https://via.placeholder.com/150',
-    name: 'Lê Hoàng',
-    password: '123456',
-    role: 'admin',
-    isVerified: true,
-    isActive: true
-  },
-  {
-    _id: '4',
-    email: 'phamvanb@gmail.com',
-    phoneNumber: '0934567890',
-    avatar: 'https://via.placeholder.com/150',
-    name: 'Phạm Văn B',
-    password: '123456',
-    role: 'user',
-    isVerified: true,
-    isActive: false
-  },
-  {
-    _id: '5',
-    email: 'ngothilan@gmail.com',
-    phoneNumber: '0945678901',
-    avatar: 'https://via.placeholder.com/150',
-    name: 'Ngô Thị Lan',
-    password: '123456',
-    role: 'employee',
-    isVerified: true,
-    isActive: true
-  }
-];
-
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -116,23 +58,16 @@ const UserManagement = () => {
   };
 
   const handleSaveUser = () => {
-    if (selectedUser) {
-      // Chỉnh sửa người dùng
-      const updatedUsers = users.map((user) => (user._id === selectedUser._id ? selectedUser : user));
-      setUsers(updatedUsers);
-      setSnackbarMessage('Cập nhật người dùng thành công!');
-    } else {
-      // Thêm người dùng mới
-      const newUser = {
-        _id: (users.length + 1).toString(),
-        email: '',
-        phoneNumber: '',
-        name: '',
-        role: 'user'
-      };
-      setUsers([...users, { ...newUser, ...selectedUser }]);
-      setSnackbarMessage('Thêm người dùng thành công!');
-    }
+    // Thêm người dùng mới
+    const newUser = {
+      _id: (users.length + 1).toString(),
+      email: '',
+      phoneNumber: '',
+      name: '',
+      role: 'user'
+    };
+    setUsers([...users, { ...newUser }]);
+    setSnackbarMessage('Thêm người dùng thành công!');
     setSnackbarSeverity('success');
     setSnackbarOpen(true);
     handleCloseDialog();
