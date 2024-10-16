@@ -18,23 +18,39 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  TablePagination
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { ROLE } from 'constants/mockData';
 import { getAllUsers } from 'api/getAllData';
 import { updateRole } from 'api/updateData';
+import { createNewUser } from 'api/createNew';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDialogRole, setOpenDialogRole] = useState(false);
-  const [selectedUser, setSelectedUser] = useState({});
   const [role, setRole] = useState('');
   const [userId, setUserId] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newRole, setNewRole] = useState('');
+  const [emailHelperText, setEmailHelperText] = useState('');
+  const [emailError, setEmailError] = useState(false);
+  const [passwordHelperText, setPasswordHelperText] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
+  const [phoneHelperText, setPhoneHelperText] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -44,35 +60,62 @@ const UserManagement = () => {
         setSnackbarOpen(true);
       }
       setUsers(response.data);
+      setFilteredUsers(response.data);
     };
 
     fetchUserData();
   }, []);
 
-  const handleOpenDialog = (user) => {
-    setSelectedUser(user);
+  const handleOpenDialog = () => {
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setSelectedUser(null);
+    setNewEmail('');
+    setNewPass('');
+    setNewName('');
+    setNewPhone('');
+    setNewRole('');
   };
 
-  const handleSaveUser = () => {
-    // Thêm người dùng mới
-    const newUser = {
-      _id: (users.length + 1).toString(),
-      email: '',
-      phoneNumber: '',
-      name: '',
-      role: 'user'
-    };
-    setUsers([...users, { ...newUser }]);
-    setSnackbarMessage('Thêm người dùng thành công!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-    handleCloseDialog();
+  const checkEmailExists = (email) => {
+    const user = users.find((user) => user.email === email);
+    return !!user;
+  };
+
+  const checkPass = (password) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const checkPhoneNumber = (phone) => {
+    const phoneRegex = /^[0-9]{10}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const handleSaveUser = async () => {
+    if (!newEmail || !newPass || !newRole) {
+      setSnackbarMessage('Khong duoc de trong!');
+      setSnackbarSeverity('error');
+    }
+
+    try {
+      const response = await createNewUser(newEmail, newPass, newName, newPhone, newRole);
+      if (response.status) {
+        setSnackbarMessage('Thêm người dùng thành công!');
+        setSnackbarSeverity('success');
+      } else {
+        setSnackbarMessage('Thêm người dùng failed!');
+        setSnackbarSeverity('error');
+      }
+    } catch (error) {
+      setSnackbarMessage('Xay ra loi, thu lai sau!');
+      setSnackbarSeverity('success');
+    } finally {
+      setSnackbarOpen(true);
+      handleCloseDialog();
+    }
   };
 
   const handleOpenDialogRole = (user) => {
@@ -80,8 +123,6 @@ const UserManagement = () => {
     setUserId(user._id);
     setOpenDialogRole(true);
   };
-
-  console.log('userId', userId);
 
   const handleSaveRole = async () => {
     try {
@@ -100,11 +141,32 @@ const UserManagement = () => {
       setOpenDialogRole(false);
     }
   };
-  console.log('role', role);
+
+  // Xử lý tìm kiếm người dùng
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    const filtered = users.filter(
+      (user) =>
+        user.email.toLowerCase().includes(e.target.value.toLowerCase()) || user.name.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredUsers(filtered);
+  };
+
+  // Xử lý phân trang
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   return (
     <MainCard title="QUẢN LÝ NGƯỜI DÙNG">
-      <Button variant="contained" color="primary" onClick={() => handleOpenDialog(null)}>
+      <TextField label="Tìm kiếm người dùng" fullWidth value={searchTerm} onChange={handleSearch} style={{ marginBottom: '20px' }} />
+
+      <Button variant="contained" color="primary" onClick={() => handleOpenDialog()}>
         Thêm Người Dùng
       </Button>
 
@@ -120,52 +182,93 @@ const UserManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user, index) => (
-              <TableRow key={index + 1}>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>
-                  <Button onClick={() => handleOpenDialogRole(user)}>Chỉnh Sửa</Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filteredUsers
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ hiển thị người dùng theo trang
+              .map((user, index) => (
+                <TableRow key={index + 1}>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleOpenDialogRole(user)}>Chỉnh Sửa Role</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
+        <TablePagination
+          component="div"
+          count={filteredUsers.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang"
+        />
       </TableContainer>
 
       {/* Dialog cho thêm/chỉnh sửa người dùng */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>{selectedUser ? 'Chỉnh Sửa Người Dùng' : 'Thêm Người Dùng'}</DialogTitle>
+        <DialogTitle>Thêm Người Dùng</DialogTitle>
         <DialogContent>
           <TextField
             label="Email"
+            onBlur={() => {
+              if (checkEmailExists(newEmail)) {
+                setEmailError(true);
+                setEmailHelperText('Email đã tồn tại trong hệ thống!');
+              } else {
+                setEmailError(false);
+                setEmailHelperText('');
+              }
+            }}
             fullWidth
-            value={selectedUser ? selectedUser.email : ''}
-            onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            error={emailError}
+            helperText={emailHelperText}
           />
           <TextField
-            label="Tên"
+            label="Password"
+            onBlur={() => {
+              if (!checkPass(newPass)) {
+                setPasswordError(true);
+                setPasswordHelperText('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!');
+              } else {
+                setPasswordError(false);
+                setPasswordHelperText('');
+              }
+            }}
+            error={passwordError}
+            helperText={passwordHelperText}
             fullWidth
-            value={selectedUser ? selectedUser.name : ''}
-            onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
+            value={newPass}
+            onChange={(e) => setNewPass(e.target.value)}
             style={{ marginTop: '10px' }}
           />
+          <TextField label="Tên" fullWidth value={newName} onChange={(e) => setNewName(e.target.value)} style={{ marginTop: '10px' }} />
           <TextField
             label="Số Điện Thoại"
             fullWidth
-            value={selectedUser ? selectedUser.phoneNumber : ''}
-            onChange={(e) => setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })}
+            value={newPhone}
+            onChange={(e) => setNewPhone(e.target.value)}
             style={{ marginTop: '10px' }}
+            onBlur={() => {
+              if (!checkPhoneNumber(newPhone)) {
+                setPhoneError(true);
+                setPhoneHelperText('Số điện thoại không hợp lệ!');
+              } else {
+                setPhoneError(false);
+                setPhoneHelperText('');
+              }
+            }}
+            error={phoneError}
+            helperText={phoneHelperText}
           />
           <FormControl fullWidth style={{ marginTop: '10px' }}>
             <InputLabel>Vai Trò</InputLabel>
-            <Select
-              label="Vai Trò"
-              value={selectedUser ? selectedUser.role : ''}
-              onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
-            >
+            <Select label="Vai Trò" value={newRole} onChange={(e) => setNewRole(e.target.value)}>
               {ROLE.map((item) => {
                 return <MenuItem value={item}>{item}</MenuItem>;
               })}

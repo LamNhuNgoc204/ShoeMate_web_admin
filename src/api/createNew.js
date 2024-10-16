@@ -1,5 +1,21 @@
 import AxiosInstance from 'helper/AxiosInstance';
 
+export const createNewUser = async (email, password, name, phoneNumber, role) => {
+  try {
+    const body = {
+      email,
+      password,
+      name,
+      phoneNumber,
+      role
+    };
+    const response = await AxiosInstance().post('/users/add-new-user', body);
+    return response;
+  } catch (error) {
+    console.log('Add new user error: ', error);
+  }
+};
+
 export const createSize = async (name) => {
   try {
     if (!name) {
