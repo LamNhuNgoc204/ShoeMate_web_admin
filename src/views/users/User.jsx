@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -14,9 +14,15 @@ import {
   TableRow,
   Paper,
   Snackbar,
-  Alert
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
+import { ROLE } from 'constants/mockData';
+import { getAllUsers } from 'api/getAllData';
 
 const sampleUsers = [
   {
@@ -28,7 +34,7 @@ const sampleUsers = [
     password: '123456',
     role: 'user',
     isVerified: true,
-    isActive: true,
+    isActive: true
   },
   {
     _id: '2',
@@ -39,7 +45,7 @@ const sampleUsers = [
     password: '123456',
     role: 'employee',
     isVerified: false,
-    isActive: true,
+    isActive: true
   },
   {
     _id: '3',
@@ -50,7 +56,7 @@ const sampleUsers = [
     password: '123456',
     role: 'admin',
     isVerified: true,
-    isActive: true,
+    isActive: true
   },
   {
     _id: '4',
@@ -61,7 +67,7 @@ const sampleUsers = [
     password: '123456',
     role: 'user',
     isVerified: true,
-    isActive: false,
+    isActive: false
   },
   {
     _id: '5',
@@ -72,17 +78,32 @@ const sampleUsers = [
     password: '123456',
     role: 'employee',
     isVerified: true,
-    isActive: true,
-  },
+    isActive: true
+  }
 ];
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(sampleUsers);
+  const [users, setUsers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [openDialogRole, setOpenDialogRole] = useState(false);
+  const [selectedUser, setSelectedUser] = useState({});
+  const [role, setRole] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const response = await getAllUsers();
+      if (!response) {
+        setSnackbarMessage('Lay danh sach người dùng failed!');
+        setSnackbarOpen(true);
+      }
+      setUsers(response.data);
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleOpenDialog = (user) => {
     setSelectedUser(user);
@@ -97,9 +118,7 @@ const UserManagement = () => {
   const handleSaveUser = () => {
     if (selectedUser) {
       // Chỉnh sửa người dùng
-      const updatedUsers = users.map((user) =>
-        user._id === selectedUser._id ? selectedUser : user
-      );
+      const updatedUsers = users.map((user) => (user._id === selectedUser._id ? selectedUser : user));
       setUsers(updatedUsers);
       setSnackbarMessage('Cập nhật người dùng thành công!');
     } else {
@@ -109,7 +128,7 @@ const UserManagement = () => {
         email: '',
         phoneNumber: '',
         name: '',
-        role: 'user',
+        role: 'user'
       };
       setUsers([...users, { ...newUser, ...selectedUser }]);
       setSnackbarMessage('Thêm người dùng thành công!');
@@ -118,6 +137,14 @@ const UserManagement = () => {
     setSnackbarOpen(true);
     handleCloseDialog();
   };
+
+  const handleOpenDialogRole = (user) => {
+    setRole(user.role);
+    setOpenDialogRole(true);
+  };
+
+  const handleSaveRole = async () => {};
+  console.log('role', role);
 
   return (
     <MainCard title="QUẢN LÝ NGƯỜI DÙNG">
@@ -141,10 +168,10 @@ const UserManagement = () => {
               <TableRow key={user._id}>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.name}</TableCell>
-                <TableCell>{user.phoneNumber}</TableCell>
+                <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>
-                  <Button onClick={() => handleOpenDialog(user)}>Chỉnh Sửa</Button>
+                  <Button onClick={() => handleOpenDialogRole(user)}>Chỉnh Sửa</Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -176,17 +203,43 @@ const UserManagement = () => {
             onChange={(e) => setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })}
             style={{ marginTop: '10px' }}
           />
-          <TextField
-            label="Vai Trò"
-            fullWidth
-            value={selectedUser ? selectedUser.role : ''}
-            onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
-            style={{ marginTop: '10px' }}
-          />
+          <FormControl fullWidth style={{ marginTop: '10px' }}>
+            <InputLabel>Vai Trò</InputLabel>
+            <Select
+              label="Vai Trò"
+              value={selectedUser ? selectedUser.role : ''}
+              onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
+            >
+              {ROLE.map((item) => {
+                return <MenuItem value={item}>{item}</MenuItem>;
+              })}
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Đóng</Button>
           <Button onClick={handleSaveUser} color="primary">
+            Lưu
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Chinh sua role */}
+      <Dialog open={openDialogRole} onClose={() => setOpenDialogRole(false)}>
+        <DialogTitle>Chỉnh Sửa Người Dùng</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth style={{ marginTop: '10px' }}>
+            <InputLabel>Vai Trò</InputLabel>
+            <Select label="Vai Trò" value={role} onChange={(e) => setRole(e.target.value)}>
+              {ROLE.map((item) => {
+                return <MenuItem value={item}>{item}</MenuItem>;
+              })}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialogRole(false)}>Đóng</Button>
+          <Button onClick={handleSaveRole} color="primary">
             Lưu
           </Button>
         </DialogActions>

@@ -1,5 +1,10 @@
 import AxiosInstance from 'helper/AxiosInstance';
 
+export const getAllUsers = async () => {
+  const response = await AxiosInstance().get('/users/get-all-user');
+  return response;
+};
+
 export const getAllBrands = async () => {
   const response = await AxiosInstance().get('/products/list-brands');
   return response;
