@@ -23,6 +23,7 @@ import {
 import MainCard from 'ui-component/cards/MainCard';
 import { ROLE } from 'constants/mockData';
 import { getAllUsers } from 'api/getAllData';
+import { updateRole } from 'api/updateData';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -30,6 +31,7 @@ const UserManagement = () => {
   const [openDialogRole, setOpenDialogRole] = useState(false);
   const [selectedUser, setSelectedUser] = useState({});
   const [role, setRole] = useState('');
+  const [userId, setUserId] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
@@ -75,10 +77,29 @@ const UserManagement = () => {
 
   const handleOpenDialogRole = (user) => {
     setRole(user.role);
+    setUserId(user._id);
     setOpenDialogRole(true);
   };
 
-  const handleSaveRole = async () => {};
+  console.log('userId', userId);
+
+  const handleSaveRole = async () => {
+    try {
+      const response = await updateRole(userId, role);
+      if (response.status) {
+        setSnackbarMessage('Cap nhat thanh cong');
+      } else {
+        setSnackbarMessage('Ban khong co quyen su dung chuc nang nay');
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      setSnackbarMessage('Xảy ra lỗi khi cập nhật vai trò');
+      setSnackbarSeverity('error');
+    } finally {
+      setSnackbarOpen(true);
+      setOpenDialogRole(false);
+    }
+  };
   console.log('role', role);
 
   return (
@@ -99,8 +120,8 @@ const UserManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user._id}>
+            {users.map((user, index) => (
+              <TableRow key={index + 1}>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>

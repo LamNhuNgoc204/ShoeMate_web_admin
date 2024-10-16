@@ -10,7 +10,7 @@ export const updateCate = async (categoryId, name, image, description) => {
   return response;
 };
 
-export const updateRole = async (role) => {
-  const response = await AxiosInstance().put(`/users/update-role`, { role });
+export const updateRole = async (userId, role) => {
+  const response = await AxiosInstance().put(`/users/update-role/${userId}`, { role });
   return response;
 };
