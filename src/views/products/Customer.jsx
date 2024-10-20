@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import { Box, Typography, List, ListItem, ListItemAvatar, Avatar, ListItemText, TextField, Button, Paper, Divider } from '@mui/material';
 import AxiosInstance from 'helper/AxiosInstance';
@@ -8,153 +8,130 @@ import { useSelector } from 'react-redux';
 const SOCKET_SERVER_URL = "http://192.168.1.28:3000"
 
 const Customer = () => {
-
-  const [selectedConversation, setSelectedConversations] = useState({
+  const [newMessage, setNewMessage] = useState('');
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const userState = useSelector(state => state.users);
+  
+  const conversationsRef = useRef(conversations);
+  const selectedConversationRef = useRef({
     _id: 0,
     userId: {
       name: "Loading..."
     }
   });
-  const [newMessage, setNewMessage] = useState('');
-  const [conversations, setConversations] = useState([]);
-  const [messages, setMesssages] = useState([])
-  const userState = useSelector(state => state.users)
+
+  const [selectedConversation, setSelectedConversations] = useState(selectedConversationRef.current);
 
   const sortConversation = () => {
-    const sortedConversations = conversations.sort((a, b) => {
+    return conversations.sort((a, b) => {
       if (a.lastMessage && b.lastMessage) {
         const aDate = new Date(a.lastMessage.createdAt);
         const bDate = new Date(b.lastMessage.createdAt);
         return bDate.getTime() - aDate.getTime();
       }
-    })
-    return sortedConversations;
-  }
-
-
+      return 0; // Đảm bảo có giá trị trả về
+    });
+  };
 
   useEffect(() => {
-    sortConversation()
-  }, [conversations])
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
+  useEffect(() => {
+    selectedConversationRef.current = selectedConversation;
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    const sortedConversations = sortConversation();
+    setConversations(sortedConversations);
+  }, [conversations]);
 
   const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+
     try {
-      if (!newMessage.trim()) {
-        return
-      }
-      const response = await AxiosInstance().post('/messages/send-message', {
+      await AxiosInstance().post('/messages/send-message', {
         conversationId: selectedConversation._id,
         text: newMessage.trim(),
         senderId: userState.users.user._id
-      })
-      setNewMessage("")
+      });
+      setNewMessage("");
     } catch (error) {
-      console.error('Error sending message: ', error);
+      console.error('Lỗi khi gửi tin nhắn: ', error);
     }
-  }
+  };
 
-  function formatDate(isoString) {
-    if (!isoString) {
-      return "";
-    }
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
     const date = new Date(isoString);
     const now = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(now.getDate() - 1);
-
     const diffTime = now - date;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      const hours = date.getHours();
-      const minutes = date.getMinutes();
-      const period = hours >= 12 ? 'PM' : 'AM';
-      const formattedHours = hours % 12 || 12;
-      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-
-      return `${formattedHours}:${formattedMinutes}${period}`;
+      return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
     }
-
-    if (diffDays === 1) {
-      return "hôm qua";
-    }
-
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-
-    return `${day < 10 ? '0' + day : day}/${month < 10 ? '0' + month : month}`;
-  }
-
-
+    if (diffDays === 1) return "Hôm qua";
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
 
   const getConversations = async () => {
     try {
       const response = await AxiosInstance().get('/messages/get-all-conversations');
-      if (response.status) {
-        if (response.data.length > 0) {
-          getMessages(response.data[0]._id)
-          setSelectedConversations(response.data[0])
-        }
+      if (response.status && response.data.length > 0) {
         setConversations(response.data);
-      } else {
-        console.error('L��i: ', error);
+        setSelectedConversations(response.data[0]);
+        getMessages(response.data[0]._id);
       }
     } catch (error) {
-      console.error('L��i: ', error);
-
+      console.error('Lỗi: ', error);
     }
-  }
+  };
 
   const getMessages = async (conversationId) => {
     try {
-      const response = await AxiosInstance().get('/messages/get-messages/' + conversationId);
-      console.log(response);
+      const response = await AxiosInstance().get(`/messages/get-messages/${conversationId}`);
       if (response.status) {
-        setMesssages(response.data);
-      } else {
-        console.error('L��i: ', error);
+        setMessages(response.data);
       }
     } catch (error) {
-      console.error('L��i: ', error);
+      console.error('Lỗi: ', error);
     }
-
-  }
+  };
 
   const getConversation = async (conversationId) => {
     try {
-      const conversation = await AxiosInstance().get('/messages/get-conversation/' + conversationId);
-      setConversations(pre => [...pre, conversation]);
+      const response = await AxiosInstance().get(`/messages/get-conversation/${conversationId}`);
+      setConversations((prev) => [...prev, response.data]);
     } catch (error) {
-      console.error('L��i: ', error);
-
+      console.error('Lỗi: ', error);
     }
-  }
+  };
 
   useEffect(() => {
-    // Kết nối tới server
     const socket = io(SOCKET_SERVER_URL);
 
-    // Lắng nghe sự kiện 'connect' khi kết nối thành công
     socket.on('connect', () => {
       console.log('Socket connected');
     });
 
     socket.on('sendMessage', (data) => {
-      console.log('Received message:', data.message);
-      if (data.message.conversationId == selectedConversation._id) {
-        setMesssages((prevMessages) => [...prevMessages, data.message]);
-      }
-      const existId = conversations.findIndex((conversation) => conversation._id == data.message.conversationId);
-      console.log('index: ',existId);
-      if (existId == -1) {
+      const currentConversations = conversationsRef.current;
+      const existId = currentConversations.findIndex((conversation) => conversation._id === data.message.conversationId);
+
+      if (existId === -1) {
         getConversation(data.message.conversationId);
       } else {
-        setConversations((preConversations) => {
-          const updatedConversations = [...preConversations];
+        setConversations((prevConversations) => {
+          const updatedConversations = [...prevConversations];
           updatedConversations[existId].lastMessage = data.message;
           return updatedConversations;
-        })
+        });
+
+        if (data.message.conversationId === selectedConversationRef.current._id) {
+          setMessages((prevMessages) => [...prevMessages, data.message]);
+        }
       }
     });
 
@@ -162,17 +139,15 @@ const Customer = () => {
       console.log('Socket disconnected');
     });
 
-    // Cleanup function khi component bị unmount
     return () => {
       socket.disconnect();
-      console.log('Socket disconnected on cleanup');
     };
   }, []);
 
-
   useEffect(() => {
-    getConversations()
-  }, [])
+    getConversations();
+  }, []);
+
   return (
     <MainCard title="HỖ TRỢ KHÁCH HÀNG">
       <Box display="flex" height="100vh" p={2}>
@@ -185,9 +160,8 @@ const Customer = () => {
             {conversations.map((conversation) => (
               <ListItem
                 button
-                key={conversations.id}
+                key={conversation._id}
                 onClick={() => {
-
                   getMessages(conversation._id);
                   setSelectedConversations(conversation);
                 }}
@@ -196,7 +170,7 @@ const Customer = () => {
                 <ListItemAvatar>
                   <Avatar>{conversation.userId.name.charAt(0)}</Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={conversation.userId.name} secondary={`${conversation.lastMessage.text} - ${formatDate(conversation.lastMessage.createdAt)}`} />
+                <ListItemText primary={conversation.userId.name} secondary={`${conversation.lastMessage ? conversation.lastMessage.text : ''} - ${formatDate(conversation.lastMessage ? conversation.lastMessage.createdAt : '')}`} />
               </ListItem>
             ))}
           </List>
@@ -209,10 +183,10 @@ const Customer = () => {
           </Typography>
           <Paper style={{ flex: 1, padding: '16px', marginBottom: '16px', overflowY: 'auto' }}>
             {messages.map((message) => (
-              <Box key={message._id} display="flex" justifyContent={message.senderId._id != selectedConversation.userId._id ? 'flex-end' : 'flex-start'}>
+              <Box key={message._id} display="flex" justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}>
                 <Box
-                  bgcolor={message.senderId._id != selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
-                  color={message.senderId._id != selectedConversation.userId._id ? 'white' : 'black'}
+                  bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
+                  color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
                   p={1}
                   m={1}
                   borderRadius={2}
