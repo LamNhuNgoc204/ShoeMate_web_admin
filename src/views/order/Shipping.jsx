@@ -1,13 +1,5 @@
-// project imports
-import MainCard from 'ui-component/cards/MainCard';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
   Table,
   TableBody,
   TableCell,
@@ -15,10 +7,48 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Typography,
+  CircularProgress,
   Grid,
   Snackbar,
-  Alert
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  Button,
+  DialogActions
 } from '@mui/material';
+import MainCard from 'ui-component/cards/MainCard';
+import shipIcon from '../../assets/images/icons/ship.png';
+import completeIcon from '../../assets/images/icons/complete.png';
+
+const sampleData = [
+  {
+    _id: '1',
+    shipping_code: 'SH123456',
+    customer_name: 'Nguyễn Văn A',
+    address: '123 Đường ABC, Quận 1, TP.HCM',
+    status: 'Đang giao',
+    expectedDelivery: '2024-10-10T00:00:00Z',
+    products: [
+      { name: 'Sản phẩm 1', quantity: 2, price: 50000 },
+      { name: 'Sản phẩm 2', quantity: 1, price: 75000 }
+    ]
+  },
+  {
+    _id: '2',
+    shipping_code: 'SH123457',
+    customer_name: 'Trần Thị B',
+    address: '456 Đường DEF, Quận 2, TP.HCM',
+    status: 'Đã giao',
+    expectedDelivery: '2024-10-09T00:00:00Z',
+    products: [
+      { name: 'Sản phẩm 3', quantity: 3, price: 30000 },
+      { name: 'Sản phẩm 4', quantity: 1, price: 20000 }
+    ]
+  }
+];
 
 const ShippingManagement = () => {
   const [shipments, setShipments] = useState([]);
@@ -28,36 +58,13 @@ const ShippingManagement = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  // Dữ liệu mẫu
-  const sampleData = [
-    {
-      _id: '1',
-      shipping_code: 'SH123456',
-      customer_name: 'Nguyễn Văn A',
-      address: '123 Đường ABC, Quận 1, TP.HCM',
-      status: 'pending',
-      expectedDelivery: '2024-10-10T00:00:00Z',
-      products: [
-        { name: 'Sản phẩm 1', quantity: 2, price: 50000 },
-        { name: 'Sản phẩm 2', quantity: 1, price: 75000 }
-      ]
-    },
-    {
-      _id: '2',
-      shipping_code: 'SH123457',
-      customer_name: 'Trần Thị B',
-      address: '456 Đường DEF, Quận 2, TP.HCM',
-      status: 'delivered',
-      expectedDelivery: '2024-10-09T00:00:00Z',
-      products: [
-        { name: 'Sản phẩm 3', quantity: 3, price: 30000 },
-        { name: 'Sản phẩm 4', quantity: 1, price: 20000 }
-      ]
-    }
-  ];
+  // Tính toán thống kê
+  const totalOrders = shipments.length;
+  const deliveredOrders = shipments.filter((order) => order.status === 'Đã giao').length;
+  const shippingOrders = shipments.filter((order) => order.status === 'Đang giao').length;
+  const processingOrders = shipments.filter((order) => order.status === 'Đang xử lý').length;
 
   useEffect(() => {
-    // Thay vì gọi API, sử dụng dữ liệu mẫu
     setShipments(sampleData);
   }, []);
 
@@ -74,9 +81,7 @@ const ShippingManagement = () => {
   const handleUpdateStatus = (status) => {
     // Cập nhật trạng thái cho đơn hàng đã chọn
     setShipments((prevShipments) =>
-      prevShipments.map((shipment) =>
-        shipment._id === selectedShipment._id ? { ...shipment, status } : shipment
-      )
+      prevShipments.map((shipment) => (shipment._id === selectedShipment._id ? { ...shipment, status } : shipment))
     );
 
     handleCloseDialog();
@@ -87,6 +92,33 @@ const ShippingManagement = () => {
 
   return (
     <MainCard title="QUẢN LÝ VẬN CHUYỂN">
+      <Grid container spacing={2} sx={{ padding: 2 }}>
+        <Grid item xs={3}>
+          <Paper elevation={3} sx={{ padding: 2 }}>
+            <Typography variant="h6">Tổng Đơn Hàng</Typography>
+            <Typography variant="h4">{totalOrders}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={3}>
+          <Paper elevation={3} sx={{ padding: 2 }}>
+            <Typography variant="h6">Đơn Đã Giao</Typography>
+            <Typography variant="h4">{deliveredOrders}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={3}>
+          <Paper elevation={3} sx={{ padding: 2 }}>
+            <Typography variant="h6">Đơn Đang Giao</Typography>
+            <Typography variant="h4">{shippingOrders}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={3}>
+          <Paper elevation={3} sx={{ padding: 2 }}>
+            <Typography variant="h6">Đơn Đang Xử Lý</Typography>
+            <Typography variant="h4">{processingOrders}</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -96,17 +128,27 @@ const ShippingManagement = () => {
               <TableCell>Địa Chỉ</TableCell>
               <TableCell>Trạng Thái</TableCell>
               <TableCell>Ngày Giao Hàng Dự Kiến</TableCell>
+              <TableCell>Hình Ảnh Trạng Thái</TableCell>
               <TableCell>Thao Tác</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {shipments.map((shipment) => (
-              <TableRow key={shipment._id}>
+              <TableRow key={shipment.id}>
                 <TableCell>{shipment.shipping_code}</TableCell>
                 <TableCell>{shipment.customer_name}</TableCell>
                 <TableCell>{shipment.address}</TableCell>
                 <TableCell>{shipment.status}</TableCell>
                 <TableCell>{new Date(shipment.expectedDelivery).toLocaleDateString()}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>
+                  {shipment.status === 'Đang giao' ? (
+                    <img src={shipIcon} alt={shipment.status} style={{ width: 50, height: 50 }} />
+                  ) : shipment.status === 'Đã giao' ? (
+                    <img src={completeIcon} alt={shipment.status} style={{ width: 50, height: 50 }} />
+                  ) : (
+                    <CircularProgress />
+                  )}
+                </TableCell>
                 <TableCell>
                   <Button onClick={() => handleOpenDialog(shipment)}>Xem Chi Tiết</Button>
                 </TableCell>

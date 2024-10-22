@@ -16,9 +16,13 @@ import {
   Paper,
   Grid,
   Snackbar,
-  Alert
+  Alert,
+  FormControl,
+  Select,
+  InputLabel,
+  MenuItem,
+  Typography
 } from '@mui/material';
-import axios from 'axios';
 
 const OrderManagement = () => {
   const sampleOrders = [
@@ -66,6 +70,7 @@ const OrderManagement = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const handleOpenDialog = (order) => {
     setSelectedOrder(order);
@@ -114,9 +119,59 @@ const OrderManagement = () => {
     setSnackbarOpen(true);
   };
 
+  // Hàm để lọc đơn hàng theo trạng thái
+  const handleFilterChange = (event) => {
+    const value = event.target.value;
+    setFilterStatus(value);
+    const filtered = value === 'all' ? orders : orders.filter((order) => order.status === value);
+    setFilteredOrders(filtered);
+  };
+
+  // Hàm xuất báo cáo đơn hàng
+  const handleExportReport = () => {
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      filteredOrders
+        .map((order) => {
+          return `${order.order_code},${order.customer_name},${order.total_amount},${order.status},${new Date(order.createdAt).toLocaleDateString()},${order.notes}`;
+        })
+        .join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'orders_report.csv');
+    document.body.appendChild(link);
+    link.click();
+  };
+
   return (
     <MainCard title="QUẢN LÝ ĐƠN HÀNG">
+      <FormControl fullWidth>
+        <TextField label="Search đơn hàng" variant="outlined" />
+      </FormControl>
+      <Grid container sx={{ marginTop: 2, alignItems: 'center', marginBottom: 5 }}>
+        <Grid item xs={16} md={4}>
+          <FormControl fullWidth>
+            <InputLabel id="filter-label">Trạng Thái</InputLabel>
+            <Select labelId="filter-label" value={filterStatus} onChange={handleFilterChange}>
+              <MenuItem value="all">Tất cả</MenuItem>
+              <MenuItem value="pending">Đang xử lý</MenuItem>
+              <MenuItem value="completed">Đã hoàn thành</MenuItem>
+              <MenuItem value="canceled">Đã hủy</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={8} md={4} style={{ marginLeft: 20 }}>
+          <Button variant="contained" onClick={handleExportReport} color="primary">
+            Xuất Báo Cáo
+          </Button>
+        </Grid>
+      </Grid>
+
       <TableContainer component={Paper}>
+        <Typography variant="h2" align="center" sx={{ padding: 2 }}>
+          BẢNG THỐNG KÊ ĐƠN HÀNG
+        </Typography>
         <Table>
           <TableHead>
             <TableRow>
