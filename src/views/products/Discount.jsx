@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -20,48 +20,17 @@ import {
   InputLabel,
   FormControl,
   Typography,
-  Grid
+  Grid,
+  TablePagination
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
+import { addVoucher, getListVoucher } from 'api/voucher';
+import { formatDate } from 'utils/date';
 
 const PromotionManagement = () => {
-  const [promotions, setPromotions] = useState([
-    {
-      id: 1,
-      name: 'Giảm giá 20%',
-      description: 'Giảm giá 20% cho tất cả sản phẩm',
-      startDate: '2024-10-01',
-      endDate: '2024-10-31',
-      type: 'Giảm Giá',
-      value: '20%',
-      active: true,
-      notes: 'Khuyến mãi này chỉ áp dụng cho đơn hàng trên 500.000 VNĐ'
-    },
-    {
-      id: 2,
-      name: 'Mua 1 Tặng 1',
-      description: 'Mua 1 sản phẩm bất kỳ, tặng 1 sản phẩm cùng loại',
-      startDate: '2024-10-15',
-      endDate: '2024-11-15',
-      type: 'Tặng Sản Phẩm',
-      value: '1',
-      active: true,
-      notes: 'Áp dụng cho sản phẩm A và B'
-    },
-    {
-      id: 3,
-      name: 'Miễn phí vận chuyển',
-      description: 'Miễn phí vận chuyển cho đơn hàng từ 300.000 VNĐ',
-      startDate: '2024-09-20',
-      endDate: '2024-10-20',
-      type: 'Miễn Phí Vận Chuyển',
-      value: '300.000 VNĐ',
-      active: false,
-      notes: 'Khuyến mãi đã hết hạn'
-    }
-  ]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [vouchers, setVouchers] = useState([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
@@ -95,6 +64,44 @@ const PromotionManagement = () => {
     }
   ]);
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+  };
+
+  const filteredVouchers = vouchers.filter((voucher) => {
+    if (statusFilter === 'all') return true;
+    return statusFilter === 'active' ? voucher.status === 'active' : voucher.status !== 'active';
+  });
+
+  const paginatedVouchers = filteredVouchers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getListVoucher();
+      console.log('response==>', response);
+
+      if (response.status) {
+        setVouchers(response.data);
+        console.log('vouchers:', response.data);
+      }
+    };
+    fetchData();
+  }, []);
+  console.log('vouchers ================>', vouchers);
+
   const handleOpenDialog = (promotion) => {
     setSelectedPromotion(promotion);
     setOpenDialog(true);
@@ -105,30 +112,57 @@ const PromotionManagement = () => {
     setSelectedPromotion(null);
   };
 
-  const handleSavePromotion = () => {
+  const handleSavePromotion = async () => {
     if (selectedPromotion) {
-      // Cập nhật khuyến mãi
-      const updatedPromotions = promotions.map((promo) => (promo.id === selectedPromotion.id ? selectedPromotion : promo));
-      setPromotions(updatedPromotions);
-    } else {
-      // Thêm khuyến mãi mới
-      const newPromotion = {
-        id: Date.now(),
-        name: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        type: '',
-        value: '',
-        active: true,
-        notes: ''
+      const {
+        name: voucher_name,
+        discount_value,
+        quantity,
+        voucher_code,
+        startDate: start_date,
+        endDate: expiry_date,
+        condition: usage_conditions,
+        usage_scope,
+        isInMiniGame,
+        min_order_value,
+        max_discount_value
+      } = selectedPromotion;
+
+      const formData = {
+        voucher_name,
+        discount_value,
+        quantity,
+        voucher_code,
+        start_date,
+        expiry_date,
+        usage_conditions,
+        usage_scope,
+        isInMiniGame,
+        min_order_value,
+        max_discount_value
       };
-      setPromotions([...promotions, newPromotion]);
+
+      try {
+        const response = await addVoucher(formData);
+
+        if (response.status) {
+          setSnackbarMessage('Voucher created successfully!');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
+          setPromotions([...promotions, response.data]);
+        } else {
+          setSnackbarMessage(response.message || 'Failed to create voucher');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        }
+      } catch (error) {
+        setSnackbarMessage('Error creating voucher');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
     }
+
     handleCloseDialog();
-    setSnackbarMessage('Lưu khuyến mãi thành công!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
   };
 
   const handleDeletePromotion = (id) => {
@@ -155,10 +189,6 @@ const PromotionManagement = () => {
 
   return (
     <MainCard title="QUẢN LÝ KHUYẾN MÃI">
-      <Button variant="contained" onClick={() => handleOpenDialog(null)} color="primary" style={{ marginBottom: '20px' }}>
-        Thêm Khuyến Mãi
-      </Button>
-
       {/* Thống kê khuyến mãi */}
       <FormControl fullWidth style={{ marginBottom: 10, marginTop: 10 }}>
         <Typography style={{ marginBottom: 20 }} variant="h1" align="center" gutterBottom>
@@ -171,7 +201,7 @@ const PromotionManagement = () => {
                 Tổng số khuyến mãi
               </Typography>
               <Typography variant="h4" align="center">
-                {promotions.length}
+                {vouchers.length}
               </Typography>
             </Paper>
           </Grid>
@@ -181,7 +211,7 @@ const PromotionManagement = () => {
                 Khuyến mãi hiệu lực
               </Typography>
               <Typography variant="h4" align="center">
-                {promotions.filter((p) => p.active).length}
+                {vouchers.filter((p) => p.active).length}
               </Typography>
             </Paper>
           </Grid>
@@ -191,42 +221,62 @@ const PromotionManagement = () => {
                 Khuyến mãi không hiệu lực
               </Typography>
               <Typography variant="h4" align="center">
-                {promotions.filter((p) => !p.active).length}
+                {vouchers.filter((p) => !p.active).length}
               </Typography>
             </Paper>
           </Grid>
         </Grid>
       </FormControl>
 
+      {/* LOC TRANG THAI */}
+      <Grid item xs={24} alignItems={'center'} style={{ marginTop: 30 }}>
+        <Button
+          variant="contained"
+          onClick={() => handleOpenDialog(null)}
+          color="primary"
+          style={{ marginBottom: '20px', marginRight: 20, paddingBlock: 12 }}
+        >
+          Thêm Khuyến Mãi
+        </Button>
+        <FormControl style={{ width: 200 }}>
+          <InputLabel>Trạng Thái</InputLabel>
+          <Select value={statusFilter} onChange={handleFilterChange}>
+            <MenuItem value="all">Tất cả</MenuItem>
+            <MenuItem value="active">Hiệu lực</MenuItem>
+            <MenuItem value="inactive">Không hiệu lực</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+
       <TableContainer component={Paper} style={{ marginTop: '20px' }}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Tên Khuyến Mãi</TableCell>
-              <TableCell>Mô Tả</TableCell>
+              <TableCell>Điều kiện sử dụng</TableCell>
               <TableCell>Thời Gian Bắt Đầu</TableCell>
               <TableCell>Thời Gian Kết Thúc</TableCell>
-              <TableCell>Loại Khuyến Mãi</TableCell>
-              <TableCell>Giá Trị</TableCell>
+              <TableCell>Mã khuyến mãi</TableCell>
+              <TableCell>Giá Trị giam gia toi da</TableCell>
               <TableCell>Trạng Thái</TableCell>
-              <TableCell>Ghi Chú</TableCell>
+              <TableCell>So luong</TableCell>
               <TableCell>Thao Tác</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {promotions.map((promotion) => (
-              <TableRow key={promotion.id}>
-                <TableCell>{promotion.name}</TableCell>
-                <TableCell>{promotion.description}</TableCell>
-                <TableCell>{promotion.startDate}</TableCell>
-                <TableCell>{promotion.endDate}</TableCell>
-                <TableCell>{promotion.type}</TableCell>
-                <TableCell>{promotion.value}</TableCell>
-                <TableCell>{promotion.active ? 'Hiệu lực' : 'Không hiệu lực'}</TableCell>
-                <TableCell>{promotion.notes}</TableCell>
+            {paginatedVouchers.map((voucher) => (
+              <TableRow key={voucher._id}>
+                <TableCell>{voucher.voucher_name}</TableCell>
+                <TableCell>{voucher.usage_conditions || 'N/A'}</TableCell>
+                <TableCell>{formatDate(voucher.start_date) || 'N/A'}</TableCell>
+                <TableCell>{formatDate(voucher.expiry_date) || 'N/A'}</TableCell>
+                <TableCell>{voucher.voucher_code || 'N/A'}</TableCell>
+                <TableCell>{voucher.max_discount_value || 'N/A'}</TableCell>
+                <TableCell>{voucher.status === 'active' ? 'Hiệu lực' : 'Không hiệu lực'}</TableCell>
+                <TableCell>{voucher.quantity}</TableCell>
                 <TableCell>
-                  <Button onClick={() => handleOpenDialog(promotion)}>Sửa</Button>
-                  <Button onClick={() => handleDeletePromotion(promotion.id)} color="error">
+                  <Button onClick={() => handleOpenDialog(voucher)}>Sửa</Button>
+                  <Button onClick={() => handleDeletePromotion(voucher._id)} color="error">
                     Xóa
                   </Button>
                 </TableCell>
@@ -234,73 +284,169 @@ const PromotionManagement = () => {
             ))}
           </TableBody>
         </Table>
+
+        <TablePagination
+          component="div"
+          count={filteredVouchers.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số hàng mỗi trang"
+        />
       </TableContainer>
 
       {/* Dialog cho Thêm/Sửa Khuyến Mãi */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{selectedPromotion ? 'Sửa Khuyến Mãi' : 'Thêm Khuyến Mãi'}</DialogTitle>
         <DialogContent>
-          <TextField
-            label="Tên Khuyến Mãi"
-            fullWidth
-            value={selectedPromotion ? selectedPromotion.name : ''}
-            onChange={(e) => setSelectedPromotion({ ...selectedPromotion, name: e.target.value })}
-          />
-          <TextField
-            label="Mô Tả"
-            fullWidth
-            value={selectedPromotion ? selectedPromotion.description : ''}
-            onChange={(e) => setSelectedPromotion({ ...selectedPromotion, description: e.target.value })}
-          />
-          <TextField
-            label="Thời Gian Bắt Đầu"
-            type="date"
-            fullWidth
-            value={selectedPromotion ? selectedPromotion.startDate : ''}
-            onChange={(e) => setSelectedPromotion({ ...selectedPromotion, startDate: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Thời Gian Kết Thúc"
-            type="date"
-            fullWidth
-            value={selectedPromotion ? selectedPromotion.endDate : ''}
-            onChange={(e) => setSelectedPromotion({ ...selectedPromotion, endDate: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <FormControl fullWidth>
-            <InputLabel>Loại Khuyến Mãi</InputLabel>
-            <Select
-              value={selectedPromotion ? selectedPromotion.type : ''}
-              onChange={(e) => setSelectedPromotion({ ...selectedPromotion, type: e.target.value })}
-            >
-              <MenuItem value="Giảm Giá">Giảm Giá</MenuItem>
-              <MenuItem value="Tặng Sản Phẩm">Tặng Sản Phẩm</MenuItem>
-              <MenuItem value="Miễn Phí Vận Chuyển">Miễn Phí Vận Chuyển</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="Giá Trị"
-            fullWidth
-            value={selectedPromotion ? selectedPromotion.value : ''}
-            onChange={(e) => setSelectedPromotion({ ...selectedPromotion, value: e.target.value })}
-          />
-          <TextField
-            label="Ghi Chú"
-            fullWidth
-            value={selectedPromotion ? selectedPromotion.notes : ''}
-            onChange={(e) => setSelectedPromotion({ ...selectedPromotion, notes: e.target.value })}
-          />
-          <FormControl fullWidth style={{ marginTop: '16px' }}>
-            <InputLabel>Trạng Thái</InputLabel>
-            <Select
-              value={selectedPromotion ? selectedPromotion.active : true}
-              onChange={(e) => setSelectedPromotion({ ...selectedPromotion, active: e.target.value })}
-            >
-              <MenuItem value={true}>Hiệu lực</MenuItem>
-              <MenuItem value={false}>Không hiệu lực</MenuItem>
-            </Select>
-          </FormControl>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                required
+                label="Tên Voucher"
+                name="voucher_name"
+                placeholder="Nhập tên voucher"
+                fullWidth
+                value={selectedPromotion ? selectedPromotion.voucher_name : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, voucher_name: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Số Lượng"
+                fullWidth
+                type="number"
+                name="quantity"
+                value={selectedPromotion ? selectedPromotion.quantity : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, quantity: e.target.value })}
+                placeholder="Nhập số lượng"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Giá Trị Giảm Giá"
+                fullWidth
+                type="number"
+                name="discount_value"
+                value={selectedPromotion ? selectedPromotion.discount_value : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, discount_value: e.target.value })}
+                placeholder="Nhập giá trị giảm giá"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Mã Voucher"
+                fullWidth
+                name="voucher_code"
+                value={selectedPromotion ? selectedPromotion.voucher_code : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, voucher_code: e.target.value })}
+                placeholder="Nhập mã voucher"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Thời Gian Bắt Đầu"
+                type="date"
+                fullWidth
+                name="startDate"
+                value={selectedPromotion ? selectedPromotion.startDate : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, startDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Thời Gian Kết Thúc"
+                type="date"
+                fullWidth
+                name="endDate"
+                value={selectedPromotion ? selectedPromotion.endDate : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, endDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Giá Trị đơn hàng nhỏ nhất"
+                fullWidth
+                required
+                type="number"
+                name="min_order_value"
+                value={selectedPromotion ? selectedPromotion.min_order_value : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, min_order_value: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Giá Trị giảm lớn nhất"
+                fullWidth
+                required
+                type="number"
+                name="max_discount_value"
+                value={selectedPromotion ? selectedPromotion.max_discount_value : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, max_discount_value: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Điều kiện sử dụng"
+                fullWidth
+                required
+                type="text"
+                name="usage_conditions"
+                value={selectedPromotion ? selectedPromotion.usage_conditions : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_conditions: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Phạm vi sử dụng</InputLabel>
+                <Select
+                  value={selectedPromotion ? selectedPromotion.usage_scope : true}
+                  onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_scope: e.target.value })}
+                >
+                  <MenuItem value="toan_quoc">Toàn quốc</MenuItem>
+                  <MenuItem value="giay_cao_got">Giày cao gót</MenuItem>
+                  <MenuItem value="giay_the_thao">Giày thể thao</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Trạng Thái</InputLabel>
+                <Select
+                  value={selectedPromotion ? selectedPromotion.status : true}
+                  onChange={(e) => setSelectedPromotion({ ...selectedPromotion, status: e.target.value })}
+                >
+                  <MenuItem value={true}>Hiệu lực</MenuItem>
+                  <MenuItem value={false}>Không hiệu lực</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <input accept="image/*" type="file" style={{ width: '100%' }} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Chơi Mini Game"
+                fullWidth
+                select
+                name="isInMiniGame"
+                value={selectedPromotion ? selectedPromotion.isInMiniGame : true}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, isInMiniGame: e.target.value })}
+                SelectProps={{ native: true }}
+              >
+                <option value={false}>Không</option>
+                <option value={true}>Có</option>
+              </TextField>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Hủy</Button>
