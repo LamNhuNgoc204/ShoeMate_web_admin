@@ -13,7 +13,7 @@ const dashboard = {
   children: [
     {
       id: 'default',
-      title: 'Bảng điều khiển',
+      title: 'Trang chủ',
       type: 'item',
       url: '/dashboard',
       icon: icons.IconHome,
