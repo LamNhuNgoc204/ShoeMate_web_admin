@@ -31,7 +31,7 @@ const utilities = {
     },
     {
       id: 'qlkhuyenmai',
-      title: 'Quản lý khuyến mãi',
+      title: 'Quản lý mã khuyến mãi',
       type: 'item',
       url: '/sanpham/qlkhuyenmai',
       icon: icons.IconShoppingCartDiscount,

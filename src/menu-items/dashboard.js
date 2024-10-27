@@ -8,7 +8,7 @@ const icons = { IconHome };
 
 const dashboard = {
   id: 'dashboard',
-  title: 'Dashboard',
+  title: 'SHOEMATE - Mỗi bước đi - Một dấu ấn',
   type: 'group',
   children: [
     {

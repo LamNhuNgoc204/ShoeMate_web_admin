@@ -7,7 +7,7 @@ import user from './user';
 // ==============================|| MENU ITEMS ||============================== //
 
 const menuItems = {
-  items: [dashboard, sanpham, order, user, pages]
+  items: [dashboard, sanpham, order, user]
 };
 
 export default menuItems;
