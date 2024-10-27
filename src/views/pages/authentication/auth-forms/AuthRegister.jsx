@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
-import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import TextField from '@mui/material/TextField';
+import Snackbar from '@mui/material/Snackbar';
 
 // third party
 import * as Yup from 'yup';
@@ -26,20 +23,17 @@ import { strengthColor, strengthIndicator } from 'utils/password-strength';
 // assets
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-
-// ===========================|| FIREBASE - REGISTER ||=========================== //
+import AxiosInstance from 'helper/AxiosInstance';
+import { useNavigate } from 'react-router-dom';
 
 const AuthRegister = ({ ...others }) => {
   const theme = useTheme();
-  const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const [showPassword, setShowPassword] = useState(false);
-
   const [strength, setStrength] = useState(0);
   const [level, setLevel] = useState();
-
-  const googleHandler = async () => {
-    console.error('Register');
-  };
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -59,9 +53,34 @@ const AuthRegister = ({ ...others }) => {
     changePassword('123456');
   }, []);
 
+  const handleChangePass = async (values) => {
+    try {
+      const body = {
+        email: values.email,
+        newPass: values.password
+      };
+      console.log('body pass ', body);
+
+      const response = await AxiosInstance().post('/admins/change-password', body);
+      if (response.status) {
+        setSnackbarMessage('Đổi mật khẩu thành công!');
+        setSnackbarOpen(true);
+        navigate('/pages/login/login3', { replace: true });
+      }
+    } catch (error) {
+      setSnackbarMessage('Có lỗi xảy ra khi đổi mật khẩu.');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
     <>
       <Formik
+        autoComplete="off"
         initialValues={{
           email: '',
           password: '',
@@ -71,35 +90,15 @@ const AuthRegister = ({ ...others }) => {
           email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
           password: Yup.string().max(255).required('Password is required')
         })}
+        onSubmit={(values, { setSubmitting }) => {
+          handleChangePass(values);
+          setSubmitting(false);
+        }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
-            <Grid container spacing={matchDownSM ? 0 : 2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="First Name"
-                  margin="normal"
-                  name="fname"
-                  type="text"
-                  defaultValue=""
-                  sx={{ ...theme.typography.customInput }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Last Name"
-                  margin="normal"
-                  name="lname"
-                  type="text"
-                  defaultValue=""
-                  sx={{ ...theme.typography.customInput }}
-                />
-              </Grid>
-            </Grid>
             <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-email-register">Email Address / Username</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-email-register">Email</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-email-register"
                 type="email"
@@ -117,7 +116,7 @@ const AuthRegister = ({ ...others }) => {
             </FormControl>
 
             <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-password-register">Password</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-password-register">Mật khẩu mới</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-password-register"
                 type={showPassword ? 'text' : 'password'}
@@ -163,13 +162,15 @@ const AuthRegister = ({ ...others }) => {
                   variant="contained"
                   color="secondary"
                 >
-                  Sign up
+                  Đổi mật khẩu
                 </Button>
               </AnimateButton>
             </Box>
           </form>
         )}
       </Formik>
+
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose} message={snackbarMessage} />
     </>
   );
 };

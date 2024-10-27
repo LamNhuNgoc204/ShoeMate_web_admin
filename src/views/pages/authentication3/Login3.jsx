@@ -34,10 +34,10 @@ const Login = () => {
                       <Grid item>
                         <Stack alignItems="center" justifyContent="center" spacing={1}>
                           <Typography color="#2196f3" gutterBottom variant={downMD ? 'h3' : 'h2'}>
-                            Hi, Welcome Back
+                            Hi, Chào mừng sự trở lại của bạn
                           </Typography>
                           <Typography color="#2196f3" variant="caption" fontSize="16px" textAlign={{ xs: 'center', md: 'inherit' }}>
-                            Enter your credentials to continue
+                            Nhập thông tin xác thực của bạn để tiếp tục
                           </Typography>
                         </Stack>
                       </Grid>
@@ -51,8 +51,14 @@ const Login = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Grid item container direction="column" alignItems="center" xs={12}>
-                      <Typography color="#2196f3" component={Link} to="/pages/register/register3" variant="subtitle1" sx={{ textDecoration: 'none' }}>
-                        Don&apos;t have an account?
+                      <Typography
+                        color="#2196f3"
+                        component={Link}
+                        to="/pages/register/register3"
+                        variant="subtitle1"
+                        sx={{ textDecoration: 'none' }}
+                      >
+                        Quên mật khẩu?
                       </Typography>
                     </Grid>
                   </Grid>

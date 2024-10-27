@@ -12,7 +12,6 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 
 // third party
@@ -28,12 +27,15 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logIn } from 'redux/thunks/userThunk';
+import { Snackbar } from '@mui/material';
 
 // ============================||  LOGIN ||============================ //
 
 const AuthLogin = ({ ...others }) => {
   const theme = useTheme();
   const [checked, setChecked] = useState(true);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
   const handleClickShowPassword = () => {
@@ -49,6 +51,10 @@ const AuthLogin = ({ ...others }) => {
   const user = useSelector((state) => state.users);
 
   console.log('User after login:', user);
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   return (
     <>
@@ -70,10 +76,14 @@ const AuthLogin = ({ ...others }) => {
 
             if (result.user.role === 'admin' || result.user.role === 'employee') {
               console.log('Admin login successful:', result.user.role);
+              setSnackbarMessage('Đăng nhập thành công!');
+              setSnackbarOpen(true);
               navigate('/dashboard');
             } else {
               console.log('Admin login successful:', result.user.role);
               console.log('Access denied. Not an admin.');
+              setSnackbarMessage('Lỗi đăng nhập. Thử lại sau!');
+              setSnackbarOpen(true);
               setErrors({ submit: 'You do not have permission to access this page.' });
             }
           } catch (error) {
@@ -86,7 +96,7 @@ const AuthLogin = ({ ...others }) => {
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
             <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-email-login">Email Address / Username</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-email-login">Email:</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-email-login"
                 type="email"
@@ -105,7 +115,7 @@ const AuthLogin = ({ ...others }) => {
             </FormControl>
 
             <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-password-login">Password</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-password-login">Mật khẩu:</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-password-login"
                 type={showPassword ? 'text' : 'password'}
@@ -140,11 +150,8 @@ const AuthLogin = ({ ...others }) => {
                 control={
                   <Checkbox checked={checked} onChange={(event) => setChecked(event.target.checked)} name="checked" color="primary" />
                 }
-                label="Remember me"
+                label="Ghi nhớ tài khoản"
               />
-              <Typography variant="subtitle1" color="#2196f3" sx={{ textDecoration: 'none', cursor: 'pointer' }}>
-                Forgot Password?
-              </Typography>
             </Stack>
             {errors.submit && (
               <Box sx={{ mt: 3 }}>
@@ -165,13 +172,14 @@ const AuthLogin = ({ ...others }) => {
                   color="secondary"
                   onClick={() => handleSubmit()}
                 >
-                  Sign in
+                  Đăng nhập
                 </Button>
               </AnimateButton>
             </Box>
           </form>
         )}
       </Formik>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose} message={snackbarMessage} />
     </>
   );
 };

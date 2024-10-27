@@ -47,7 +47,23 @@ const ProfileSection = () => {
   const anchorRef = useRef(null);
   const handleLogout = async () => {
     console.log('Logout');
+    // Xử lý logic logout như xóa token hoặc session
+    navigate('/pages/login/login3', { replace: true }); // Chuyển hướng đến trang login và thay thế trang hiện tại
   };
+
+  useEffect(() => {
+    // Chặn hành động quay lại bằng cách lắng nghe sự kiện "popstate"
+    const handlePopState = () => {
+      navigate('/pages/login/login3', { replace: true });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup event listener khi component bị unmount
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
 
   const handleClose = (event) => {
     if (anchorRef.current && anchorRef.current.contains(event.target)) {

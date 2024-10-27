@@ -36,10 +36,10 @@ const Register = () => {
                       <Grid item>
                         <Stack alignItems="center" justifyContent="center" spacing={1}>
                           <Typography color="#2196f3" gutterBottom variant={downMD ? 'h3' : 'h2'}>
-                            Sign up
+                            Quên mật khẩu
                           </Typography>
                           <Typography variant="caption" fontSize="16px" textAlign={{ xs: 'center', md: 'inherit', color: '#2196f3' }}>
-                            Enter your credentials to continue
+                            Nhập thông tin xác thực của bạn để tiếp tục
                           </Typography>
                         </Stack>
                       </Grid>
@@ -60,7 +60,7 @@ const Register = () => {
                         variant="subtitle1"
                         sx={{ textDecoration: 'none' }}
                       >
-                        Already have an account?
+                        Về trang đăng nhập
                       </Typography>
                     </Grid>
                   </Grid>
