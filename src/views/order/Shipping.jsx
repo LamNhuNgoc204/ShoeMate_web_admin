@@ -128,7 +128,7 @@ const ShippingManagement = () => {
               <TableCell>Địa Chỉ</TableCell>
               <TableCell>Trạng Thái</TableCell>
               <TableCell>Ngày Giao Hàng Dự Kiến</TableCell>
-              <TableCell>Hình Ảnh Trạng Thái</TableCell>
+              <TableCell>Đơn vị vận chuyển</TableCell>
               <TableCell>Thao Tác</TableCell>
             </TableRow>
           </TableHead>

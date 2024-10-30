@@ -777,7 +777,7 @@ const InventoryManagement = () => {
                           Sửa
                         </Button>
                         <Button style={{ marginTop: 10 }} variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
-                          Xóa
+                          Ngừng bán
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -981,6 +981,7 @@ const InventoryManagement = () => {
                     <Button onClick={() => handleOpenEditCateDialog(category._id, category.name, category.image, category.description)}>
                       Chỉnh sửa
                     </Button>
+                    <Button>Xóa</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -1035,6 +1036,7 @@ const InventoryManagement = () => {
                   <TableCell>
                     <Button onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
                     <Button onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}>Chỉnh sửa</Button>
+                    <Button>Xóa</Button>
                   </TableCell>
                 </TableRow>
               ))}

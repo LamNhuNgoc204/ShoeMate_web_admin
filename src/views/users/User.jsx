@@ -192,6 +192,7 @@ const UserManagement = () => {
                   <TableCell>{user.role}</TableCell>
                   <TableCell>
                     <Button onClick={() => handleOpenDialogRole(user)}>Chỉnh Sửa Role</Button>
+                    <Button>Ngừng hoạt động</Button>
                   </TableCell>
                 </TableRow>
               ))}

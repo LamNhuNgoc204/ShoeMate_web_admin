@@ -23,7 +23,7 @@ const utilities = {
     },
     {
       id: 'qltonkho',
-      title: 'Quản lý kho hàng',
+      title: 'Kho hàng',
       type: 'item',
       url: '/sanpham/qltonkho',
       icon: icons.IconPackages,
@@ -31,7 +31,7 @@ const utilities = {
     },
     {
       id: 'qlkhuyenmai',
-      title: 'Quản lý mã khuyến mãi',
+      title: 'Khuyến mãi',
       type: 'item',
       url: '/sanpham/qlkhuyenmai',
       icon: icons.IconShoppingCartDiscount,
