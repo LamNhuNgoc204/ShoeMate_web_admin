@@ -6,7 +6,7 @@ const icons = { IconUsers, IconStars };
 
 const user = {
   id: 'sample-docs-roadmap',
-  title: 'Quản lý người dùng',
+  title: 'Khác',
   type: 'group',
   children: [
     {

@@ -1,5 +1,5 @@
 import MainCard from 'ui-component/cards/MainCard';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -21,56 +21,69 @@ import {
   Select,
   InputLabel,
   MenuItem,
-  Typography
+  Typography,
+  Pagination
 } from '@mui/material';
+import AxiosInstance from 'helper/AxiosInstance';
+import { formatDate } from 'utils/date';
 
 const OrderManagement = () => {
-  const sampleOrders = [
-    {
-      _id: '1',
-      order_code: 'OD001',
-      customer_name: 'Nguyễn Văn A',
-      total_amount: 500000,
-      status: 'pending',
-      createdAt: '2024-10-01T10:00:00Z',
-      notes: 'Ghi chú đơn hàng 1'
-    },
-    {
-      _id: '2',
-      order_code: 'OD002',
-      customer_name: 'Trần Thị B',
-      total_amount: 300000,
-      status: 'completed',
-      createdAt: '2024-10-02T11:00:00Z',
-      notes: 'Ghi chú đơn hàng 2'
-    },
-    {
-      _id: '3',
-      order_code: 'OD003',
-      customer_name: 'Lê Văn C',
-      total_amount: 700000,
-      status: 'canceled',
-      createdAt: '2024-10-03T12:00:00Z',
-      notes: 'Ghi chú đơn hàng 3'
-    },
-    {
-      _id: '4',
-      order_code: 'OD004',
-      customer_name: 'Phạm Văn D',
-      total_amount: 450000,
-      status: 'pending',
-      createdAt: '2024-10-04T13:00:00Z',
-      notes: 'Ghi chú đơn hàng 4'
-    }
-  ];
-
-  const [orders, setOrders] = useState(sampleOrders);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [filterStatus, setFilterStatus] = useState('all');
+
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [orderRenturn, setOrderRenturn] = useState([]);
+  const [orderComplete, setOrderComplete] = useState([]);
+  const [orderCancel, setOrderCancel] = useState([]);
+  const [data, setData] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState(data);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await AxiosInstance().get('/orders/get-all-orders');
+        if (response.status) {
+          setData(response.data);
+          // Initial filter
+          setFilteredOrders(response.data);
+          updateOrderCounts(response.data);
+        }
+      } catch (error) {
+        console.log('error get data order: ', error);
+      }
+    };
+
+    const updateOrderCounts = (orders) => {
+      setPendingOrders(orders.filter((item) => item.status === 'pending'));
+      setOrderRenturn(orders.filter((item) => item.returnRequest && item.returnRequest.status === 'pending'));
+      setOrderCancel(orders.filter((item) => item.status === 'cancelled'));
+      setOrderComplete(orders.filter((item) => item.status === 'completed'));
+    };
+
+    fetchData();
+  }, []);
+
+  console.log('data orders =>>>>', data);
+
+  useEffect(() => {
+    if (filterStatus === 'all') {
+      setFilteredOrders(data);
+    } else {
+      setFilteredOrders(data.filter((order) => order.status === filterStatus));
+    }
+  }, [filterStatus, data]);
+
+  const [currentOrderPage, setCurrentOrderPage] = useState(1);
+  const itemsPerPageOrder = 10;
+  const paginatedOrder = filteredOrders.slice((currentOrderPage - 1) * itemsPerPageOrder, currentOrderPage * itemsPerPageOrder);
+
+  const handlePageOrderChange = (_, value) => {
+    setCurrentOrderPage(value);
+  };
 
   const handleOpenDialog = (order) => {
     setSelectedOrder(order);
@@ -82,96 +95,120 @@ const OrderManagement = () => {
     setSelectedOrder(null);
   };
 
-  const handleUpdateStatus = async (status) => {
-    // Cập nhật trạng thái đơn hàng mẫu
-    const updatedOrders = orders.map((order) => (order._id === selectedOrder._id ? { ...order, status } : order));
-    setOrders(updatedOrders);
-    handleCloseDialog();
-    setSnackbarMessage('Cập nhật trạng thái thành công!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
+  const handleUpdateStatus = async (status, orderId) => {
+    if (status === 'processing') {
+      try {
+        const response = await AxiosInstance().put(`/orders/confirm-order/${orderId}`, { status: 'processing' });
+        if (response.status) {
+          const updatedOrders = pendingOrders.filter((order) => order._id !== selectedOrder._id);
+          setPendingOrders(updatedOrders);
+          handleCloseDialog();
+          setSnackbarMessage('Đơn hàng đã được xác nhận!');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
+        }
+      } catch (error) {
+        console.log('Xac nhan don failed');
+        setSnackbarMessage('Lỗi server!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    } else if (status === 'cancelled') {
+      try {
+        const response = await AxiosInstance().put(`/orders/confirm-order/${orderId}`, { status: 'cancelled' });
+        if (response.status) {
+          const updatedOrders = pendingOrders.filter((order) => order._id !== selectedOrder._id);
+          setPendingOrders(updatedOrders);
+          setOrderCancel((prev) => [...prev, selectedOrder]);
+          handleCloseDialog();
+          setSnackbarMessage('Đơn hàng đã bị hủy!');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
+        }
+      } catch (error) {
+        console.log('Huy don failed');
+        setSnackbarMessage('Lỗi server!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    }
   };
 
-  const handleDeleteOrder = async (id) => {
-    const updatedOrders = orders.filter((order) => order._id !== id);
-    setOrders(updatedOrders);
-    setSnackbarMessage('Xóa đơn hàng thành công!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-  };
-
-  const handleConfirmReturn = async () => {
+  const handleConfirmReturn = async (status) => {
     // Xác nhận hoàn hàng
-    const updatedOrders = orders.map((order) => (order._id === selectedOrder._id ? { ...order, status: 'returned' } : order));
-    setOrders(updatedOrders);
     handleCloseDialog();
     setSnackbarMessage('Xác nhận hoàn hàng thành công!');
     setSnackbarSeverity('success');
     setSnackbarOpen(true);
   };
 
-  const handleDeclineReturn = async () => {
-    const updatedOrders = orders.map((order) => (order._id === selectedOrder._id ? { ...order, status: 'return declined' } : order));
-    setOrders(updatedOrders);
+  const handleDeclineReturn = async (status) => {
     handleCloseDialog();
     setSnackbarMessage('Từ chối yêu cầu hoàn hàng thành công!');
     setSnackbarSeverity('info');
     setSnackbarOpen(true);
   };
 
-  // Hàm để lọc đơn hàng theo trạng thái
   const handleFilterChange = (event) => {
     const value = event.target.value;
     setFilterStatus(value);
-    const filtered = value === 'all' ? orders : orders.filter((order) => order.status === value);
+    const filtered = value === 'all' ? data : data.filter((order) => order.status === value);
     setFilteredOrders(filtered);
   };
 
-  // Hàm xuất báo cáo đơn hàng
-  const handleExportReport = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      filteredOrders
-        .map((order) => {
-          return `${order.order_code},${order.customer_name},${order.total_amount},${order.status},${new Date(order.createdAt).toLocaleDateString()},${order.notes}`;
-        })
-        .join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'orders_report.csv');
-    document.body.appendChild(link);
-    link.click();
-  };
+  console.log('selectedOrder==>', selectedOrder);
 
   return (
     <MainCard title="QUẢN LÝ ĐƠN HÀNG">
-      <FormControl fullWidth>
-        <TextField label="Search đơn hàng" variant="outlined" />
-      </FormControl>
-      <Grid container sx={{ marginTop: 2, alignItems: 'center', marginBottom: 5 }}>
-        <Grid item xs={16} md={4}>
-          <FormControl fullWidth>
-            <InputLabel id="filter-label">Trạng Thái</InputLabel>
-            <Select labelId="filter-label" value={filterStatus} onChange={handleFilterChange}>
-              <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="pending">Đang xử lý</MenuItem>
-              <MenuItem value="completed">Đã hoàn thành</MenuItem>
-              <MenuItem value="canceled">Đã hủy</MenuItem>
-            </Select>
-          </FormControl>
+      <div>
+        <Grid container spacing={1}>
+          <Grid item xs={3}>
+            <Paper elevation={3} sx={{ padding: 2 }}>
+              <Typography variant="h6">Đơn Đã Hoàn Thành</Typography>
+              <Typography variant="h4">{orderComplete.length}</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={3}>
+            <Paper elevation={3} sx={{ padding: 2 }}>
+              <Typography variant="h6">Đơn Đã Hủy</Typography>
+              <Typography variant="h4">{orderCancel.length}</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={3}>
+            <Paper elevation={3} sx={{ padding: 2 }}>
+              <Typography variant="h6">Đơn Đang Xử Lý</Typography>
+              <Typography variant="h4">{pendingOrders.length}</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={3}>
+            <Paper elevation={3} sx={{ padding: 2 }}>
+              <Typography variant="h6">Yêu Cầu Hoàn hàng</Typography>
+              <Typography variant="h4">{orderRenturn.length}</Typography>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item xs={8} md={4} style={{ marginLeft: 20 }}>
-          <Button variant="contained" onClick={handleExportReport} color="primary">
-            Xuất Báo Cáo
-          </Button>
-        </Grid>
-      </Grid>
+        <FormControl fullWidth style={{ marginTop: 10 }}>
+          <Grid item xs={24} md={4} style={{ marginBlock: 20 }}>
+            <FormControl fullWidth>
+              <InputLabel id="filter-label">Trạng Thái</InputLabel>
+              <Select labelId="filter-label" value={filterStatus} onChange={handleFilterChange}>
+                <MenuItem value="all">Tất cả</MenuItem>
+                <MenuItem value="pending">Đang chờ xác nhận</MenuItem>
+                <MenuItem value="processing">Đang chuẩn bị đơn hàng</MenuItem>
+                <MenuItem value="completed">Đã hoàn thành</MenuItem>
+                <MenuItem value="cancelled">Đã hủy</MenuItem>
+                <MenuItem value="refunded">Hoàn hàng</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </FormControl>
+      </div>
 
+      {/* TẤT CẢ ĐƠN HÀNG */}
       <TableContainer component={Paper}>
-        <Typography variant="h2" align="center" sx={{ padding: 2 }}>
-          BẢNG THỐNG KÊ ĐƠN HÀNG
-        </Typography>
+        {/* <Typography variant="h2" align="center" sx={{ padding: 2 }}>
+          QUẢN LÝ ĐƠN HÀNG
+        </Typography> */}
         <Table>
           <TableHead>
             <TableRow>
@@ -184,23 +221,36 @@ const OrderManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {orders.map((order) => (
+            {paginatedOrder.map((order) => (
               <TableRow key={order._id}>
-                <TableCell>{order.order_code}</TableCell>
-                <TableCell>{order.customer_name}</TableCell>
-                <TableCell>{order.total_amount} VND</TableCell>
-                <TableCell>{order.status}</TableCell>
-                <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>{order._id && order._id.slice(0, 5) && order._id.slice(0, 8).toUpperCase()}</TableCell>
+                <TableCell>{order.receiver}</TableCell>
+                <TableCell>{order.total_price && order.total_price.toLocaleString('vi-VN')} VND</TableCell>
+                <TableCell>
+                  {order.status === 'pending'
+                    ? 'Đang chờ xử lý'
+                    : order.status === 'processing'
+                      ? 'Đang chuẩn bị đơn hàng'
+                      : order.status === 'completed'
+                        ? 'Đã hoàn thành'
+                        : order.status === 'cancelled'
+                          ? 'Đã hủy'
+                          : 'Hoàn hàng'}
+                </TableCell>
+                <TableCell>{order.timestamps && order.timestamps.placedAt && formatDate(order.timestamps.placedAt)}</TableCell>
                 <TableCell>
                   <Button onClick={() => handleOpenDialog(order)}>Xem Chi Tiết</Button>
-                  <Button onClick={() => handleDeleteOrder(order._id)} color="error">
-                    Xóa
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        <Pagination
+          count={Math.ceil(filteredOrders.length / itemsPerPageOrder)}
+          page={currentOrderPage}
+          onChange={handlePageOrderChange}
+          style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
+        />
       </TableContainer>
 
       {/* Dialog cho Chi Tiết Đơn Hàng */}
@@ -210,13 +260,23 @@ const OrderManagement = () => {
           {selectedOrder && (
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField label="Mã Đơn Hàng" fullWidth value={selectedOrder.order_code} disabled />
+                <TextField
+                  label="Mã Đơn Hàng"
+                  fullWidth
+                  value={selectedOrder._id && selectedOrder._id.slice(0, 5) && selectedOrder._id.slice(0, 8).toUpperCase()}
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Tên Khách Hàng" fullWidth value={selectedOrder.customer_name} disabled />
+                <TextField label="Tên Khách Hàng" fullWidth value={selectedOrder.receiver} disabled />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Tổng Giá Trị" fullWidth value={`${selectedOrder.total_amount} VND`} disabled />
+                <TextField
+                  label="Tổng Giá Trị"
+                  fullWidth
+                  value={`${selectedOrder.total_price && selectedOrder.total_price.toLocaleString('vi-VN')} VND`}
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField label="Trạng Thái" fullWidth value={selectedOrder.status} disabled />
@@ -225,23 +285,72 @@ const OrderManagement = () => {
                 <TextField label="Ngày Đặt Hàng" fullWidth value={new Date(selectedOrder.createdAt).toLocaleDateString()} disabled />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Ghi Chú" fullWidth multiline rows={4} value={selectedOrder.notes || ''} disabled />
+                <TextField
+                  label="Ghi Chú"
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={selectedOrder.notes ? selectedOrder.notes : 'Không có ghi chú'}
+                  disabled
+                />
+              </Grid>
+
+              {/* Hiện sp */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  Chi Tiết Sản Phẩm
+                </Typography>
+                {selectedOrder.orderDetails &&
+                  selectedOrder.orderDetails.map((detail, index) => (
+                    <Grid container key={index} alignItems="center" style={{ marginBottom: 20 }}>
+                      <Grid item xs={2}>
+                        {detail.product.pd_image.length > 0 ? (
+                          <img
+                            src={detail.product.pd_image[0]}
+                            alt={detail.product.name}
+                            style={{ width: '70px', height: '70px', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <img src={'../../assets/images/no_img.png'} style={{ width: '70px', height: '70px', borderRadius: '4px' }} />
+                        )}
+                      </Grid>
+                      <Grid item xs={9}>
+                        <Typography variant="body1">{detail.product.name}</Typography>
+                        <Typography variant="body2">Số lượng: {detail.product.pd_quantity}</Typography>
+                        <Typography variant="body2">Size: {detail.product.size_name}</Typography>
+                      </Grid>
+                    </Grid>
+                  ))}
+              </Grid>
+
+              <Grid item xs={12}>
+                {selectedOrder.status === 'pending' && (
+                  <div>
+                    <Button
+                      variant="contained"
+                      onClick={() => handleUpdateStatus('processing', selectedOrder._id)}
+                      color="success"
+                      style={{ marginRight: '10px' }}
+                    >
+                      Xác Nhận Đơn Hàng
+                    </Button>
+                    <Button variant="contained" onClick={() => handleUpdateStatus('cancelled', selectedOrder._id)} color="error">
+                      Hủy Đơn Hàng
+                    </Button>
+                  </div>
+                )}
               </Grid>
               <Grid item xs={12}>
-                <Button variant="contained" onClick={() => handleUpdateStatus('completed')} color="success" style={{ marginRight: '10px' }}>
-                  Xác Nhận Đơn Hàng
-                </Button>
-                <Button variant="contained" onClick={() => handleUpdateStatus('canceled')} color="error">
-                  Hủy Đơn Hàng
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Button variant="contained" onClick={handleConfirmReturn} color="primary" style={{ marginRight: '10px' }}>
-                  Xác Nhận Hoàn Hàng
-                </Button>
-                <Button variant="contained" onClick={handleDeclineReturn} color="secondary">
-                  Từ Chối Hoàn Hàng
-                </Button>
+                {selectedOrder.returnRequest && selectedOrder.returnRequest.status === 'pending' && (
+                  <div>
+                    <Button variant="contained" onClick={handleConfirmReturn('accepted')} color="primary" style={{ marginRight: '10px' }}>
+                      Xác Nhận Hoàn Hàng
+                    </Button>
+                    <Button variant="contained" onClick={handleDeclineReturn('rejected')} color="secondary">
+                      Từ Chối Hoàn Hàng
+                    </Button>
+                  </div>
+                )}
               </Grid>
             </Grid>
           )}

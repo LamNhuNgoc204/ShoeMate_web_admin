@@ -183,7 +183,7 @@ const UserManagement = () => {
           </TableHead>
           <TableBody>
             {filteredUsers
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ hiển thị người dùng theo trang
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) 
               .map((user, index) => (
                 <TableRow key={index + 1}>
                   <TableCell>{user.email}</TableCell>
