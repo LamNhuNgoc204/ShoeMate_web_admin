@@ -20,6 +20,11 @@ const statusOptions = [
   { value: 'year', label: 'Year' }
 ];
 
+const offsetOptionsDay = [
+  { value: 0, label: 'Today' },
+
+];
+
 const offsetOptionsWeek = [
   { value: 0, label: 'Week Present' },
   { value: 1, label: '1 Week Ago' },
@@ -72,6 +77,9 @@ const TotalGrowthBarChart = ({ isLoading }) => {
     };
     if (value === 'year') {
       return offsetOptionsYear
+    };
+    if (value === 'day') {
+      return offsetOptionsDay
     };
     return [];
   };
