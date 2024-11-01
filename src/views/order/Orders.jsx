@@ -134,19 +134,40 @@ const OrderManagement = () => {
     }
   };
 
-  const handleConfirmReturn = async (status) => {
-    // Xác nhận hoàn hàng
-    handleCloseDialog();
-    setSnackbarMessage('Xác nhận hoàn hàng thành công!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
+  const handleConfirmReturn = async (orderId) => {
+    try {
+      const response = await AxiosInstance().put(`/orders/return-request/${orderId}`, { status: 'accepted' });
+      if (response.status) {
+        handleCloseDialog();
+        setSnackbarMessage('Xác nhận hoàn hàng!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.log('Huy don failed');
+      handleCloseDialog();
+      setSnackbarMessage('Lỗi server!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };
 
-  const handleDeclineReturn = async (status) => {
-    handleCloseDialog();
-    setSnackbarMessage('Từ chối yêu cầu hoàn hàng thành công!');
-    setSnackbarSeverity('info');
-    setSnackbarOpen(true);
+  const handleDeclineReturn = async (orderId) => {
+    try {
+      const response = await AxiosInstance().put(`/orders/return-request/${orderId}`, { status: 'rejected' });
+      if (response.status) {
+        handleCloseDialog();
+        setSnackbarMessage('Từ chối yêu cầu hoàn hàng!');
+        setSnackbarSeverity('info');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      handleCloseDialog();
+      console.log('Huy don failed');
+      setSnackbarMessage('Lỗi server!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };
 
   const handleFilterChange = (event) => {
@@ -343,10 +364,15 @@ const OrderManagement = () => {
               <Grid item xs={12}>
                 {selectedOrder.returnRequest && selectedOrder.returnRequest.status === 'pending' && (
                   <div>
-                    <Button variant="contained" onClick={handleConfirmReturn('accepted')} color="primary" style={{ marginRight: '10px' }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleConfirmReturn(selectedOrder._id)}
+                      color="primary"
+                      style={{ marginRight: '10px' }}
+                    >
                       Xác Nhận Hoàn Hàng
                     </Button>
-                    <Button variant="contained" onClick={handleDeclineReturn('rejected')} color="secondary">
+                    <Button variant="contained" onClick={handleDeclineReturn(selectedOrder._id)} color="secondary">
                       Từ Chối Hoàn Hàng
                     </Button>
                   </div>
