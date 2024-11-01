@@ -1,44 +1,48 @@
 // ==============================|| DASHBOARD - BAJAJ AREA CHART ||============================== //
 
-const chartData = {
-  type: 'area',
-  height: 95,
-  options: {
-    chart: {
-      id: 'support-chart',
-      sparkline: {
-        enabled: true
-      }
-    },
-    dataLabels: {
-      enabled: false
-    },
-    stroke: {
-      curve: 'smooth',
-      width: 1
-    },
-    tooltip: {
-      fixed: {
-        enabled: false
+// chart-data.js
+
+const chartData = (products) => {
+  return {
+    type: 'area',
+    height: 95,
+    options: {
+      chart: {
+        id: 'support-chart',
+        sparkline: {
+          enabled: true,
+        },
       },
-      x: {
-        show: false
+      dataLabels: {
+        enabled: false,
       },
-      y: {
-        title: {
-          formatter: () => 'Ticket '
-        }
+      stroke: {
+        curve: 'smooth',
+        width: 1,
       },
-      marker: {
-        show: false
-      }
-    }
-  },
-  series: [
-    {
-      data: [0, 15, 10, 50, 30, 40, 25]
-    }
-  ]
+      tooltip: {
+        fixed: {
+          enabled: false,
+        },
+        x: {
+          show: false,
+        },
+        y: {
+          title: {
+            formatter: () => 'Top Product ',
+          },
+        },
+        marker: {
+          show: false,
+        },
+      },
+    },
+    series: [
+      {
+        data: products.map((product) => product.totalSold),
+      },
+    ],
+  };
 };
 
 export default chartData;

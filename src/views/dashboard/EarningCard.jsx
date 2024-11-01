@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { getStats } from 'api/dashboard'
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -18,10 +19,6 @@ import SkeletonEarningCard from 'ui-component/cards/Skeleton/EarningCard';
 import EarningIcon from 'assets/images/icons/earning.svg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import GetAppTwoToneIcon from '@mui/icons-material/GetAppOutlined';
-import FileCopyTwoToneIcon from '@mui/icons-material/FileCopyOutlined';
-import PictureAsPdfTwoToneIcon from '@mui/icons-material/PictureAsPdfOutlined';
-import ArchiveTwoToneIcon from '@mui/icons-material/ArchiveOutlined';
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
@@ -29,6 +26,9 @@ const EarningCard = ({ isLoading }) => {
   const theme = useTheme();
 
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [period, setSelectedPeriod] = React.useState('week');
+  const [income, setIncome] = React.useState(0);
+  const [loadingData, setLoadingData] = React.useState(false);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -38,9 +38,33 @@ const EarningCard = ({ isLoading }) => {
     setAnchorEl(null);
   };
 
+  const handlePeriodSelect = (period) => {
+    setSelectedPeriod(period);
+    handleClose(); 
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (period) {
+        setLoadingData(true);
+        try {
+          const response = await getStats({ period });  
+          console.log(response);
+          setIncome(response.totalRevenue);
+        } catch (error) {
+          console.error("Error fetching stats:", error);
+        } finally {
+          setLoadingData(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [period]);
+
   return (
     <>
-      {isLoading ? (
+      {isLoading || loadingData ? (
         <SkeletonEarningCard />
       ) : (
         <MainCard
@@ -123,18 +147,10 @@ const EarningCard = ({ isLoading }) => {
                         horizontal: 'right'
                       }}
                     >
-                      <MenuItem onClick={handleClose}>
-                        <GetAppTwoToneIcon sx={{ mr: 1.75 }} /> Import Card
-                      </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        <FileCopyTwoToneIcon sx={{ mr: 1.75 }} /> Copy Data
-                      </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        <PictureAsPdfTwoToneIcon sx={{ mr: 1.75 }} /> Export
-                      </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        <ArchiveTwoToneIcon sx={{ mr: 1.75 }} /> Archive File
-                      </MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('day')}>Day</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('week')}>Week</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('month')}>Month</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('year')}>Year</MenuItem>
                     </Menu>
                   </Grid>
                 </Grid>
@@ -142,7 +158,7 @@ const EarningCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container alignItems="center">
                   <Grid item>
-                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>$500.00</Typography>
+                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{income}</Typography>
                   </Grid>
                   <Grid item>
                     <Avatar
@@ -166,7 +182,7 @@ const EarningCard = ({ isLoading }) => {
                     color: 'secondary.200'
                   }}
                 >
-                  Total Earning
+                  Total Income
                 </Typography>
               </Grid>
             </Grid>
