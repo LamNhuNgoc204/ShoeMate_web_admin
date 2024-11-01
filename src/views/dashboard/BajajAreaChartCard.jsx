@@ -16,12 +16,16 @@ import chartData from './chart-data/bajaj-area-chart';
 
 // ===========================|| DASHBOARD DEFAULT - BAJAJ AREA CHART CARD ||=========================== //
 
-const BajajAreaChartCard = () => {
+const BajajAreaChartCard = ({ data }) => {
   const theme = useTheme();
   const orangeDark = theme.palette.secondary[800];
 
   const customization = useSelector((state) => state.customization);
   const { navType } = customization;
+
+  const chartDataNew = chartData(data);
+
+  const totalQuantitySold = data.reduce((total, product) => total + product.totalSold, 0)
 
   React.useEffect(() => {
     const newSupportChart = {
@@ -39,23 +43,18 @@ const BajajAreaChartCard = () => {
           <Grid container alignItems="center" justifyContent="space-between">
             <Grid item>
               <Typography variant="subtitle1" sx={{ color: 'secondary.dark' }}>
-                Bajaj Finery
+                Top Products
               </Typography>
             </Grid>
             <Grid item>
               <Typography variant="h4" sx={{ color: 'grey.800' }}>
-                $1839.00
+                Total Sold: {totalQuantitySold}
               </Typography>
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ color: 'grey.800' }}>
-            10% Profit
-          </Typography>
-        </Grid>
       </Grid>
-      <Chart {...chartData} />
+      <Chart {...chartDataNew} />
     </Card>
   );
 };
