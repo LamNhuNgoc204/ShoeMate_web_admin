@@ -20,8 +20,32 @@ const statusOptions = [
   { value: 'year', label: 'Year' }
 ];
 
+const offsetOptionsWeek = [
+  { value: 0, label: 'Week Present' },
+  { value: 1, label: '1 Week Ago' },
+  { value: 2, label: '2 Weeks Ago' },
+  { value: 3, label: '3 Weeks Ago' },
+  { value: 4, label: '4 Weeks Ago' }
+];
+
+const offsetOptionsMonth = [
+  { value: 0, label: 'Month Present' },
+  { value: 1, label: '1 Month Ago' },
+  { value: 2, label: '2 Months Ago' },
+  { value: 3, label: '3 Months Ago' },
+  { value: 6, label: '6 Months Ago' }
+];
+
+const offsetOptionsYear = [
+  { value: 0, label: 'Year Present' },
+  { value: 1, label: '1 Year Ago' },
+  { value: 2, label: '2 Years Ago' },
+  { value: 3, label: '3 Years Ago' }
+];
+
 const TotalGrowthBarChart = ({ isLoading }) => {
   const [value, setValue] = useState('week');
+  const [offset, setOffset] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [chartSeries, setChartSeries] = useState(chartData.series);
   const theme = useTheme();
@@ -35,31 +59,21 @@ const TotalGrowthBarChart = ({ isLoading }) => {
   const secondaryLight = theme.palette.secondary.light;
 
   const getPeriodParams = () => {
-    const today = new Date();
-    let period = 'day';
-    let offset = 0;
-
-    switch (value) {
-      case 'day':
-        period = 'day';
-        offset = 0;
-        break;
-      case 'week':
-        period = 'week';
-        offset = 0;
-        break;
-      case 'month':
-        period = 'month';
-        offset = 0;
-        break;
-      case 'year':
-        period = 'year';
-        offset = 0;
-        break;
-      default:
-        break;
-    }
+    let period = value;
     return { period, offset, status: 'completed' };
+  };
+
+  const getOffsetOptions = () => {
+    if (value === 'week') {
+      return offsetOptionsWeek;
+    }
+    if (value === 'month') {
+      return offsetOptionsMonth
+    };
+    if (value === 'year') {
+      return offsetOptionsYear
+    };
+    return [];
   };
 
   useEffect(() => {
@@ -97,7 +111,7 @@ const TotalGrowthBarChart = ({ isLoading }) => {
     };
 
     fetchChartData();
-  }, [value]);
+  }, [value, offset]);
 
   useEffect(() => {
     const newChartData = {
@@ -147,8 +161,27 @@ const TotalGrowthBarChart = ({ isLoading }) => {
                   </Grid>
                 </Grid>
                 <Grid item>
-                  <TextField id="standard-select-currency" select value={value} onChange={(e) => setValue(e.target.value)}>
+                  <TextField
+                    id="select-period"
+                    select
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  >
                     {statusOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    id="select-offset"
+                    select
+                    value={offset}
+                    onChange={(e) => setOffset(e.target.value)}
+                    disabled={value === 'day'}
+                    sx={{ marginLeft: 2 }}
+                  >
+                    {getOffsetOptions().map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>

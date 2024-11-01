@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import React, { useEffect } from 'react';
-import { getStats } from 'api/dashboard'
+import React, { useEffect, useState } from 'react';
+import { getStats } from 'api/dashboard';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -10,6 +10,9 @@ import Grid from '@mui/material/Grid';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
@@ -20,15 +23,42 @@ import EarningIcon from 'assets/images/icons/earning.svg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
-// ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
+const offsetOptionsDay = [
+  { value: 0, label: 'Today' },
+];
+
+const offsetOptionsWeek = [
+  { value: 0, label: 'Week Present' },
+  { value: 1, label: '1 Week Ago' },
+  { value: 2, label: '2 Weeks Ago' },
+  { value: 3, label: '3 Weeks Ago' },
+  { value: 4, label: '4 Weeks Ago' }
+];
+
+const offsetOptionsMonth = [
+  { value: 0, label: 'Month Present' },
+  { value: 1, label: '1 Month Ago' },
+  { value: 2, label: '2 Months Ago' },
+  { value: 3, label: '3 Months Ago' },
+  { value: 6, label: '6 Months Ago' }
+];
+
+const offsetOptionsYear = [
+  { value: 0, label: 'Year Present' },
+  { value: 1, label: '1 Year Ago' },
+  { value: 2, label: '2 Years Ago' },
+  { value: 3, label: '3 Years Ago' }
+];
 
 const EarningCard = ({ isLoading }) => {
   const theme = useTheme();
 
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [period, setSelectedPeriod] = React.useState('week');
-  const [income, setIncome] = React.useState(0);
-  const [loadingData, setLoadingData] = React.useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [period, setPeriod] = useState('week');
+  const [offset, setOffset] = useState(0);
+  const [offsetOptions, setOffsetOptions] = useState(offsetOptionsWeek);
+  const [income, setIncome] = useState(0);
+  const [loadingData, setLoadingData] = useState(false);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -38,9 +68,25 @@ const EarningCard = ({ isLoading }) => {
     setAnchorEl(null);
   };
 
-  const handlePeriodSelect = (period) => {
-    setSelectedPeriod(period);
-    handleClose(); 
+  const handlePeriodSelect = (newPeriod) => {
+    setPeriod(newPeriod);
+    handleClose();
+
+    // Update offset options based on the selected period
+    if (newPeriod === 'week') {
+      setOffsetOptions(offsetOptionsWeek);
+    } else if (newPeriod === 'month') {
+      setOffsetOptions(offsetOptionsMonth);
+    } else if (newPeriod === 'year') {
+      setOffsetOptions(offsetOptionsYear);
+    } else if (newPeriod === 'day') {
+      setOffsetOptions(offsetOptionsDay);
+    }
+    setOffset(0); // Reset offset to 0 when period changes
+  };
+
+  const handleOffsetChange = (event) => {
+    setOffset(event.target.value);
   };
 
   useEffect(() => {
@@ -48,11 +94,11 @@ const EarningCard = ({ isLoading }) => {
       if (period) {
         setLoadingData(true);
         try {
-          const response = await getStats({ period });  
+          const response = await getStats({ period, offset });
           console.log(response);
           setIncome(response.totalRevenue);
         } catch (error) {
-          console.error("Error fetching stats:", error);
+          console.error('Error fetching stats:', error);
         } finally {
           setLoadingData(false);
         }
@@ -60,7 +106,7 @@ const EarningCard = ({ isLoading }) => {
     };
 
     fetchData();
-  }, [period]);
+  }, [period, offset]);
 
   return (
     <>
@@ -83,7 +129,7 @@ const EarningCard = ({ isLoading }) => {
               background: theme.palette.secondary[800],
               borderRadius: '50%',
               top: { xs: -105, sm: -85 },
-              right: { xs: -140, sm: -95 }
+              right: { xs: -140, sm: -95 },
             },
             '&:before': {
               content: '""',
@@ -94,14 +140,14 @@ const EarningCard = ({ isLoading }) => {
               borderRadius: '50%',
               top: { xs: -155, sm: -125 },
               right: { xs: -70, sm: -15 },
-              opacity: 0.5
-            }
+              opacity: 0.5,
+            },
           }}
         >
           <Box sx={{ p: 2.25 }}>
             <Grid container direction="column">
               <Grid item>
-                <Grid container justifyContent="space-between">
+                <Grid container justifyContent="space-between" alignItems="center">
                   <Grid item>
                     <Avatar
                       variant="rounded"
@@ -109,11 +155,26 @@ const EarningCard = ({ isLoading }) => {
                         ...theme.typography.commonAvatar,
                         ...theme.typography.largeAvatar,
                         bgcolor: 'secondary.800',
-                        mt: 1
+                        mt: 1,
                       }}
                     >
                       <img src={EarningIcon} alt="Notification" />
                     </Avatar>
+                  </Grid>
+                  <Grid item>
+                    <FormControl sx={{ minWidth: 150 }}>
+                      <Select
+                        value={offset}
+                        onChange={handleOffsetChange}
+                        label="Offset"
+                      >
+                        {offsetOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item>
                     <Avatar
@@ -123,7 +184,7 @@ const EarningCard = ({ isLoading }) => {
                         ...theme.typography.mediumAvatar,
                         bgcolor: 'secondary.dark',
                         color: 'secondary.200',
-                        zIndex: 1
+                        zIndex: 1,
                       }}
                       aria-controls="menu-earning-card"
                       aria-haspopup="true"
@@ -140,11 +201,11 @@ const EarningCard = ({ isLoading }) => {
                       variant="selectedMenu"
                       anchorOrigin={{
                         vertical: 'bottom',
-                        horizontal: 'right'
+                        horizontal: 'right',
                       }}
                       transformOrigin={{
                         vertical: 'top',
-                        horizontal: 'right'
+                        horizontal: 'right',
                       }}
                     >
                       <MenuItem onClick={() => handlePeriodSelect('day')}>Day</MenuItem>
@@ -158,7 +219,17 @@ const EarningCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container alignItems="center">
                   <Grid item>
-                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{income}</Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '2.125rem',
+                        fontWeight: 500,
+                        mr: 1,
+                        mt: 1.75,
+                        mb: 0.75,
+                      }}
+                    >
+                      {income}
+                    </Typography>
                   </Grid>
                   <Grid item>
                     <Avatar
@@ -166,10 +237,13 @@ const EarningCard = ({ isLoading }) => {
                         cursor: 'pointer',
                         ...theme.typography.smallAvatar,
                         bgcolor: 'secondary.200',
-                        color: 'secondary.dark'
+                        color: 'secondary.dark',
                       }}
                     >
-                      <ArrowUpwardIcon fontSize="inherit" sx={{ transform: 'rotate3d(1, 1, 1, 45deg)' }} />
+                      <ArrowUpwardIcon
+                        fontSize="inherit"
+                        sx={{ transform: 'rotate3d(1, 1, 1, 45deg)' }}
+                      />
                     </Avatar>
                   </Grid>
                 </Grid>
@@ -179,7 +253,7 @@ const EarningCard = ({ isLoading }) => {
                   sx={{
                     fontSize: '1rem',
                     fontWeight: 500,
-                    color: 'secondary.200'
+                    color: 'secondary.200',
                   }}
                 >
                   Total Income
@@ -194,7 +268,7 @@ const EarningCard = ({ isLoading }) => {
 };
 
 EarningCard.propTypes = {
-  isLoading: PropTypes.bool
+  isLoading: PropTypes.bool,
 };
 
 export default EarningCard;
