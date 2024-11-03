@@ -5,7 +5,7 @@ import AxiosInstance from 'helper/AxiosInstance';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 
-const SOCKET_SERVER_URL = "http://192.168.1.28:3000"
+const SOCKET_SERVER_URL = "http://192.168.1.32:3000"
 
 const Customer = () => {
   const [newMessage, setNewMessage] = useState('');
@@ -30,7 +30,7 @@ const Customer = () => {
         const bDate = new Date(b.lastMessage.createdAt);
         return bDate.getTime() - aDate.getTime();
       }
-      return 0; // Đảm bảo có giá trị trả về
+      return 0; 
     });
   };
 
@@ -93,7 +93,7 @@ const Customer = () => {
     try {
       const response = await AxiosInstance().get(`/messages/get-messages/${conversationId}`);
       if (response.status) {
-        setMessages(response.data);
+        setMessages(response.data.reverse());
       }
     } catch (error) {
       console.error('Lỗi: ', error);
@@ -182,7 +182,7 @@ const Customer = () => {
             Hỗ trợ khách hàng: {selectedConversation.userId.name}
           </Typography>
           <Paper style={{ flex: 1, padding: '16px', marginBottom: '16px', overflowY: 'auto' }}>
-            {messages.map((message) => (
+            {messages.map((message) => (message.type == 'order' && message.order)? OrderItem(message.order) : (
               <Box key={message._id} display="flex" justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}>
                 <Box
                   bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
@@ -219,5 +219,87 @@ const Customer = () => {
     </MainCard>
   );
 };
+
+
+function OrderItem(order) {
+  const countItems = () => {
+    var count = 0;
+    order.orderDetails.forEach(e => {
+      count += e.product.pd_quantity
+    });
+    return count;
+  }
+  return (
+      <div style={styles.container}>
+          <div style={styles.imageContainer}>
+              <img 
+                  src="https://w7.pngwing.com/pngs/423/632/png-transparent-computer-icons-purchase-order-order-fulfillment-purchasing-order-icon-blue-angle-text-thumbnail.png" 
+                  alt="Order Icon" 
+                  style={styles.image} 
+              />
+          </div>
+          <div style={styles.content}>
+              <div style={styles.header}>
+                  <span style={styles.orderId}>Order #{order.order._id}</span>
+                  <span style={styles.itemsBadge}>{countItems()} items</span>
+              </div>
+              <div style={styles.status}>{order.status}</div>
+              <div style={styles.total}>
+                  Total: <span style={styles.totalAmount}>${order.order.total_price}</span>
+              </div>
+          </div>
+      </div>
+  );
+}
+
+const styles = {
+  container: {
+      display: 'flex',
+      alignItems: 'center',
+      border: '1px solid #007AFF',
+      borderRadius: '8px',
+      padding: '10px',
+      maxWidth: '400px',
+      margin: '10px 0'
+  },
+  imageContainer: {
+      marginRight: '10px',
+  },
+  image: {
+      width: '50px',
+      height: '50px',
+  },
+  content: {
+      flex: 1,
+  },
+  header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  orderId: {
+      fontWeight: 'bold',
+      color: '#000',
+  },
+  itemsBadge: {
+      backgroundColor: '#E0E0E0',
+      borderRadius: '12px',
+      padding: '2px 8px',
+      fontSize: '12px',
+      color: '#6e6e6e',
+  },
+  status: {
+      fontSize: '14px',
+      color: '#757575',
+  },
+  total: {
+      marginTop: '4px',
+      fontWeight: 'bold',
+  },
+  totalAmount: {
+      color: '#007AFF',
+  }
+};
+
 
 export default Customer;
