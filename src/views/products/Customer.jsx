@@ -5,21 +5,33 @@ import AxiosInstance from 'helper/AxiosInstance';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 
-const SOCKET_SERVER_URL = "http://192.168.1.32:3000"
+const SOCKET_SERVER_URL = 'http://192.168.1.5:3000';
 
 const Customer = () => {
   const [newMessage, setNewMessage] = useState('');
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
-  const userState = useSelector(state => state.users);
-  
+  const userState = useSelector((state) => state.users);
+
   const conversationsRef = useRef(conversations);
   const selectedConversationRef = useRef({
     _id: 0,
     userId: {
-      name: "Loading..."
+      name: 'Loading...'
     }
   });
+
+  const messagesEndRef = useRef(null); // Tạo ref cho cuối danh sách tin nhắn
+
+  // Hàm cuộn xuống cuối danh sách tin nhắn
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Cuộn xuống cuối khi có tin nhắn mới
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const [selectedConversation, setSelectedConversations] = useState(selectedConversationRef.current);
 
@@ -30,7 +42,7 @@ const Customer = () => {
         const bDate = new Date(b.lastMessage.createdAt);
         return bDate.getTime() - aDate.getTime();
       }
-      return 0; 
+      return 0;
     });
   };
 
@@ -56,14 +68,14 @@ const Customer = () => {
         text: newMessage.trim(),
         senderId: userState.users.user._id
       });
-      setNewMessage("");
+      setNewMessage('');
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn: ', error);
     }
   };
 
   const formatDate = (isoString) => {
-    if (!isoString) return "";
+    if (!isoString) return '';
     const date = new Date(isoString);
     const now = new Date();
     const diffTime = now - date;
@@ -72,7 +84,7 @@ const Customer = () => {
     if (diffDays === 0) {
       return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
     }
-    if (diffDays === 1) return "Hôm qua";
+    if (diffDays === 1) return 'Hôm qua';
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
   };
 
@@ -150,7 +162,7 @@ const Customer = () => {
 
   return (
     <MainCard title="HỖ TRỢ KHÁCH HÀNG">
-      <Box display="flex" height="100vh" p={2}>
+      <Box display="flex" height="70vh" p={2}>
         {/* Danh sách cuộc trò chuyện */}
         <Box width="25%" borderRight="1px solid #ccc" pr={2}>
           <Typography variant="h6" gutterBottom>
@@ -170,7 +182,10 @@ const Customer = () => {
                 <ListItemAvatar>
                   <Avatar>{conversation.userId.name.charAt(0)}</Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={conversation.userId.name} secondary={`${conversation.lastMessage ? conversation.lastMessage.text : ''} - ${formatDate(conversation.lastMessage ? conversation.lastMessage.createdAt : '')}`} />
+                <ListItemText
+                  primary={conversation.userId.name}
+                  secondary={`${conversation.lastMessage ? conversation.lastMessage.text : ''} - ${formatDate(conversation.lastMessage ? conversation.lastMessage.createdAt : '')}`}
+                />
               </ListItem>
             ))}
           </List>
@@ -182,22 +197,31 @@ const Customer = () => {
             Hỗ trợ khách hàng: {selectedConversation.userId.name}
           </Typography>
           <Paper style={{ flex: 1, padding: '16px', marginBottom: '16px', overflowY: 'auto' }}>
-            {messages.map((message) => (message.type == 'order' && message.order)? OrderItem(message.order) : (
-              <Box key={message._id} display="flex" justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}>
+            {messages.map((message) =>
+              message.type == 'order' && message.order ? (
+                OrderItem(message.order)
+              ) : (
                 <Box
-                  bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
-                  color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
-                  p={1}
-                  m={1}
-                  borderRadius={2}
+                  key={message._id}
+                  display="flex"
+                  justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}
                 >
-                  <Typography>{message.text}</Typography>
-                  <Typography variant="caption" display="block" textAlign="right">
-                    {formatDate(message.createdAt)}
-                  </Typography>
+                  <Box
+                    bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
+                    color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
+                    p={1}
+                    m={1}
+                    borderRadius={2}
+                  >
+                    <Typography>{message.text}</Typography>
+                    <Typography variant="caption" display="block" textAlign="right">
+                      {formatDate(message.createdAt)}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              )
+            )}
+            <div ref={messagesEndRef} />
           </Paper>
 
           {/* Khu vực nhập tin nhắn */}
@@ -220,86 +244,84 @@ const Customer = () => {
   );
 };
 
-
 function OrderItem(order) {
   const countItems = () => {
     var count = 0;
-    order.orderDetails.forEach(e => {
-      count += e.product.pd_quantity
+    order.orderDetails.forEach((e) => {
+      count += e.product.pd_quantity;
     });
     return count;
-  }
+  };
   return (
-      <div style={styles.container}>
-          <div style={styles.imageContainer}>
-              <img 
-                  src="https://w7.pngwing.com/pngs/423/632/png-transparent-computer-icons-purchase-order-order-fulfillment-purchasing-order-icon-blue-angle-text-thumbnail.png" 
-                  alt="Order Icon" 
-                  style={styles.image} 
-              />
-          </div>
-          <div style={styles.content}>
-              <div style={styles.header}>
-                  <span style={styles.orderId}>Order #{order.order._id}</span>
-                  <span style={styles.itemsBadge}>{countItems()} items</span>
-              </div>
-              <div style={styles.status}>{order.status}</div>
-              <div style={styles.total}>
-                  Total: <span style={styles.totalAmount}>${order.order.total_price}</span>
-              </div>
-          </div>
+    <div style={styles.container}>
+      <div style={styles.imageContainer}>
+        <img
+          src="https://w7.pngwing.com/pngs/423/632/png-transparent-computer-icons-purchase-order-order-fulfillment-purchasing-order-icon-blue-angle-text-thumbnail.png"
+          alt="Order Icon"
+          style={styles.image}
+        />
       </div>
+      <div style={styles.content}>
+        <div style={styles.header}>
+          <span style={styles.orderId}>Order #{order.order._id}</span>
+          <span style={styles.itemsBadge}>{countItems()} items</span>
+        </div>
+        <div style={styles.status}>{order.status}</div>
+        <div style={styles.total}>
+          Total: <span style={styles.totalAmount}>${order.order.total_price}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
 const styles = {
   container: {
-      display: 'flex',
-      alignItems: 'center',
-      border: '1px solid #007AFF',
-      borderRadius: '8px',
-      padding: '10px',
-      maxWidth: '400px',
-      margin: '10px 0'
+    display: 'flex',
+    alignItems: 'center',
+    border: '1px solid #007AFF',
+    borderRadius: '8px',
+    padding: '10px',
+    maxWidth: '400px',
+    margin: '10px 0'
   },
   imageContainer: {
-      marginRight: '10px',
+    marginRight: '10px'
   },
   image: {
-      width: '50px',
-      height: '50px',
+    width: '50px',
+    height: '50px'
   },
   content: {
-      flex: 1,
+    flex: 1
   },
   header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   orderId: {
-      fontWeight: 'bold',
-      color: '#000',
+    fontWeight: 'bold',
+    color: '#000'
   },
   itemsBadge: {
-      backgroundColor: '#E0E0E0',
-      borderRadius: '12px',
-      padding: '2px 8px',
-      fontSize: '12px',
-      color: '#6e6e6e',
+    backgroundColor: '#E0E0E0',
+    borderRadius: '12px',
+    padding: '2px 8px',
+    fontSize: '12px',
+    color: '#6e6e6e'
   },
   status: {
-      fontSize: '14px',
-      color: '#757575',
+    fontSize: '14px',
+    color: '#757575'
   },
   total: {
-      marginTop: '4px',
-      fontWeight: 'bold',
+    marginTop: '4px',
+    fontWeight: 'bold'
   },
   totalAmount: {
-      color: '#007AFF',
+    color: '#007AFF'
   }
 };
-
 
 export default Customer;
