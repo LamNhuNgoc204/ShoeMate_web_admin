@@ -4,8 +4,9 @@ import { Box, Typography, List, ListItem, ListItemAvatar, Avatar, ListItemText, 
 import AxiosInstance from 'helper/AxiosInstance';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
+import { borders, height, maxWidth } from '@mui/system';
 
-const SOCKET_SERVER_URL = 'http://192.168.1.5:3000';
+const SOCKET_SERVER_URL = 'http://192.168.9.28:3000';
 
 const Customer = () => {
   const [newMessage, setNewMessage] = useState('');
@@ -201,7 +202,8 @@ const Customer = () => {
               message.type == 'order' && message.order ? (
                 OrderItem(message.order)
               ) : (
-                <Box
+                message.type == 'product'? ProductMessageItem(message.product) : (
+                  <Box
                   key={message._id}
                   display="flex"
                   justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}
@@ -219,6 +221,7 @@ const Customer = () => {
                     </Typography>
                   </Box>
                 </Box>
+                )
               )
             )}
             <div ref={messagesEndRef} />
@@ -322,6 +325,64 @@ const styles = {
   totalAmount: {
     color: '#007AFF'
   }
+};
+
+const ProductMessageItem = (product) => {
+
+  const styles = {
+    container: {
+      display: 'flex',
+      padding: '10px',
+      margin: '10px 0',
+      borderRadius: '8px',
+      backgroundColor: '#fff',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      maxWidth: '400px',
+      border: '1px solid #007AFF',
+      
+    },
+    image: {
+      width: '60px',
+      height: '60px',
+      borderRadius: '8px',
+    },
+    details: {
+      flex: 1,
+      marginLeft: '10px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+    },
+    name: {
+      fontWeight: 'bold',
+      fontSize: '16px',
+    },
+    price: {
+      color: '#FF5733',
+      marginTop: '4px',
+      fontSize: '14px',
+    },
+    description: {
+      color: '#6c6c6c',
+      marginTop: '2px',
+      fontSize: '12px',
+      display: '-webkit-box',
+      WebkitBoxOrient: 'vertical',
+      WebkitLineClamp: 2,
+      overflow: 'hidden',
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <img src={product.assets[0] || 'https://cdn.vectorstock.com/i/1000v/79/10/product-icon-simple-element-vector-27077910.jpg'} alt="Product" style={styles.image} />
+      <div style={styles.details}>
+        <h4 style={styles.name}>{product.name}</h4>
+        <p style={styles.price}>{product.price} đ</p>
+        <p style={styles.description}>{product.description}</p>
+      </div>
+    </div>
+  );
 };
 
 export default Customer;
