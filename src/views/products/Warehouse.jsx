@@ -465,7 +465,7 @@ const InventoryManagement = () => {
 
   useEffect(() => {
     if (products && products.products && products.products.length > 0) {
-      setListProducts(products.products);
+      setListProducts([...products.products].reverse());
     }
   }, [products]);
 
@@ -1059,7 +1059,7 @@ const InventoryManagement = () => {
         </Button>
         <div style={{ display: 'flex', flexDirection: 'row' }}>
           <FormControl fullWidth margin="normal">
-            <InputLabel>Tìm kiếm thương hiệu</InputLabel>
+            <InputLabel>Tìm kiếm...</InputLabel>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <Select fullWidth name="brands" value={filterSize} onChange={(e) => setFilterSize(e.target.value)}>
                 {ListSizes.map((size) => (
