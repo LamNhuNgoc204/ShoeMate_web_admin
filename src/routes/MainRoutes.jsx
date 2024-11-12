@@ -12,6 +12,7 @@ const Orders = Loadable(lazy(() => import('views/order/Orders')));
 const Shipping = Loadable(lazy(() => import('views/order/Shipping')));
 const User = Loadable(lazy(() => import('views/users/User')));
 const Reviews = Loadable(lazy(() => import('views/users/Reviews')));
+const AccountSettings = Loadable(lazy(() => import('views/handle/UpdateInfor')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 // const isAuthenticated = false;
@@ -78,6 +79,10 @@ const MainRoutes = {
           element: <Reviews />
         }
       ]
+    },
+    {
+      path: 'update-profile',
+      element: <AccountSettings />
     }
   ]
 };

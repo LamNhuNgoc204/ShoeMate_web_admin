@@ -45,6 +45,7 @@ const ProfileSection = () => {
    * anchorRef is used on different componets and specifying one type leads to other components throwing an error
    * */
   const anchorRef = useRef(null);
+
   const handleLogout = async () => {
     console.log('Logout');
     // Xử lý logic logout như xóa token hoặc session
@@ -52,7 +53,6 @@ const ProfileSection = () => {
   };
 
   useEffect(() => {
-    // Chặn hành động quay lại bằng cách lắng nghe sự kiện "popstate"
     const handlePopState = () => {
       navigate('/pages/login/login3', { replace: true });
     };
@@ -80,6 +80,7 @@ const ProfileSection = () => {
       navigate(route);
     }
   };
+
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
   };
@@ -120,7 +121,7 @@ const ProfileSection = () => {
         }}
         icon={
           <Avatar
-            src={user.avatar}
+            src={user && user.avatar}
             sx={{
               ...theme.typography.mediumAvatar,
               margin: '8px 0 8px 8px !important',
@@ -166,12 +167,12 @@ const ProfileSection = () => {
                   <Box sx={{ p: 2, pb: 0 }}>
                     <Stack>
                       <Stack direction="row" spacing={0.5} alignItems="center">
-                        <Typography variant="h4">Hello,</Typography>
+                        <Typography variant="h4">Xin chào,</Typography>
                         <Typography component="span" variant="h4" sx={{ fontWeight: 400 }}>
-                          {user.name}
+                          {user && user.name}
                         </Typography>
                       </Stack>
-                      <Typography variant="subtitle2">{user.email}</Typography>
+                      <Typography variant="subtitle2">{user && user.email}</Typography>
                     </Stack>
                   </Box>
                   <PerfectScrollbar style={{ height: '100%', maxHeight: 'calc(100vh - 250px)', overflowX: 'hidden' }}>
@@ -195,12 +196,12 @@ const ProfileSection = () => {
                         <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
                           selected={selectedIndex === 0}
-                          onClick={(event) => handleListItemClick(event, 0, '#')}
+                          onClick={(event) => handleListItemClick(event, 0, '/update-profile')}
                         >
                           <ListItemIcon>
                             <IconSettings stroke={1.5} size="1.3rem" />
                           </ListItemIcon>
-                          <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
+                          <ListItemText primary={<Typography variant="body2">Cài đặt tài khoản</Typography>} />
                         </ListItemButton>
                         <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
@@ -238,7 +239,7 @@ const ProfileSection = () => {
                           <ListItemIcon>
                             <IconLogout stroke={1.5} size="1.3rem" />
                           </ListItemIcon>
-                          <ListItemText primary={<Typography variant="body2">Logout</Typography>} />
+                          <ListItemText primary={<Typography variant="body2">Đăng xuất</Typography>} />
                         </ListItemButton>
                       </List>
                     </Box>
