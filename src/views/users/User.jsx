@@ -182,20 +182,18 @@ const UserManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredUsers
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) 
-              .map((user, index) => (
-                <TableRow key={index + 1}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    <Button onClick={() => handleOpenDialogRole(user)}>Chỉnh Sửa Role</Button>
-                    <Button>Ngừng hoạt động</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user, index) => (
+              <TableRow key={index + 1}>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
+                  <Button>Khóa tài khoản</Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
         <TablePagination
