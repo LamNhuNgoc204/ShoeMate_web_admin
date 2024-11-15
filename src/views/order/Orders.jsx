@@ -214,8 +214,8 @@ const OrderManagement = () => {
               <InputLabel id="filter-label">Trạng Thái</InputLabel>
               <Select labelId="filter-label" value={filterStatus} onChange={handleFilterChange}>
                 <MenuItem value="all">Tất cả</MenuItem>
-                <MenuItem value="pending">Đang chờ xác nhận</MenuItem>
-                <MenuItem value="processing">Đang chuẩn bị đơn hàng</MenuItem>
+                <MenuItem value="pending">Chờ xác nhận</MenuItem>
+                <MenuItem value="processing">Đang vận chuyển</MenuItem>
                 <MenuItem value="completed">Đã hoàn thành</MenuItem>
                 <MenuItem value="cancelled">Đã hủy</MenuItem>
                 <MenuItem value="refunded">Hoàn hàng</MenuItem>
@@ -270,6 +270,7 @@ const OrderManagement = () => {
           count={Math.ceil(filteredOrders.length / itemsPerPageOrder)}
           page={currentOrderPage}
           onChange={handlePageOrderChange}
+          color="primary"
           style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
         />
       </TableContainer>

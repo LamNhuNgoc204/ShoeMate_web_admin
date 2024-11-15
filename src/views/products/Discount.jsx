@@ -292,6 +292,7 @@ const PromotionManagement = () => {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          color="primary"
           labelRowsPerPage="Số hàng mỗi trang"
         />
       </TableContainer>
