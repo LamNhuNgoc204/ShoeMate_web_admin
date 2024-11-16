@@ -772,12 +772,12 @@ const InventoryManagement = () => {
                       <TableCell>{product.sold}</TableCell>
                       <TableCell>{product.status}</TableCell>
                       {/* <TableCell>{product.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}</TableCell> */}
-                      <TableCell>
+                      <TableCell >
                         <Button variant="contained" color="secondary" onClick={() => handleOpenDialog(product)} style={{ marginRight: 10 }}>
                           Sửa
                         </Button>
                         <Button style={{ marginTop: 10 }} variant="contained" color="error" onClick={() => handleDeleteProduct(product.id)}>
-                          Ngừng bán
+                          Tạm ngừng
                         </Button>
                       </TableCell>
                     </TableRow>

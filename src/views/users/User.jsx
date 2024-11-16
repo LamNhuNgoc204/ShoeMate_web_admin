@@ -26,6 +26,7 @@ import { ROLE } from 'constants/mockData';
 import { getAllUsers } from 'api/getAllData';
 import { updateRole } from 'api/updateData';
 import { createNewUser } from 'api/createNew';
+import AxiosInstance from 'helper/AxiosInstance';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -162,6 +163,26 @@ const UserManagement = () => {
     setPage(0);
   };
 
+  const handleLockAccound = async (user) => {
+    try {
+      const response = await AxiosInstance().put(`/users/lock-accound/${user._id}`);
+      if (response.status) {
+        setSnackbarMessage(`Tải khoản của ${user.name} đã bị khóa`);
+        setSnackbarSeverity('success');
+
+        const updatedUsers = users.map((u) => (u._id === user._id ? { ...u, isActive: false } : u));
+        setUsers(updatedUsers);
+        setFilteredUsers(updatedUsers);
+      }
+    } catch (error) {
+      setSnackbarMessage('Xảy ra lỗi khi cập nhật vai trò');
+      setSnackbarSeverity('error');
+    } finally {
+      setSnackbarOpen(true);
+      setOpenDialogRole(false);
+    }
+  };
+
   return (
     <MainCard title="QUẢN LÝ NGƯỜI DÙNG">
       <TextField label="Tìm kiếm người dùng" fullWidth value={searchTerm} onChange={handleSearch} style={{ marginBottom: '20px' }} />
@@ -190,7 +211,11 @@ const UserManagement = () => {
                 <TableCell>{user.role}</TableCell>
                 <TableCell>
                   <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
-                  <Button>Khóa tài khoản</Button>
+                  {user.isActive === true ? (
+                    <Button onClick={() => handleLockAccound(user)}>Khóa tài khoản</Button>
+                  ) : (
+                    <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 5 }}>Đã khóa</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

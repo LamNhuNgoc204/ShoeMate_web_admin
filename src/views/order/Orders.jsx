@@ -47,10 +47,11 @@ const OrderManagement = () => {
       try {
         const response = await AxiosInstance().get('/orders/get-all-orders');
         if (response.status) {
-          setData(response.data);
+          const reversedData = response.data && response.data.reverse();
+          setData(reversedData);
           // Initial filter
-          setFilteredOrders(response.data);
-          updateOrderCounts(response.data);
+          setFilteredOrders(reversedData);
+          updateOrderCounts(reversedData);
         }
       } catch (error) {
         console.log('error get data order: ', error);
@@ -251,7 +252,7 @@ const OrderManagement = () => {
                   {order.status === 'pending'
                     ? 'Đang chờ xử lý'
                     : order.status === 'processing'
-                      ? 'Đang chuẩn bị đơn hàng'
+                      ? 'Đang vận chuyển'
                       : order.status === 'completed'
                         ? 'Đã hoàn thành'
                         : order.status === 'cancelled'
