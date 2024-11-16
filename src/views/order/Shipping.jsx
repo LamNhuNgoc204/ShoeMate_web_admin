@@ -47,12 +47,17 @@ const ShippingManagement = () => {
 
   useEffect(() => {
     let filtered = data;
+
+    // Lọc theo trạng thái nếu có chọn một trạng thái cụ thể
     if (filterStatus !== 'all') {
       filtered = filtered.filter((order) => order.status === filterStatus);
     }
+
+    // Lọc theo đơn vị vận chuyển nếu có chọn một đơn vị cụ thể
     if (filterShip !== 'all') {
       filtered = filtered.filter((order) => order.shipping_id && order.shipping_id._id === filterShip);
     }
+
     setFilteredOrders(filtered);
   }, [data, filterStatus, filterShip]);
 
@@ -193,7 +198,7 @@ const ShippingManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((shipment) => (
+            {filteredOrders.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((shipment) => (
               <TableRow key={shipment._id}>
                 <TableCell>{shipment._id && shipment._id.slice(0, 8) && shipment._id.slice(0, 8).toUpperCase()}</TableCell>
                 <TableCell>{shipment.receiver}</TableCell>
