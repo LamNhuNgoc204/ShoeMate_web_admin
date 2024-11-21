@@ -22,7 +22,7 @@ export const getBestSellingProducts = async (params) => {
 
 export const getRevenueByProduct = async (params) => {
   try {
-    const response = await AxiosInstance().get('/stats/products', { params });
+    const response = await AxiosInstance().get('/stats', { params });
     return response;
   } catch (error) {
     console.error('Error fetching revenue by product:', error);
