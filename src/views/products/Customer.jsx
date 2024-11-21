@@ -6,7 +6,7 @@ import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { borders, height, maxWidth } from '@mui/system';
 
-const SOCKET_SERVER_URL = 'http://192.168.175.83:3000';
+const SOCKET_SERVER_URL = 'http://192.168.1.79:3000';
 
 const groupDate = (messages) => {
   if (messages.length === 0) return [];
