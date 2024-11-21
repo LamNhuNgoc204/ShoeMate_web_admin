@@ -6,7 +6,56 @@ import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { borders, height, maxWidth } from '@mui/system';
 
-const SOCKET_SERVER_URL = 'http://192.168.9.28:3000';
+const SOCKET_SERVER_URL = 'http://192.168.175.83:3000';
+
+const groupDate = (messages) => {
+  if (messages.length === 0) return [];
+
+  messages = messages.reverse();
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  let lastDate = null;
+
+
+  return messages.map((message) => {
+    const messageDate = formatDate(message.createdAt);
+
+    const isShowDate = messageDate !== lastDate;
+    lastDate = messageDate;
+    return { ...message, isShowDate };
+  }).reverse();;
+};
+
+
+export function formatDate2(isoString) {
+  const inputDate = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const year = inputDate.getFullYear();
+  const formattedDate = `${day}/${month}/${year}`;
+
+  const daysOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+  // So sánh ngày
+  if (inputDate.toDateString() === today.toDateString()) {
+    return `Hôm nay, ${formattedDate}`;
+  } else if (inputDate.toDateString() === yesterday.toDateString()) {
+    return `Hôm qua, ${formattedDate}`;
+  } else {
+    return `${daysOfWeek[inputDate.getDay()]}, ${formattedDate}`;
+  }
+}
 
 const Customer = () => {
   const [newMessage, setNewMessage] = useState('');
@@ -106,7 +155,8 @@ const Customer = () => {
     try {
       const response = await AxiosInstance().get(`/messages/get-messages/${conversationId}`);
       if (response.status) {
-        setMessages(response.data.reverse());
+        const newMessages = groupDate(response.data.reverse())
+        setMessages(newMessages);
       }
     } catch (error) {
       console.error('Lỗi: ', error);
@@ -143,7 +193,10 @@ const Customer = () => {
         });
 
         if (data.message.conversationId === selectedConversationRef.current._id) {
-          setMessages((prevMessages) => [...prevMessages, data.message]);
+          setMessages((prevMessages) => {
+            const newMessages = groupDate([...prevMessages, data.message])
+            return newMessages;
+          });
         }
       }
     });
@@ -199,30 +252,45 @@ const Customer = () => {
           </Typography>
           <Paper style={{ flex: 1, padding: '16px', marginBottom: '16px', overflowY: 'auto' }}>
             {messages.map((message) =>
-              message.type == 'order' && message.order ? (
-                OrderItem(message.order)
-              ) : (
-                message.type == 'product'? ProductMessageItem(message.product) : (
-                  <Box
-                  key={message._id}
+
+              <Box>
+                {message.isShowDate ? <Box
                   display="flex"
-                  justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}
+                  justifyContent="center"
+                  alignItems="center"
+                  width="100%"
+                  margin="10px 0"
                 >
-                  <Box
-                    bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
-                    color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
-                    p={1}
-                    m={1}
-                    borderRadius={2}
-                  >
-                    <Typography>{message.text}</Typography>
-                    <Typography variant="caption" display="block" textAlign="right">
-                      {formatDate(message.createdAt)}
-                    </Typography>
-                  </Box>
+                  <Typography variant="caption" align="center">
+                    {formatDate2(message.createdAt)}
+                  </Typography>
                 </Box>
-                )
-              )
+                  : <Box></Box>}
+                {message.type == 'order' && message.order ? (
+                  OrderItem(message.order)
+                ) : (
+                  message.type == 'product' ? ProductMessageItem(message.product) : (
+                    <Box
+                      key={message._id}
+                      display="flex"
+                      justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}
+                    >
+                      <Box
+                        bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
+                        color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
+                        p={1}
+                        m={1}
+                        borderRadius={2}
+                      >
+                        <Typography>{message.text}</Typography>
+                        <Typography variant="caption" display="block" textAlign="right">
+                          {formatDate(message.createdAt)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )
+                )}
+              </Box>
             )}
             <div ref={messagesEndRef} />
           </Paper>
@@ -339,7 +407,7 @@ const ProductMessageItem = (product) => {
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       maxWidth: '400px',
       border: '1px solid #007AFF',
-      
+
     },
     image: {
       width: '60px',
