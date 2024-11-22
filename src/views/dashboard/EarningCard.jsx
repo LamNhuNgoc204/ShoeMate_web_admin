@@ -23,31 +23,29 @@ import EarningIcon from 'assets/images/icons/earning.svg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
-const offsetOptionsDay = [
-  { value: 0, label: 'Today' },
-];
+const offsetOptionsDay = [{ value: 0, label: 'Hôm nay' }];
 
 const offsetOptionsWeek = [
-  { value: 0, label: 'Week Present' },
-  { value: 1, label: '1 Week Ago' },
-  { value: 2, label: '2 Weeks Ago' },
-  { value: 3, label: '3 Weeks Ago' },
-  { value: 4, label: '4 Weeks Ago' }
+  { value: 0, label: 'Tuần hiện tại' },
+  { value: 1, label: '1 tuần trước' },
+  { value: 2, label: '2 tuần trước' },
+  { value: 3, label: '3 tuần trước' },
+  { value: 4, label: '4 tuần trước' }
 ];
 
 const offsetOptionsMonth = [
-  { value: 0, label: 'Month Present' },
-  { value: 1, label: '1 Month Ago' },
-  { value: 2, label: '2 Months Ago' },
-  { value: 3, label: '3 Months Ago' },
-  { value: 6, label: '6 Months Ago' }
+  { value: 0, label: 'Tháng hiện tại' },
+  { value: 1, label: '1 tháng trước' },
+  { value: 2, label: '2 tháng trước' },
+  { value: 3, label: '3 tháng trước' },
+  { value: 6, label: '6 tháng trước' }
 ];
 
 const offsetOptionsYear = [
-  { value: 0, label: 'Year Present' },
-  { value: 1, label: '1 Year Ago' },
-  { value: 2, label: '2 Years Ago' },
-  { value: 3, label: '3 Years Ago' }
+  { value: 0, label: 'Năm hiện tại' },
+  { value: 1, label: '1 năm trước' },
+  { value: 2, label: '2 năm trước' },
+  { value: 3, label: '3 năm trước' }
 ];
 
 const EarningCard = ({ isLoading }) => {
@@ -129,7 +127,7 @@ const EarningCard = ({ isLoading }) => {
               background: theme.palette.secondary[800],
               borderRadius: '50%',
               top: { xs: -105, sm: -85 },
-              right: { xs: -140, sm: -95 },
+              right: { xs: -140, sm: -95 }
             },
             '&:before': {
               content: '""',
@@ -140,8 +138,8 @@ const EarningCard = ({ isLoading }) => {
               borderRadius: '50%',
               top: { xs: -155, sm: -125 },
               right: { xs: -70, sm: -15 },
-              opacity: 0.5,
-            },
+              opacity: 0.5
+            }
           }}
         >
           <Box sx={{ p: 2.25 }}>
@@ -155,7 +153,7 @@ const EarningCard = ({ isLoading }) => {
                         ...theme.typography.commonAvatar,
                         ...theme.typography.largeAvatar,
                         bgcolor: 'secondary.800',
-                        mt: 1,
+                        mt: 1
                       }}
                     >
                       <img src={EarningIcon} alt="Notification" />
@@ -163,11 +161,7 @@ const EarningCard = ({ isLoading }) => {
                   </Grid>
                   <Grid item>
                     <FormControl sx={{ minWidth: 150 }}>
-                      <Select
-                        value={offset}
-                        onChange={handleOffsetChange}
-                        label="Offset"
-                      >
+                      <Select value={offset} onChange={handleOffsetChange} label="Offset">
                         {offsetOptions.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
                             {option.label}
@@ -184,7 +178,7 @@ const EarningCard = ({ isLoading }) => {
                         ...theme.typography.mediumAvatar,
                         bgcolor: 'secondary.dark',
                         color: 'secondary.200',
-                        zIndex: 1,
+                        zIndex: 1
                       }}
                       aria-controls="menu-earning-card"
                       aria-haspopup="true"
@@ -201,17 +195,17 @@ const EarningCard = ({ isLoading }) => {
                       variant="selectedMenu"
                       anchorOrigin={{
                         vertical: 'bottom',
-                        horizontal: 'right',
+                        horizontal: 'right'
                       }}
                       transformOrigin={{
                         vertical: 'top',
-                        horizontal: 'right',
+                        horizontal: 'right'
                       }}
                     >
-                      <MenuItem onClick={() => handlePeriodSelect('day')}>Day</MenuItem>
-                      <MenuItem onClick={() => handlePeriodSelect('week')}>Week</MenuItem>
-                      <MenuItem onClick={() => handlePeriodSelect('month')}>Month</MenuItem>
-                      <MenuItem onClick={() => handlePeriodSelect('year')}>Year</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('day')}>Ngày</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('week')}>Tuần</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('month')}>Tháng</MenuItem>
+                      <MenuItem onClick={() => handlePeriodSelect('year')}>Năm</MenuItem>
                     </Menu>
                   </Grid>
                 </Grid>
@@ -225,7 +219,7 @@ const EarningCard = ({ isLoading }) => {
                         fontWeight: 500,
                         mr: 1,
                         mt: 1.75,
-                        mb: 0.75,
+                        mb: 0.75
                       }}
                     >
                       {income}
@@ -237,13 +231,10 @@ const EarningCard = ({ isLoading }) => {
                         cursor: 'pointer',
                         ...theme.typography.smallAvatar,
                         bgcolor: 'secondary.200',
-                        color: 'secondary.dark',
+                        color: 'secondary.dark'
                       }}
                     >
-                      <ArrowUpwardIcon
-                        fontSize="inherit"
-                        sx={{ transform: 'rotate3d(1, 1, 1, 45deg)' }}
-                      />
+                      <ArrowUpwardIcon fontSize="inherit" sx={{ transform: 'rotate3d(1, 1, 1, 45deg)' }} />
                     </Avatar>
                   </Grid>
                 </Grid>
@@ -253,10 +244,13 @@ const EarningCard = ({ isLoading }) => {
                   sx={{
                     fontSize: '1rem',
                     fontWeight: 500,
-                    color: 'secondary.200',
+                    color: 'secondary.200'
                   }}
                 >
-                  Total Income
+                  Tổng thu nhập
+                </Typography>
+                <Typography variant="h4" sx={{ color: '#fff' }}>
+                  203k
                 </Typography>
               </Grid>
             </Grid>
@@ -268,7 +262,7 @@ const EarningCard = ({ isLoading }) => {
 };
 
 EarningCard.propTypes = {
-  isLoading: PropTypes.bool,
+  isLoading: PropTypes.bool
 };
 
 export default EarningCard;

@@ -13,9 +13,9 @@ import { getRevenueByProduct } from 'api/dashboard';
 
 const statusOptions = [
   // { value: 'day', label: 'Day' },
-  { value: 'week', label: 'Week' },
-  { value: 'month', label: 'Month' },
-  { value: 'year', label: 'Year' }
+  { value: 'week', label: 'Tuần' },
+  { value: 'month', label: 'Tháng' },
+  { value: 'year', label: 'Năm' }
 ];
 
 const getOffsetOptions = (period) => {
@@ -29,25 +29,25 @@ const getOffsetOptions = (period) => {
     //   ];
     case 'week':
       return [
-        { value: 0, label: 'This Week' },
-        { value: 1, label: '1 Week Ago' },
-        { value: 2, label: '2 Weeks Ago' },
-        { value: 3, label: '3 Weeks Ago' }
+        { value: 0, label: 'Tuần hiện tại' },
+        { value: 1, label: '1 tuần trước' },
+        { value: 2, label: '2 tuần trước' },
+        { value: 3, label: '3 tuần trước' }
       ];
     case 'month':
       return [
-        { value: 0, label: 'This Month' },
-        { value: 1, label: '1 Month Ago' },
-        { value: 2, label: '2 Months Ago' },
-        { value: 3, label: '3 Months Ago' }
+        { value: 0, label: 'Tháng hiện tại' },
+        { value: 1, label: '1 tháng trước' },
+        { value: 2, label: '2 tháng trước' },
+        { value: 3, label: '3 tháng trước' }
       ];
     case 'year':
     default:
       return [
-        { value: 0, label: 'This Year' },
-        { value: 1, label: '1 Year Ago' },
-        { value: 2, label: '2 Years Ago' },
-        { value: 3, label: '3 Years Ago' }
+        { value: 0, label: 'Năm hiện tại' },
+        { value: 1, label: '1 năm trước' },
+        { value: 2, label: '2 năm trước' },
+        { value: 3, label: '3 năm trước' }
       ];
   }
 };
@@ -81,7 +81,7 @@ const TotalGrowthLineChart = ({ isLoading }) => {
       setChartData((prevState) => ({
         ...prevState,
         series: [
-          { name: 'Revenue', data: revenueData },
+          { name: 'Doanh thu', data: revenueData },
           { name: 'Sales', data: salesData }
         ],
         options: { ...prevState.options, xaxis: { ...prevState.options.xaxis, categories } }
@@ -107,28 +107,17 @@ const TotalGrowthLineChart = ({ isLoading }) => {
             <Grid item xs={12}>
               <Grid container alignItems="center" justifyContent="space-between">
                 <Grid item>
-                  <Typography variant="subtitle2">Total Revenue & Sales</Typography>
+                  <Typography variant="subtitle2">Tổng doanh thu</Typography>
                 </Grid>
                 <Grid item>
-                  <TextField
-                    id="select-period"
-                    select
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  >
+                  <TextField id="select-period" select value={value} onChange={(e) => setValue(e.target.value)}>
                     {statusOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
                     ))}
                   </TextField>
-                  <TextField
-                    id="select-offset"
-                    select
-                    value={offset}
-                    onChange={(e) => setOffset(e.target.value)}
-                    sx={{ marginLeft: 2 }}
-                  >
+                  <TextField id="select-offset" select value={offset} onChange={(e) => setOffset(e.target.value)} sx={{ marginLeft: 2 }}>
                     {getOffsetOptions(value).map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}

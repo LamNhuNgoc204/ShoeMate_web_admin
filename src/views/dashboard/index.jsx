@@ -45,7 +45,7 @@ const Dashboard = () => {
                   {...{
                     isLoading: isLoading,
                     total: 203,
-                    label: 'Total Income',
+                    label: 'Tổng thu nhập',
                     icon: <StorefrontTwoToneIcon fontSize="inherit" />
                   }}
                 />

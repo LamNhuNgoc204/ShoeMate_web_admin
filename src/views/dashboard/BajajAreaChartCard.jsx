@@ -25,7 +25,7 @@ const BajajAreaChartCard = ({ data }) => {
 
   const chartDataNew = chartData(data);
 
-  const totalQuantitySold = data.reduce((total, product) => total + product.totalSold, 0)
+  const totalQuantitySold = data.reduce((total, product) => total + product.totalSold, 0);
 
   React.useEffect(() => {
     const newSupportChart = {
@@ -43,12 +43,12 @@ const BajajAreaChartCard = ({ data }) => {
           <Grid container alignItems="center" justifyContent="space-between">
             <Grid item>
               <Typography variant="subtitle1" sx={{ color: 'secondary.dark' }}>
-                Top Products
+                Sản phẩm hàng đầu
               </Typography>
             </Grid>
             <Grid item>
               <Typography variant="h4" sx={{ color: 'grey.800' }}>
-                Total Sold: {totalQuantitySold}
+                Tổng số đã bán: {totalQuantitySold}
               </Typography>
             </Grid>
           </Grid>
