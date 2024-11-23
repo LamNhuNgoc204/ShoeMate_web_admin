@@ -276,9 +276,9 @@ const PromotionManagement = () => {
                 <TableCell>{voucher.quantity}</TableCell>
                 <TableCell>
                   <Button onClick={() => handleOpenDialog(voucher)}>Sửa</Button>
-                  <Button onClick={() => handleDeletePromotion(voucher._id)} color="error">
+                  {/* <Button onClick={() => handleDeletePromotion(voucher._id)} color="error">
                     Xóa
-                  </Button>
+                  </Button> */}
                 </TableCell>
               </TableRow>
             ))}

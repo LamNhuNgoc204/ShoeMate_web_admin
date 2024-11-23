@@ -53,7 +53,7 @@ const PopularCard = ({ isLoading }) => {
               <Grid item xs={12}>
                 <Grid container alignContent="center" justifyContent="space-between">
                   <Grid item>
-                    <Typography variant="h4">Best Selling Products</Typography>
+                    <Typography variant="h4">Sản phẩm bán chạy nhất</Typography>
                   </Grid>
                 </Grid>
               </Grid>
@@ -66,7 +66,7 @@ const PopularCard = ({ isLoading }) => {
                     <Grid item>
                       <Grid container alignItems="center" justifyContent="space-between">
                         <Grid item>
-                          <Typography variant="subtitle1" color="inherit" style={{width: 150}}>
+                          <Typography variant="subtitle1" color="inherit" style={{ width: 150 }}>
                             {product.productName}
                           </Typography>
                         </Grid>
@@ -74,7 +74,7 @@ const PopularCard = ({ isLoading }) => {
                           <Grid container alignItems="center" justifyContent="space-between">
                             <Grid item>
                               <Typography variant="subtitle1" color="inherit">
-                                {`Quantity ${product.totalSold}`} {/* Example price calculation */}
+                                {`Số lượng: ${product.totalSold}`} {/* Example price calculation */}
                               </Typography>
                             </Grid>
                             <Grid item>
@@ -86,7 +86,7 @@ const PopularCard = ({ isLoading }) => {
                                   borderRadius: '5px',
                                   bgcolor: product.totalSold > 0 ? 'success.light' : 'orange.light',
                                   color: product.totalSold > 0 ? 'success.dark' : 'orange.dark',
-                                  ml: 2,
+                                  ml: 2
                                 }}
                               >
                                 {product.totalSold > 0 ? (
@@ -100,11 +100,11 @@ const PopularCard = ({ isLoading }) => {
                         </Grid>
                       </Grid>
                     </Grid>
-                    <Grid item>
+                    {/* <Grid item>
                       <Typography variant="subtitle2" sx={{ color: product.totalSold > 0 ? 'success.dark' : 'orange.dark' }}>
                         {product.totalSold > 0 ? 'Profit' : 'Loss'}
                       </Typography>
-                    </Grid>
+                    </Grid> */}
                   </Grid>
                   <Divider sx={{ my: 1.5 }} />
                 </Grid>
@@ -113,7 +113,7 @@ const PopularCard = ({ isLoading }) => {
           </CardContent>
           <CardActions sx={{ p: 1.25, pt: 0, justifyContent: 'center' }}>
             <Button size="small" disableElevation>
-              View All
+              Xem tất cả
               <ChevronRightOutlinedIcon />
             </Button>
           </CardActions>
@@ -124,7 +124,7 @@ const PopularCard = ({ isLoading }) => {
 };
 
 PopularCard.propTypes = {
-  isLoading: PropTypes.bool,
+  isLoading: PropTypes.bool
 };
 
 export default PopularCard;
