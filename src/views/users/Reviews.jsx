@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Pagination from '@mui/material/Pagination';
 import {
   Box,
   Table,
@@ -26,15 +27,19 @@ import AxiosInstance from 'helper/AxiosInstance';
 
 const Review = () => {
   const [reviews, setReviews] = useState([]);
-  const [pendingreviews, setpendingreviews] = useState([]);
-  const [violatereviews, setviolatereviews] = useState([]);
-  const [successReviews, setsuccessReviews] = useState([]);
+  const [filteredReviews, setFilteredReviews] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
-  const handleOpenDialog = (order) => {
-    setSelectedReview(order);
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
+  const handleOpenDialog = (review) => {
+    setSelectedReview(review);
     setOpenDialog(true);
   };
 
@@ -46,17 +51,17 @@ const Review = () => {
   const handleFilterChange = (event) => {
     const value = event.target.value;
     setFilterStatus(value);
-    const filtered = value === 'all' ? reviews : reviews.filter((review) => review.status === value);
-    setReviews(filtered);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await AxiosInstance().get('/reviews/get-all-reviews');
-      if (response.status) {
-        setReviews(response.data);
-      }
       try {
+        const response = await AxiosInstance().get('/reviews/get-all-reviews');
+        if (response.status) {
+          setReviews(response?.data?.reverse());
+          setFilteredReviews(response?.data?.reverse());
+        }
       } catch (error) {
         console.log('Không lấy được đánh giá', error);
       }
@@ -64,7 +69,12 @@ const Review = () => {
     fetchData();
   }, []);
 
-  console.log('response=====>', reviews);
+  useEffect(() => {
+    const updatedReviews = filterStatus === 'all' ? reviews : reviews.filter((review) => review.status === filterStatus);
+    setFilteredReviews(updatedReviews);
+  }, [filterStatus, reviews]);
+
+  const paginatedReviews = filteredReviews.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <MainCard title="QUẢN LÝ ĐÁNH GIÁ">
@@ -73,19 +83,19 @@ const Review = () => {
           <Grid item xs={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Chờ Duyệt</Typography>
-              <Typography variant="h4">{pendingreviews.length}</Typography>
+              <Typography variant="h4">{reviews.filter((r) => r.status === 'pending').length}</Typography>
             </Paper>
           </Grid>
           <Grid item xs={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Hợp Lệ</Typography>
-              <Typography variant="h4">{successReviews.length}</Typography>
+              <Typography variant="h4">{reviews.filter((r) => r.status === 'approved').length}</Typography>
             </Paper>
           </Grid>
           <Grid item xs={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Vi Phạm</Typography>
-              <Typography variant="h4">{violatereviews.length}</Typography>
+              <Typography variant="h4">{reviews.filter((r) => r.status === 'rejected').length}</Typography>
             </Paper>
           </Grid>
         </Grid>
@@ -118,33 +128,30 @@ const Review = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {reviews.map((review, index) => (
+              {paginatedReviews.map((review, index) => (
                 <TableRow key={review._id}>
-                  <TableCell>{index}</TableCell>
+                  <TableCell>{index + 1 + (currentPage - 1) * pageSize}</TableCell>
                   <TableCell>
-                    {
-                      // Lọc lấy link ảnh từ danh sách assets
-                      review?.product_id?.assets && review.product_id.assets.length > 0 ? (
-                        (() => {
-                          const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-                          const images = review.product_id.assets.filter((asset) => {
-                            const extension = asset.split('.').pop().toLowerCase();
-                            return imageExtensions.includes(extension);
-                          });
+                    {review?.product_id?.assets && review.product_id.assets.length > 0 ? (
+                      (() => {
+                        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                        const images = review.product_id.assets.filter((asset) => {
+                          const extension = asset.split('.').pop().toLowerCase();
+                          return imageExtensions.includes(extension);
+                        });
 
-                          const imageSrc =
-                            images.length > 0 ? images[0] : 'https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg';
+                        const imageSrc =
+                          images.length > 0 ? images[0] : 'https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg';
 
-                          return <img style={{ width: '70px', height: '70px', borderRadius: '5px' }} src={imageSrc} alt="product" />;
-                        })()
-                      ) : (
-                        <img
-                          style={{ width: '70px', height: '70px', borderRadius: '5px' }}
-                          src="https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg"
-                          alt="default"
-                        />
-                      )
-                    }
+                        return <img style={{ width: '70px', height: '70px', borderRadius: '5px' }} src={imageSrc} alt="product" />;
+                      })()
+                    ) : (
+                      <img
+                        style={{ width: '70px', height: '70px', borderRadius: '5px' }}
+                        src="https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg"
+                        alt="default"
+                      />
+                    )}
                   </TableCell>
 
                   <TableCell>{review?.product_id?.name}</TableCell>
@@ -161,6 +168,13 @@ const Review = () => {
               ))}
             </TableBody>
           </Table>
+          <Pagination
+            count={Math.ceil(filteredReviews.length / pageSize)}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            sx={{ marginTop: 2, display: 'flex', justifyContent: 'center' }}
+          />
         </TableContainer>
       </Box>
 
