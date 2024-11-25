@@ -20,7 +20,9 @@ import {
   DialogTitle,
   DialogContent,
   TextField,
-  DialogActions
+  DialogActions,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import AxiosInstance from 'helper/AxiosInstance';
@@ -33,6 +35,14 @@ const Review = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+  const [content, setContent] = useState(
+    'Cảm ơn quý khách đã tin tưởng và sử dụng sản phẩm/dịch vụ của ShoeMate.\n' +
+      'ShoeMate rất trân trọng ý kiến đóng góp của quý khách và sẽ nỗ lực cải thiện dịch vụ để mang lại trải nghiệm tốt nhất. Nếu có bất kỳ vấn đề nào, xin vui lòng liên hệ với chúng tôi qua 0123456789 hoặc shoemate@gmail.com để được hỗ trợ kịp thời.'
+  );
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -75,6 +85,60 @@ const Review = () => {
   }, [filterStatus, reviews]);
 
   const paginatedReviews = filteredReviews.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleUpdateStatus = async (status) => {
+    try {
+      const response = await AxiosInstance().put(`/reviews/update-review-status/${selectedReview._id}`, { status: status });
+      if (response.status) {
+        // Cập nhật trạng thái trong mảng reviews
+        setReviews((prevReviews) =>
+          prevReviews.map((review) => (review._id === selectedReview._id ? { ...review, status: status } : review))
+        );
+
+        // Cập nhật lại filteredReviews nếu cần
+        setFilteredReviews((prevFilteredReviews) =>
+          prevFilteredReviews.map((review) => (review._id === selectedReview._id ? { ...review, status: status } : review))
+        );
+      }
+      if (status === 'approved') {
+        setSnackbarMessage('Đánh giá đã được duyệt!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        return;
+      }
+      if (status === 'rejected') {
+        setSnackbarMessage('Đánh giá đã bị ẩn !');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        return;
+      }
+    } catch (error) {
+      setSnackbarMessage('Lỗi server!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleResponseReview = async () => {
+    // console.log('content', content);
+
+    try {
+      const response = await AxiosInstance().put(`/reviews/respondtoreview/${selectedReview._id}`, {
+        content: content
+      });
+      console.log('response===>', response.data);
+
+      if (response.status) {
+        setSnackbarMessage('Phản hồi thành công!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      setSnackbarMessage('Lỗi server!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
 
   return (
     <MainCard title="QUẢN LÝ ĐÁNH GIÁ">
@@ -191,10 +255,24 @@ const Review = () => {
                 <TextField label="Tên Khách Hàng" fullWidth value={selectedReview?.reviewer_id?.name} disabled />
               </Grid>
               <Grid item xs={12}>
+                <TextField label="Nội dung" fullWidth value={selectedReview?.comment || 'Không có nội dung'} disabled />
+              </Grid>
+              <Grid item xs={12}>
                 <TextField label="Rating" fullWidth value={selectedReview?.rating} disabled />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Trạng Thái" fullWidth value={selectedReview.status} disabled />
+                <TextField
+                  label="Trạng Thái"
+                  fullWidth
+                  value={
+                    selectedReview.status === 'pending'
+                      ? 'Đang chờ duyệt'
+                      : selectedReview.status === 'rejected'
+                        ? 'Bị ẩn'
+                        : 'Đã được duyệt'
+                  }
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField label="Ngày Đánh Giá" fullWidth value={new Date(selectedReview.createdAt).toLocaleDateString()} disabled />
@@ -227,22 +305,43 @@ const Review = () => {
                       return null;
                     })}
                 </div>
+                <Grid item xs={12}>
+                  {selectedReview?.response?.content ? (
+                    <TextField
+                      label="Đã phản hồi"
+                      fullWidth
+                      value={selectedReview.response.content}
+                      sx={{ marginTop: 3 }}
+                      multiline
+                      disabled
+                    />
+                  ) : (
+                    <div style={{ marginTop: '10px' }}>
+                      <TextField
+                        label="Phản hồi"
+                        fullWidth
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        sx={{ marginBottom: 2, marginTop: 3 }}
+                        multiline
+                      />
+                      <Button onClick={() => handleResponseReview()} variant="contained" color="primary" sx={{ marginRight: 1 }}>
+                        Gửi phản hồi
+                      </Button>
+                    </div>
+                  )}
+                </Grid>
               </Grid>
 
               <Grid item xs={12}>
                 {selectedReview.status === 'pending' && (
                   <div>
-                    <Button variant="contained" color="primary" sx={{ marginRight: 1 }}>
+                    <Button onClick={() => handleUpdateStatus('approved')} variant="contained" color="primary" sx={{ marginRight: 1 }}>
                       Duyệt
                     </Button>
-                    <Button variant="contained" color="secondary" sx={{ marginRight: 1 }}>
+                    <Button onClick={() => handleUpdateStatus('rejected')} variant="contained" color="secondary" sx={{ marginRight: 1 }}>
                       Ẩn đánh giá
                     </Button>
-                    {!selectedReview?.response?.content && (
-                      <Button variant="contained" color="secondary">
-                        Phản hồi
-                      </Button>
-                    )}
                   </div>
                 )}
               </Grid>
@@ -253,6 +352,12 @@ const Review = () => {
           <Button onClick={handleCloseDialog}>Đóng</Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </MainCard>
   );
 };
