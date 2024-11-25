@@ -5,13 +5,12 @@ import AxiosInstance from 'helper/AxiosInstance';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { borders, height, maxWidth } from '@mui/system';
+import { formatDate } from 'utils/date';
 
 const SOCKET_SERVER_URL = 'http://localhost:3000';
 
 const groupDate = (messages) => {
   if (messages.length === 0) return [];
-
-  messages = messages.reverse();
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
@@ -30,7 +29,7 @@ const groupDate = (messages) => {
     const isShowDate = messageDate !== lastDate;
     lastDate = messageDate;
     return { ...message, isShowDate };
-  }).reverse();;
+  });
 };
 
 
@@ -270,24 +269,24 @@ const Customer = () => {
                   OrderItem(message.order)
                 ) : (
                   message.type == 'product' ? ProductMessageItem(message.product) : (
+                    message.type == 'image' ? MessageTypeImage(message) : <Box
+                    key={message._id}
+                    display="flex"
+                    justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}
+                  >
                     <Box
-                      key={message._id}
-                      display="flex"
-                      justifyContent={message.senderId._id !== selectedConversation.userId._id ? 'flex-end' : 'flex-start'}
+                      bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
+                      color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
+                      p={1}
+                      m={1}
+                      borderRadius={2}
                     >
-                      <Box
-                        bgcolor={message.senderId._id !== selectedConversation.userId._id ? 'primary.main' : 'grey.300'}
-                        color={message.senderId._id !== selectedConversation.userId._id ? 'white' : 'black'}
-                        p={1}
-                        m={1}
-                        borderRadius={2}
-                      >
-                        <Typography>{message.text}</Typography>
-                        <Typography variant="caption" display="block" textAlign="right">
-                          {formatDate(message.createdAt)}
-                        </Typography>
-                      </Box>
+                      <Typography>{message.text}</Typography>
+                      <Typography variant="caption" display="block" textAlign="right">
+                        {formatDate(message.createdAt)}
+                      </Typography>
                     </Box>
+                  </Box>
                   )
                 )}
               </Box>
@@ -344,6 +343,44 @@ function OrderItem(order) {
       </div>
     </div>
   );
+}
+
+function MessageTypeImage(message) {
+
+  const formatDate = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffTime = now - date;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    if (diffDays === 1) return 'Hôm qua';
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
+
+  const imageCount = message.fileUrls.length;
+  const isLastMessageExpand = imageCount % 2 == 1;
+  return <div>
+    <div style={{maxWidth: 500, display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
+    {
+      message.fileUrls.map((file, index) => {
+        return <img
+          src={file}
+          style={{
+            margin: 1,
+            width: (isLastMessageExpand && index == imageCount -1) ? 500 + 'px' : 248 + 'px',
+            height: 248 + 'px',
+            objectFit: 'cover',
+          }}
+        />
+      })
+    }
+  </div>
+  <p style={{padding: '2px 10px', borderRadius: '16px', backgroundColor: '#cdcdcd', maxWidth: '100px', color: 'white', textAlign: 'center', alignSelf: 'baseline'}}>{formatDate(message.createdAt)}</p>
+  </div>
 }
 
 const styles = {
