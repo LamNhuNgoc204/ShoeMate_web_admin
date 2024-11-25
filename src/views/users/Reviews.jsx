@@ -90,12 +90,10 @@ const Review = () => {
     try {
       const response = await AxiosInstance().put(`/reviews/update-review-status/${selectedReview._id}`, { status: status });
       if (response.status) {
-        // Cập nhật trạng thái trong mảng reviews
         setReviews((prevReviews) =>
           prevReviews.map((review) => (review._id === selectedReview._id ? { ...review, status: status } : review))
         );
 
-        // Cập nhật lại filteredReviews nếu cần
         setFilteredReviews((prevFilteredReviews) =>
           prevFilteredReviews.map((review) => (review._id === selectedReview._id ? { ...review, status: status } : review))
         );
@@ -120,13 +118,10 @@ const Review = () => {
   };
 
   const handleResponseReview = async () => {
-    // console.log('content', content);
-
     try {
       const response = await AxiosInstance().put(`/reviews/respondtoreview/${selectedReview._id}`, {
         content: content
       });
-      console.log('response===>', response.data);
 
       if (response.status) {
         setSnackbarMessage('Phản hồi thành công!');
