@@ -236,6 +236,20 @@ const InventoryManagement = () => {
     setopenCateEditDialog(false);
   };
   const handleEditCate = async () => {
+    const newErrors = {};
+
+    if (!newCateName) {
+      newErrors.newCategory = 'Tên danh mục không được để trống!';
+    }
+    if (!newCatelogo) {
+      newErrors.newCategoryImage = 'Vui lòng chọn ảnh!';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setCateErrors(newErrors);
+      return;
+    }
+
     if (!newCatelogo) {
       setSnackbarMessage('Vui lòng chọn ảnh');
       setOpenSnackbar(true);
@@ -337,7 +351,22 @@ const InventoryManagement = () => {
   };
 
   //CREATE NEW
+  const [cateErrors, setCateErrors] = useState({});
   const handleAddNewCategory = async () => {
+    const newErrors = {};
+
+    if (!newCategory.trim()) {
+      newErrors.newCategory = 'Tên danh mục không được để trống!';
+    }
+    if (!newCategoryImage) {
+      newErrors.newCategoryImage = 'Vui lòng chọn ảnh!';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setCateErrors(newErrors);
+      return;
+    }
+
     if (!newCategory || !newCategoryImage) {
       setSnackbarMessage(!newCategory ? 'Nhập tên danh mục' : 'Chọn ảnh danh mục');
       setOpenSnackbar(true);
@@ -585,16 +614,19 @@ const InventoryManagement = () => {
 
   const handleSaveProduct = async () => {
     try {
-      if (!validateForm()) {
-        return;
-      }
       // console.log('formdata', formData);
 
       if (selectedProduct) {
+        if (!validateForm()) {
+          return;
+        }
         // Cập nhật sản phẩm hiện tại
         const updatedProduct = await updateProduct(selectedProduct._id, formData);
         setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct : p)));
       } else {
+        if (!validateForm()) {
+          return;
+        }
         // Thêm sản phẩm mới
         const newProduct = await addProduct(formData);
         if (newProduct) {
@@ -711,7 +743,6 @@ const InventoryManagement = () => {
 
     if (!formData.name.trim()) newErrors.name = 'Tên sản phẩm là bắt buộc.';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Giá phải lớn hơn 0.';
-    if (!formData.description.trim()) newErrors.description = 'Mô tả không được để trống.';
     if (!formData.brand) newErrors.brand = 'Vui lòng chọn thương hiệu.';
     if (!formData.category) newErrors.category = 'Vui lòng chọn danh mục.';
 
@@ -725,7 +756,7 @@ const InventoryManagement = () => {
       });
     }
 
-    setErrors(newErrors);
+    setErrorsProduct(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -1286,7 +1317,14 @@ const InventoryManagement = () => {
         <Dialog open={openCategoryDialog} onClose={handleCloseCategoryDialog}>
           <DialogTitle>Thêm danh mục mới</DialogTitle>
           <DialogContent>
-            <TextField label="Tên danh mục" fullWidth value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
+            <TextField
+              error={!!cateErrors.newCategory}
+              helperText={cateErrors.newCategory}
+              label="Tên danh mục"
+              fullWidth
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+            />
 
             <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
               <Button variant="outlined" component="span">
@@ -1380,7 +1418,14 @@ const InventoryManagement = () => {
         <Dialog style={{ padding: 10, textAlign: 'center' }} fullWidth open={openCateEditDialog} onClose={handleCloseEditCateDialog}>
           <div style={{ padding: 20 }}>
             <DialogTitle>Chỉnh sửa danh mục {selectedCatesName}</DialogTitle>
-            <TextField label="Tên danh mục" fullWidth value={newCateName} onChange={(e) => setnewCateName(e.target.value)} />
+            <TextField
+              error={!!cateErrors.newCategory}
+              helperText={cateErrors.newCategory}
+              label="Tên danh mục"
+              fullWidth
+              value={newCateName}
+              onChange={(e) => setnewCateName(e.target.value)}
+            />
             <TextField
               style={{ marginTop: 10 }}
               label="Mô tả danh mục"
