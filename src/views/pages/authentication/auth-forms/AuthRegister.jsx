@@ -62,7 +62,7 @@ const AuthRegister = ({ ...others }) => {
       console.log('body pass ', body);
 
       const response = await AxiosInstance().post('/admins/change-password', body);
-      if (response.status) {
+      if (response.status === 200) {
         setSnackbarMessage('Đổi mật khẩu thành công!');
         setSnackbarOpen(true);
         navigate('/pages/login/login3', { replace: true });
@@ -87,11 +87,18 @@ const AuthRegister = ({ ...others }) => {
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
+          email: Yup.string().email('Email không hợp lệ').max(255).required('Email không được để trống'),
+          password: Yup.string()
+            .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
+            .matches(/[A-Z]/, 'Mật khẩu phải chứa ít nhất 1 ký tự in hoa')
+            .matches(/[a-z]/, 'Mật khẩu phải chứa ít nhất 1 ký tự thường')
+            .matches(/[0-9]/, 'Mật khẩu phải chứa ít nhất 1 chữ số')
+            .required('Mật khẩu không được để trống')
         })}
         onSubmit={(values, { setSubmitting }) => {
-          handleChangePass(values);
+          if (!Object.keys(errors).length) {
+            handleChangePass(values);
+          }
           setSubmitting(false);
         }}
       >
@@ -106,7 +113,10 @@ const AuthRegister = ({ ...others }) => {
                 name="email"
                 onBlur={handleBlur}
                 onChange={handleChange}
-                inputProps={{}}
+                autoComplete="off"
+                inputProps={{
+                  autoComplete: 'new-email'
+                }}
               />
               {touched.email && errors.email && (
                 <FormHelperText error id="standard-weight-helper-text--register">
@@ -141,7 +151,10 @@ const AuthRegister = ({ ...others }) => {
                     </IconButton>
                   </InputAdornment>
                 }
-                inputProps={{}}
+                autoComplete="off"
+                inputProps={{
+                  autoComplete: 'new-pass'
+                }}
               />
               {touched.password && errors.password && (
                 <FormHelperText error id="standard-weight-helper-text-password-register">
@@ -170,7 +183,14 @@ const AuthRegister = ({ ...others }) => {
         )}
       </Formik>
 
-      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose} message={snackbarMessage} />
+      {/* <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose} message={snackbarMessage} /> */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      />
     </>
   );
 };

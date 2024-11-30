@@ -65,8 +65,14 @@ const AuthLogin = ({ ...others }) => {
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
+          email: Yup.string().email('Email không hợp lệ').max(255).required('Email là bắt buộc'),
+          password: Yup.string()
+            .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
+            .matches(/[A-Z]/, 'Mật khẩu phải chứa ít nhất 1 ký tự in hoa')
+            .matches(/[a-z]/, 'Mật khẩu phải chứa ít nhất 1 ký tự thường')
+            .matches(/[0-9]/, 'Mật khẩu phải chứa ít nhất 1 chữ số')
+            .max(30)
+            .required('Mật khẩu là bắt buộc')
         })}
         onSubmit={async (values, { setSubmitting, setErrors }) => {
           try {
@@ -84,7 +90,7 @@ const AuthLogin = ({ ...others }) => {
               console.log('Access denied. Not an admin.');
               setSnackbarMessage('Lỗi đăng nhập. Thử lại sau!');
               setSnackbarOpen(true);
-              setErrors({ submit: 'You do not have permission to access this page.' });
+              setErrors({ submit: 'Bạn không có quyền truy cập vào trang này.' });
             }
           } catch (error) {
             setErrors({ submit: error.message });
@@ -96,7 +102,7 @@ const AuthLogin = ({ ...others }) => {
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
             <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-email-login">Email:</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-email-login">Email</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-email-login"
                 type="email"
@@ -115,7 +121,7 @@ const AuthLogin = ({ ...others }) => {
             </FormControl>
 
             <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-password-login">Mật khẩu:</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-password-login">Mật khẩu</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-password-login"
                 type={showPassword ? 'text' : 'password'}
