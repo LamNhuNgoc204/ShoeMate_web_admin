@@ -61,12 +61,12 @@ const InventoryManagement = () => {
   const [newCateDescription, setnewCateDescription] = useState('');
   const [productOfCate, setproductOfCate] = useState([]);
   const [selectIdForDetailCate, setselectIdForDetailCate] = useState('');
-  const [filterCate, setfilterCate] = useState('');
+  const [filterCate, setfilterCate] = useState('all');
   const [currentPageCate, setCurrentPageCate] = useState(1);
   const itemsPerPageCate = 5;
   // Lọc danh sách danh mục
   const listCateFilter = categories.filter((cate) => {
-    return filterCate === '' || filterCate === cate._id;
+    return filterCate === 'all' || filterCate === cate._id;
   });
   // Phân trang dựa trên danh sách đã lọc
   const paginateCate = listCateFilter.slice((currentPageCate - 1) * itemsPerPageCate, currentPageCate * itemsPerPageCate);
@@ -86,13 +86,13 @@ const InventoryManagement = () => {
   const [newBrandLogo, setNewBrandLogo] = useState('');
   const [openEditBrandDialog, setopenEditBrandDialog] = useState(false);
   const [brands, setBrands] = useState([]);
-  const [filterBrand, setFilterBrand] = useState('');
+  const [filterBrand, setFilterBrand] = useState('all');
   const [currentBrandPage, setcurrentBrandPage] = useState(1);
   const itemsPerPagebrand = 5;
   // Lọc danh sách thương hiệu theo filterBrand
   const listBrandFilter = Array.isArray(brands)
     ? brands.filter((brand) => {
-        return filterBrand === '' || filterBrand === brand._id;
+        return filterBrand === 'all' || filterBrand === brand._id;
       })
     : [];
   // Phân trang dựa trên danh sách đã lọc
@@ -106,13 +106,13 @@ const InventoryManagement = () => {
   const [sizes, setSizes] = useState([]);
   const [newSize, setNewSize] = useState('');
   const [openSizeDialog, setOpenSizeDialog] = useState(false);
-  const [filterSize, setFilterSize] = useState('');
+  const [filterSize, setFilterSize] = useState('all');
   const [currentSizePage, setcurrentSizePage] = useState(1);
   const itemsPerPageSize = 5;
   // Lọc danh sách thương hiệu theo filtercurrentSize
   const listSizeFilter = Array.isArray(sizes)
     ? sizes.filter((size) => {
-        return filterSize === '' || filterSize === size._id;
+        return filterSize === 'all' || filterSize === size._id;
       })
     : [];
   // Phân trang dựa trên danh sách đã lọc
@@ -149,7 +149,15 @@ const InventoryManagement = () => {
       try {
         const [sizes, brands, categories] = await Promise.all([getAllSizes(), getAllBrands(), getAllCategories()]);
 
-        if (sizes) setSizes(sizes);
+        if (sizes) {
+          const freeSize = sizes.filter((size) => size.name === 'Free size');
+          const otherSizes = sizes.filter((size) => size.name !== 'Free size');
+          const sortedSizes = otherSizes.sort((a, b) => {
+            return parseInt(a.name) - parseInt(b.name);
+          });
+          const sortedListSizes = [...freeSize, ...sortedSizes];
+          setSizes(sortedListSizes);
+        }
         if (brands) setBrands(brands);
         if (categories) setCategories(categories);
       } catch (error) {
@@ -166,8 +174,8 @@ const InventoryManagement = () => {
       const response = await getProductOfBrand(selectedBrandId);
       console.log('Response:', response);
       if (!response || !response.data) {
-        setSnackbarMessage('Lấy dữ liệu thất bại!');
-        setOpenSnackbar(true);
+        // setSnackbarMessage('Lấy dữ liệu thất bại!');
+        // setOpenSnackbar(true);
         return;
       }
       setProductOfBrands(response.data);
@@ -196,12 +204,14 @@ const InventoryManagement = () => {
     setCatenamefordetail(name);
     try {
       if (!productOfCate) {
-        setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
-        setOpenSnackbar(true);
+        // setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+        // setOpenSnackbar(true);
+        return;
       }
     } catch (error) {
-      setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
-      setOpenSnackbar(true);
+      // setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+      // setOpenSnackbar(true);
+      console.log('error==>', error);
     } finally {
       setopenCateDetailDialog(true);
     }
@@ -212,8 +222,8 @@ const InventoryManagement = () => {
       const response = await getProductOfCate(selectIdForDetailCate);
       console.log('Response:', response);
       if (!response || !response.data) {
-        setSnackbarMessage('Lấy dữ sản phẩm của danh mục thất bại!');
-        setOpenSnackbar(true);
+        // setSnackbarMessage('Lấy dữ sản phẩm của danh mục thất bại!');
+        // setOpenSnackbar(true);
         return;
       }
       setproductOfCate(response.data);
@@ -222,7 +232,7 @@ const InventoryManagement = () => {
     fetchdataDetailCate();
   }, [selectIdForDetailCate]);
 
-  console.log('productOfCate', productOfCate);
+  // console.log('productOfCate', productOfCate);
 
   const handleOpenEditCateDialog = async (id, name, img, description) => {
     setSelectedsCateId(id);
@@ -294,12 +304,14 @@ const InventoryManagement = () => {
     setSelectedBrandsName(name);
     try {
       if (!productOfBrands) {
-        setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
-        setOpenSnackbar(true);
+        // setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+        // setOpenSnackbar(true);
+        return;
       }
     } catch (error) {
-      setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
-      setOpenSnackbar(true);
+      // setSnackbarMessage('Xảy ra lỗi khi lấy sản phẩm theo brands!');
+      // setOpenSnackbar(true);
+      console.log('Lỗi lấy dữ liệu:', error);
     } finally {
       setopenBrandDetailDialog(true);
     }
@@ -318,7 +330,7 @@ const InventoryManagement = () => {
   };
   const handleEditBrand = async () => {
     if (!newBrandLogo) {
-      setSnackbarMessage('Vui long chon anh');
+      setSnackbarMessage('Vui lòng chọn ảnh!');
       setOpenSnackbar(true);
       return;
     }
@@ -334,7 +346,7 @@ const InventoryManagement = () => {
       }
     } catch (error) {
       console.error(error);
-      setSnackbarMessage('Đã xảy ra lỗi khi chinh sua logo brand, thử lại sau');
+      setSnackbarMessage('Đã xảy ra lỗi khi cập nhật logo thương hiệu.');
     } finally {
       handleCloseEditBrandDialog();
       setOpenSnackbar(true);
@@ -386,7 +398,7 @@ const InventoryManagement = () => {
         description: newCateDes
       };
 
-      console.log('body: ', body);
+      // console.log('body: ', body);
 
       if (!body.name || !body.image || !body.description) {
         setSnackbarMessage('Dữ liệu không đầy đủ, vui lòng kiểm tra lại');
@@ -431,7 +443,7 @@ const InventoryManagement = () => {
         return;
       }
 
-      console.log('Brand body: ', body);
+      // console.log('Brand body: ', body);
 
       if (newBrand && !brands.includes(newBrand)) {
         const response = await createNewBrand(body);
@@ -474,6 +486,36 @@ const InventoryManagement = () => {
   const [ListBrands, setListBrands] = useState([]);
   const [ListCategories, setListCategories] = useState([]);
   const [ListSizes, setListSizes] = useState([]);
+  const dispatch = useDispatch();
+  const products = useSelector((state) => state.products);
+  const [loadingProduct, setLoadingProduct] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [result, cate, sizes] = await Promise.all([getAllBrands(), getAllCategories(), getAllSizes()]);
+
+        if (result) setListBrands(result);
+        if (cate) setListCategories(cate);
+        if (sizes) {
+          const freeSize = sizes.filter((size) => size.name === 'Free size');
+          const otherSizes = sizes.filter((size) => size.name !== 'Free size');
+          const sortedSizes = otherSizes.sort((a, b) => {
+            return parseInt(a.name) - parseInt(b.name);
+          });
+          const sortedListSizes = [...freeSize, ...sortedSizes];
+
+          console.log('sortedListSizes===============', sortedListSizes);
+
+          setListSizes(sortedListSizes);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -488,10 +530,6 @@ const InventoryManagement = () => {
     category: '',
     assets: []
   });
-
-  const dispatch = useDispatch();
-  const products = useSelector((state) => state.products);
-  const [loadingProduct, setLoadingProduct] = useState(false);
 
   useEffect(() => {
     const fetchdata = async () => {
@@ -513,25 +551,7 @@ const InventoryManagement = () => {
     }
   }, [products]);
 
-  console.log('ListProducts------------------>', listProducts);
-
-  useEffect(() => {
-    const fetchdata = async () => {
-      const result = await getAllBrands();
-      const cate = await getAllCategories();
-      const sizes = await getAllSizes();
-      if (result) {
-        setListBrands(result);
-      }
-      if (cate) {
-        setListCategories(cate);
-      }
-      if (sizes) {
-        setListSizes(sizes);
-      }
-    };
-    fetchdata();
-  }, []);
+  // console.log('ListProducts------------------>', listProducts);
 
   // Trạng thái cho lọc khác (giá, danh mục, thương hiệu, tình trạng hàng)
   const [minPrice, setMinPrice] = useState('');
@@ -577,7 +597,7 @@ const InventoryManagement = () => {
     setCurrentPageProduct(value);
   };
 
-  console.log('Filtered Products:', filteredProducts);
+  // console.log('Filtered Products:', filteredProducts);
 
   const handleOpenDialog = (product = null) => {
     setSelectedProduct(product);
@@ -686,8 +706,8 @@ const InventoryManagement = () => {
   };
 
   const handleRemoveFile = (file) => {
-    console.log('File remove:', file);
-    console.log('Current assets:', formData.assets);
+    // console.log('File remove:', file);
+    // console.log('Current assets:', formData.assets);
 
     const newAssets = formData.assets.filter((item) => item.trim() !== file.trim());
     setFormData({
@@ -695,7 +715,7 @@ const InventoryManagement = () => {
       assets: newAssets
     });
 
-    console.log('New assets:', newAssets);
+    // console.log('New assets:', newAssets);
   };
 
   const handleSizeChange = (sizeId) => {
@@ -839,7 +859,7 @@ const InventoryManagement = () => {
                   </div>
                 ) : (
                   <TableContainer component={Paper} style={{ marginTop: 20 }}>
-                    <Table>
+                    <Table stickyHeader>
                       <TableHead>
                         <TableRow>
                           <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
@@ -960,23 +980,14 @@ const InventoryManagement = () => {
               </Button>
               <FormControl fullWidth margin="normal">
                 <InputLabel>Lọc danh mục</InputLabel>
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                  <Select fullWidth name="categories" value={filterCate} onChange={(e) => setfilterCate(e.target.value)}>
-                    {categories.map((cate) => (
-                      <MenuItem key={cate._id} value={cate._id}>
-                        {cate.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    onClick={() => setfilterCate('')}
-                    style={{ marginLeft: 10, width: 200, flex: 1 }}
-                  >
-                    Bỏ lọc
-                  </Button>
-                </div>
+                <Select fullWidth name="categories" value={filterCate} onChange={(e) => setfilterCate(e.target.value)}>
+                  <MenuItem value="all">Tất cả</MenuItem>
+                  {categories.map((cate) => (
+                    <MenuItem key={cate._id} value={cate._id}>
+                      {cate.name}
+                    </MenuItem>
+                  ))}
+                </Select>
               </FormControl>
               {loading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
@@ -1036,23 +1047,14 @@ const InventoryManagement = () => {
               </Button>
               <FormControl fullWidth margin="normal">
                 <InputLabel>Tìm kiếm thương hiệu</InputLabel>
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                  <Select fullWidth name="brands" value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)}>
-                    {ListBrands.map((brand) => (
-                      <MenuItem key={brand._id} value={brand._id}>
-                        {brand.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    onClick={() => setFilterBrand('')}
-                    style={{ marginLeft: 10, width: 200, flex: 1 }}
-                  >
-                    Bỏ lọc
-                  </Button>
-                </div>
+                <Select fullWidth name="brands" value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)}>
+                  <MenuItem value="all">Tất cả</MenuItem>
+                  {ListBrands.map((brand) => (
+                    <MenuItem key={brand._id} value={brand._id}>
+                      {brand.name}
+                    </MenuItem>
+                  ))}
+                </Select>
               </FormControl>
               {loading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
@@ -1109,18 +1111,14 @@ const InventoryManagement = () => {
               <div style={{ display: 'flex', flexDirection: 'row' }}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Tìm kiếm...</InputLabel>
-                  <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <Select fullWidth name="brands" value={filterSize} onChange={(e) => setFilterSize(e.target.value)}>
-                      {ListSizes.map((size) => (
-                        <MenuItem key={size._id} value={size._id}>
-                          {size.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    <Button style={{ marginLeft: 15, flex: 1 }} variant="contained" color="warning" onClick={() => setFilterSize('')}>
-                      Bỏ lọc
-                    </Button>
-                  </div>
+                  <Select fullWidth name="brands" value={filterSize} onChange={(e) => setFilterSize(e.target.value)}>
+                    <MenuItem value="all">Tất cả</MenuItem>
+                    {ListSizes.map((size) => (
+                      <MenuItem key={size._id} value={size._id}>
+                        {size.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </FormControl>
               </div>
               {loading ? (
@@ -1142,6 +1140,7 @@ const InventoryManagement = () => {
                           <TableRow key={index}>
                             <TableCell align="center">{size.name}</TableCell>
                             <TableCell align="center">
+                              <Button onClick={() => {}}>Xem chi tiết</Button>
                               <Button onClick={() => handleDeleteSize(size.id)}>Xóa</Button>
                             </TableCell>
                           </TableRow>
@@ -1366,20 +1365,28 @@ const InventoryManagement = () => {
         </Dialog>
 
         {/* Diaglog thông tin chi tiết danh mục */}
-        <Dialog open={openCateDetailDialog} onClose={handleCloseCateDetailDialog}>
-          <DialogTitle>Chi tiết danh mục {catenamefordetail}</DialogTitle>
-          <TableContainer component={Paper}>
-            <Table style={{ width: '80%', maxWidth: 800 }}>
+        <Dialog open={openCateDetailDialog} onClose={handleCloseCateDetailDialog} fullWidth={true} maxWidth="lg">
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+            Chi tiết danh mục {catenamefordetail}
+          </DialogTitle>
+          <DialogContent>Tổng sản phẩm: {productOfCate.length}</DialogContent>
+          <TableContainer
+            style={{
+              maxHeight: '500px'
+            }}
+            component={Paper}
+          >
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
                   <TableCell>ID</TableCell>
-                  <TableCell>Tên</TableCell>
-                  <TableCell>Giá</TableCell>
-                  <TableCell>Size</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell>Danh mục</TableCell>
-                  <TableCell>Đã bán</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Kích thước</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -1388,20 +1395,24 @@ const InventoryManagement = () => {
                     <TableRow key={product._id}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{product?.name || 'N/A'}</TableCell>
-                      <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
-                      <TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
+                      <TableCell style={{ textAlign: 'center', justifyContent: 'center', alignItems: 'center' }}>
                         {product.size && product.size.length > 0
-                          ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
+                          ? product.size.map((s) => (
+                              <TableRow style={{ textAlign: 'center' }} key={s._id}>
+                                {s.sizeId && s.sizeId.name}
+                              </TableRow>
+                            ))
                           : 'Không có kích thước'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>
                         {product.size && product.size.length > 0
                           ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
                           : 'Không có số lượng'}
                       </TableCell>
-                      <TableCell>{product.brand ? product.brand.name : 'Không có danh mục'}</TableCell>
-                      <TableCell>{product.sold}</TableCell>
-                      <TableCell>{product.status}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.brand ? product.brand.name : 'Không có danh mục'}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -1463,42 +1474,52 @@ const InventoryManagement = () => {
       {/* QUẢN LÝ BRAND */}
       <>
         {/* Diaglog thông tin chi tiết thương hiệu */}
-        <Dialog open={openBrandDetailDialog} onClose={handleCloseBrandDetailDialog}>
-          <DialogTitle>Chi tiết thương hiệu {selectedBrandsName}</DialogTitle>
-          <TableContainer component={Paper}>
-            <Table style={{ width: '80%', maxWidth: 800 }}>
+        <Dialog open={openBrandDetailDialog} fullWidth={true} maxWidth="lg" onClose={handleCloseBrandDetailDialog}>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+            Chi tiết thương hiệu {selectedBrandsName}
+          </DialogTitle>
+          <DialogContent>Tổng sản phẩm: {productOfBrands.length}</DialogContent>
+          <TableContainer
+            style={{
+              maxHeight: '500px'
+            }}
+            component={Paper}
+          >
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Tên</TableCell>
-                  <TableCell>Giá</TableCell>
-                  <TableCell>Size</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell>Danh mục</TableCell>
-                  <TableCell>Đã bán</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Giá</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Size</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {productOfBrands && productOfBrands.length > 0 ? (
                   productOfBrands.map((product, index) => (
                     <TableRow key={product._id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{product?.name || 'N/A'}</TableCell>
-                      <TableCell>{product.price.toLocaleString('vi-VN')}</TableCell>
-                      <TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product?.name || 'N/A'}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>
                         {product.size && product.size.length > 0
                           ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
                           : 'Không có kích thước'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>
                         {product.size && product.size.length > 0
                           ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
                           : 'Không có số lượng'}
                       </TableCell>
-                      <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
-                      <TableCell>{product.sold}</TableCell>
-                      <TableCell>{product.status}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>
+                        {product.category ? product.category.name : 'Không có danh mục'}
+                      </TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -1584,7 +1605,7 @@ const InventoryManagement = () => {
       <>
         {/* Dialog for Adding New Size */}
         <Dialog open={openSizeDialog} onClose={handleCloseSizeDialog}>
-          <DialogTitle>Thêm kích thước mới</DialogTitle>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Thêm kích thước mới</DialogTitle>
           <DialogContent>
             <TextField label="Tên kích thước" fullWidth value={newSize} onChange={(e) => setNewSize(e.target.value)} />
           </DialogContent>
