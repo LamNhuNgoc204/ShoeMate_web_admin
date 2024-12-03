@@ -22,3 +22,12 @@ export const addProduct = async (body) => {
     console.error('Lỗi cập nhật: ', error);
   }
 };
+
+export const stopSellingPd = async (id, status) => {
+  try {
+    const response = await AxiosInstance().put(`/products/stop-selling/${id}`, { status });
+    return response;
+  } catch (error) {
+    console.error('Lỗi cập nhật: ', error);
+  }
+};

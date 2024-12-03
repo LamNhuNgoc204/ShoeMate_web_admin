@@ -36,7 +36,7 @@ import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
 import { updateCate, updateLogoBrand } from 'api/updateData';
 import { fetchProducts } from 'redux/thunks/productsThunk';
-import { addProduct, updateProduct } from 'api/products';
+import { addProduct, stopSellingPd, updateProduct } from 'api/products';
 import { Box } from '@mui/system';
 
 const InventoryManagement = () => {
@@ -670,8 +670,38 @@ const InventoryManagement = () => {
     }
   };
 
-  const handleDeleteProduct = (id) => {
-    setListProducts(listProducts.filter((product) => product._id !== id));
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState('');
+  const [selectPd, setselectPd] = useState('');
+  const handleClickOpen = (newStatus, id) => {
+    setselectPd(id);
+    setStatus(newStatus);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleStopSelling = async (id) => {
+    try {
+      const response = await stopSellingPd(id, status);
+      if (response.status) {
+        setListProducts((prevProducts) => prevProducts.map((product) => (product._id === id ? { ...product, status: status } : product)));
+        setOpen(false);
+        setSnackbarMessage('Cập nhật trạng thái thành công');
+        setOpenSnackbar(true);
+      } else {
+        setOpen(false);
+        setSnackbarMessage('Cập nhật trạng thái thất bại');
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      setOpen(false);
+      console.log('Lỗi khi cập nhật sp: ', error);
+      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau.');
+      setOpenSnackbar(true);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -938,22 +968,38 @@ const InventoryManagement = () => {
                                     : 'Không có số lượng'}
                                 </TableCell>
                                 <TableCell style={{ textAlign: 'center' }}>
-                                  <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    onClick={() => handleOpenDialog(product)}
-                                    style={{ width: '125px' }}
-                                  >
-                                    Sửa
-                                  </Button>
-                                  <Button
-                                    style={{ marginTop: 10 }}
-                                    variant="contained"
-                                    color="error"
-                                    onClick={() => handleDeleteProduct(product.id)}
-                                  >
-                                    Tạm ngừng
-                                  </Button>
+                                  {product.status === 'Ngừng bán' ? (
+                                    <>
+                                      <Typography>Sản phẩm này đã tạm ngừng bán</Typography>
+                                      <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={() => handleClickOpen('Đang kinh doanh', product._id)}
+                                        style={{ width: '125px', marginTop: 5 }}
+                                      >
+                                        Tiếp tục kinh doanh
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={() => handleOpenDialog(product)}
+                                        style={{ width: '125px' }}
+                                      >
+                                        Sửa
+                                      </Button>
+                                      <Button
+                                        style={{ marginTop: 10 }}
+                                        variant="contained"
+                                        color="error"
+                                        onClick={() => handleClickOpen('Ngừng bán', product._id)}
+                                      >
+                                        Tạm ngừng
+                                      </Button>
+                                    </>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             );
@@ -1171,152 +1217,177 @@ const InventoryManagement = () => {
       </Box>
 
       {/* QUAN LY SP */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>{selectedProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            error={!!errorsProduct.name}
-            helperText={errorsProduct.name}
-            label="Tên sản phẩm"
-            name="name"
-            fullWidth
-            margin="normal"
-            value={formData.name}
-            onChange={handleInputChange}
-          />
-          <TextField
-            error={!!errorsProduct.price}
-            helperText={errorsProduct.price}
-            label="Giá"
-            name="price"
-            fullWidth
-            margin="normal"
-            type="number"
-            value={formData.price}
-            onChange={handleInputChange}
-          />
-          <TextField label="Mô tả" name="description" fullWidth margin="normal" value={formData.description} onChange={handleInputChange} />
-          <TextField
-            label="Giảm giá"
-            name="discount"
-            fullWidth
-            margin="normal"
-            type="number"
-            value={formData.discount}
-            onChange={handleInputChange}
-          />
+      <>
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle>{selectedProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</DialogTitle>
+          <DialogContent>
+            <TextField
+              error={!!errorsProduct.name}
+              helperText={errorsProduct.name}
+              label="Tên sản phẩm"
+              name="name"
+              fullWidth
+              margin="normal"
+              value={formData.name}
+              onChange={handleInputChange}
+            />
+            <TextField
+              error={!!errorsProduct.price}
+              helperText={errorsProduct.price}
+              label="Giá"
+              name="price"
+              fullWidth
+              margin="normal"
+              type="number"
+              value={formData.price}
+              onChange={handleInputChange}
+            />
+            <TextField
+              label="Mô tả"
+              name="description"
+              fullWidth
+              margin="normal"
+              value={formData.description}
+              onChange={handleInputChange}
+            />
+            <TextField
+              label="Giảm giá"
+              name="discount"
+              fullWidth
+              margin="normal"
+              type="number"
+              value={formData.discount}
+              onChange={handleInputChange}
+            />
 
-          {/* Thương hiệu Select */}
-          <FormControl fullWidth margin="normal" error={!!errorsProduct.brand}>
-            <InputLabel>Thương hiệu</InputLabel>
-            <Select name="brand" value={formData.brand} onChange={handleInputChange}>
-              {ListBrands.map((brand) => (
-                <MenuItem key={brand._id} value={brand._id}>
-                  {brand.name}
-                </MenuItem>
-              ))}
-            </Select>
-            <FormHelperText>{errorsProduct.brand}</FormHelperText>
-          </FormControl>
-
-          {/* Danh mục Select */}
-          <FormControl fullWidth margin="normal" error={!!errorsProduct.category}>
-            <InputLabel>Danh mục</InputLabel>
-            <Select name="category" value={formData.category} onChange={handleInputChange}>
-              {ListCategories.map((category) => (
-                <MenuItem key={category._id} value={category._id}>
-                  {category.name}
-                </MenuItem>
-              ))}
-            </Select>
-            <FormHelperText>{errorsProduct.category}</FormHelperText>
-          </FormControl>
-
-          <FormControl component="fieldset" error={!!errorsProduct.size}>
-            <FormLabel component="legend">Sizes</FormLabel>
-            {ListSizes.map((size) => {
-              const isChecked = formData.size.some((selectedSize) => selectedSize.sizeId === size._id);
-              const selectedSize = formData.size.find((selectedSize) => selectedSize.sizeId === size._id);
-
-              return (
-                <div key={size._id}>
-                  <FormControlLabel
-                    control={<Checkbox checked={isChecked} onChange={() => handleSizeChange(size._id)} name={`size-${size._id}`} />}
-                    label={size.name}
-                  />
-                  {isChecked && (
-                    <TextField
-                      label="Quantity"
-                      type="number"
-                      value={selectedSize?.quantity}
-                      onChange={(e) => handleQuantityChange(size._id, e.target.value)}
-                      style={{ width: '100px', marginLeft: '10px', marginTop: 10, marginBottom: 10 }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-            <FormHelperText>{errorsProduct.size}</FormHelperText>
-          </FormControl>
-
-          <div style={{ display: 'flex', marginTop: 20 }}>
-            {/* Input cho hình ảnh */}
-            <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10 }}>
-              <Button variant="outlined" component="span">
-                Chọn ảnh
-              </Button>
-              <input
-                id="image-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageProductChange}
-                style={{ display: 'none' }}
-              />
-            </label>
-
-            {/* Input cho video */}
-            <label htmlFor="video-upload" style={{ display: 'block' }}>
-              <Button variant="outlined" component="span">
-                Chọn video
-              </Button>
-              <input id="video-upload" type="file" accept="video/*" onChange={handleVideoChange} style={{ display: 'none' }} />
-            </label>
-          </div>
-
-          <div style={{ marginTop: 10 }}>
-            <strong>Các file đã chọn:</strong>
-            <ul>
-              {formData.assets.length > 0 &&
-                formData.assets.map((url, index) => (
-                  <li key={index} style={{ listStyle: 'none' }}>
-                    {url.endsWith('.mp4') ? (
-                      <video src={url} controls style={{ width: '100px', height: 'auto', marginRight: '10px' }} />
-                    ) : url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') ? (
-                      <img
-                        src={url}
-                        alt={`Image ${index + 1}`}
-                        style={{ width: 100, height: 100, margin: 10, position: 'relative', marginRight: '10px' }}
-                      />
-                    ) : null}
-                    <button onClick={() => handleRemoveFile(url)} style={{ marginLeft: '10px' }}>
-                      Xóa
-                    </button>
-                  </li>
+            {/* Thương hiệu Select */}
+            <FormControl fullWidth margin="normal" error={!!errorsProduct.brand}>
+              <InputLabel>Thương hiệu</InputLabel>
+              <Select name="brand" value={formData.brand} onChange={handleInputChange}>
+                {ListBrands.map((brand) => (
+                  <MenuItem key={brand._id} value={brand._id}>
+                    {brand.name}
+                  </MenuItem>
                 ))}
-            </ul>
-          </div>
-        </DialogContent>
+              </Select>
+              <FormHelperText>{errorsProduct.brand}</FormHelperText>
+            </FormControl>
 
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
-            Hủy
-          </Button>
-          <Button size="lg" onClick={handleSaveProduct} color="primary">
-            Lưu
-          </Button>
-        </DialogActions>
-      </Dialog>
+            {/* Danh mục Select */}
+            <FormControl fullWidth margin="normal" error={!!errorsProduct.category}>
+              <InputLabel>Danh mục</InputLabel>
+              <Select name="category" value={formData.category} onChange={handleInputChange}>
+                {ListCategories.map((category) => (
+                  <MenuItem key={category._id} value={category._id}>
+                    {category.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>{errorsProduct.category}</FormHelperText>
+            </FormControl>
+
+            <FormControl component="fieldset" error={!!errorsProduct.size}>
+              <FormLabel component="legend">Sizes</FormLabel>
+              {ListSizes.map((size) => {
+                const isChecked = formData.size.some((selectedSize) => selectedSize.sizeId === size._id);
+                const selectedSize = formData.size.find((selectedSize) => selectedSize.sizeId === size._id);
+
+                return (
+                  <div key={size._id}>
+                    <FormControlLabel
+                      control={<Checkbox checked={isChecked} onChange={() => handleSizeChange(size._id)} name={`size-${size._id}`} />}
+                      label={size.name}
+                    />
+                    {isChecked && (
+                      <TextField
+                        label="Quantity"
+                        type="number"
+                        value={selectedSize?.quantity}
+                        onChange={(e) => handleQuantityChange(size._id, e.target.value)}
+                        style={{ width: '100px', marginLeft: '10px', marginTop: 10, marginBottom: 10 }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+              <FormHelperText>{errorsProduct.size}</FormHelperText>
+            </FormControl>
+
+            <div style={{ display: 'flex', marginTop: 20 }}>
+              {/* Input cho hình ảnh */}
+              <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10 }}>
+                <Button variant="outlined" component="span">
+                  Chọn ảnh
+                </Button>
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageProductChange}
+                  style={{ display: 'none' }}
+                />
+              </label>
+
+              {/* Input cho video */}
+              <label htmlFor="video-upload" style={{ display: 'block' }}>
+                <Button variant="outlined" component="span">
+                  Chọn video
+                </Button>
+                <input id="video-upload" type="file" accept="video/*" onChange={handleVideoChange} style={{ display: 'none' }} />
+              </label>
+            </div>
+
+            <div style={{ marginTop: 10 }}>
+              <strong>Các file đã chọn:</strong>
+              <ul>
+                {formData.assets.length > 0 &&
+                  formData.assets.map((url, index) => (
+                    <li key={index} style={{ listStyle: 'none' }}>
+                      {url.endsWith('.mp4') ? (
+                        <video src={url} controls style={{ width: '100px', height: 'auto', marginRight: '10px' }} />
+                      ) : url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') ? (
+                        <img
+                          src={url}
+                          alt={`Image ${index + 1}`}
+                          style={{ width: 100, height: 100, margin: 10, position: 'relative', marginRight: '10px' }}
+                        />
+                      ) : null}
+                      <button onClick={() => handleRemoveFile(url)} style={{ marginLeft: '10px' }}>
+                        Xóa
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="primary">
+              Hủy
+            </Button>
+            <Button size="lg" onClick={handleSaveProduct} color="primary">
+              Lưu
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* dialog doi trang thai */}
+        <Dialog style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} open={open} onClose={handleClose}>
+          <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
+          <DialogContent>
+            <p>Bạn có chắc chắn muốn thay đổi trạng thái sản phẩm này thành {status}?</p>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Hủy
+            </Button>
+            <Button onClick={() => handleStopSelling(selectPd)} color="primary">
+              Xác nhận
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </>
 
       {/* QUẢN LÝ DANH MỤC */}
       <>
