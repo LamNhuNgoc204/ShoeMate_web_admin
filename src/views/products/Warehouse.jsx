@@ -505,8 +505,6 @@ const InventoryManagement = () => {
           });
           const sortedListSizes = [...freeSize, ...sortedSizes];
 
-          console.log('sortedListSizes===============', sortedListSizes);
-
           setListSizes(sortedListSizes);
         }
       } catch (error) {
@@ -634,24 +632,35 @@ const InventoryManagement = () => {
 
   const handleSaveProduct = async () => {
     try {
-      // console.log('formdata', formData);
-
       if (selectedProduct) {
         if (!validateForm()) {
           return;
         }
         // Cập nhật sản phẩm hiện tại
         const updatedProduct = await updateProduct(selectedProduct._id, formData);
-        setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct : p)));
+        if (updatedProduct && updatedProduct.status) {
+          console.log('updatedProduct.data', updatedProduct.data);
+
+          setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct.data : p)));
+          setSnackbarMessage('Cập nhật sản phẩm thành công!');
+          setOpenSnackbar(true);
+        } else {
+          setSnackbarMessage('Xảy ra lỗi! Cập nhật sản phẩm thất bại!');
+          setOpenSnackbar(true);
+        }
       } else {
         if (!validateForm()) {
           return;
         }
         // Thêm sản phẩm mới
         const newProduct = await addProduct(formData);
-        if (newProduct) {
-          setListProducts([...listProducts, newProduct]);
+
+        if (newProduct && newProduct.status) {
+          setListProducts([newProduct.data, ...listProducts]);
           setSnackbarMessage('Thêm sản phẩm thành công!');
+          setOpenSnackbar(true);
+        } else {
+          setSnackbarMessage('Lỗi!!! Thêm sản phẩm không thành công!');
           setOpenSnackbar(true);
         }
       }
@@ -816,7 +825,6 @@ const InventoryManagement = () => {
                   style={{ marginRight: 20, width: '170px' }}
                 />
 
-                {/* <TextField label="Danh mục" value={category} onChange={(e) => setCategory(e.target.value)} style={{ marginRight: 20 }} /> */}
                 <FormControl style={{ width: '170px', marginRight: '20px', marginBottom: '15px' }} margin="normal">
                   <InputLabel>Danh mục</InputLabel>
                   <Select name="category" value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -1304,7 +1312,7 @@ const InventoryManagement = () => {
           <Button onClick={handleCloseDialog} color="primary">
             Hủy
           </Button>
-          <Button onClick={handleSaveProduct} color="primary">
+          <Button size="lg" onClick={handleSaveProduct} color="primary">
             Lưu
           </Button>
         </DialogActions>
