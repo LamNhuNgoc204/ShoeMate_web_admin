@@ -14,3 +14,14 @@ export const updateRole = async (userId, role) => {
   const response = await AxiosInstance().put(`/users/update-role/${userId}`, { role });
   return response;
 };
+
+export const deleteCate = async (categoryId) => {
+  try {
+    const response = await AxiosInstance().delete(`/categories/delete-category/${categoryId}`);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Loi xoa danh muc', error);
+  }
+};

@@ -27,16 +27,17 @@ import {
   Tab,
   Tabs,
   CircularProgress,
-  FormHelperText
+  FormHelperText,
+  DialogContentText
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand, getProductOfCate } from 'api/getAllData';
 import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
-import { updateCate, updateLogoBrand } from 'api/updateData';
+import { deleteCate, updateCate, updateLogoBrand } from 'api/updateData';
 import { fetchProducts } from 'redux/thunks/productsThunk';
-import { addProduct, stopSellingPd, updateProduct } from 'api/products';
+import { addProduct, getProducts, stopSellingPd, updateProduct } from 'api/products';
 import { Box } from '@mui/system';
 
 const InventoryManagement = () => {
@@ -144,7 +145,7 @@ const InventoryManagement = () => {
   //CALL API
   const [loading, setloading] = useState(false);
   useEffect(() => {
-    const fetchdata = async () => {
+    const fetchProductData = async () => {
       setloading(true);
       try {
         const [sizes, brands, categories] = await Promise.all([getAllSizes(), getAllBrands(), getAllCategories()]);
@@ -159,14 +160,14 @@ const InventoryManagement = () => {
           setSizes(sortedListSizes);
         }
         if (brands) setBrands(brands);
-        if (categories) setCategories(categories);
+        if (categories) setCategories(categories.reverse());
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu:', error);
       } finally {
         setloading(false);
       }
     };
-    fetchdata();
+    fetchProductData();
   }, []);
 
   useEffect(() => {
@@ -188,19 +189,14 @@ const InventoryManagement = () => {
   const handleOpenCategoryDialog = () => {
     setOpenCategoryDialog(true);
   };
-  const handleCloseCategoryDialog = () => {
-    setOpenCategoryDialog(false);
-    setNewCategory('');
-    setNewCateDes('');
-    setNewCategoryImage('');
-  };
+
   const handleCloseCateDetailDialog = () => {
     setopenCateDetailDialog(false);
   };
 
   const handleOpenCategoryDetailDialog = async (id, name) => {
     setselectIdForDetailCate(id);
-    console.log('selectIdForDetailCate', selectIdForDetailCate, '--', id);
+    // console.log('selectIdForDetailCate', selectIdForDetailCate, '--', id);
     setCatenamefordetail(name);
     try {
       if (!productOfCate) {
@@ -245,46 +241,42 @@ const InventoryManagement = () => {
   const handleCloseEditCateDialog = async () => {
     setopenCateEditDialog(false);
   };
+
   const handleEditCate = async () => {
-    const newErrors = {};
-
-    if (!newCateName) {
-      newErrors.newCategory = 'Tên danh mục không được để trống!';
-    }
-    if (!newCatelogo) {
-      newErrors.newCategoryImage = 'Vui lòng chọn ảnh!';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setCateErrors(newErrors);
-      return;
-    }
-
-    if (!newCatelogo) {
-      setSnackbarMessage('Vui lòng chọn ảnh');
-      setOpenSnackbar(true);
-      return;
-    }
-
-    if (!newCateName) {
-      setSnackbarMessage('Vui lòng nhập tên');
-      setOpenSnackbar(true);
-      return;
-    }
-
     try {
+      const newErrors = {};
+
+      if (!newCateName) {
+        newErrors.newCategory = 'Tên danh mục không được để trống!';
+        setSnackbarMessage('Vui lòng nhập tên');
+        setOpenSnackbar(true);
+        return;
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setCateErrors(newErrors);
+        return;
+      }
+
       const response = await updateCate(selectedCateId, newCateName, newCatelogo, newCateDescription);
       console.log('response new cate: ', response);
 
       if (response.status) {
-        setSnackbarMessage('Chỉnh sửa category thành công');
+        setCategories((prevCategories) =>
+          prevCategories.map((category) => (category._id === selectedCateId ? { ...category, ...response.data } : category))
+        );
+        setSnackbarMessage('Chỉnh sửa danh mục thành công');
+        setOpenSnackbar(true);
       } else {
-        setSnackbarMessage('Chỉnh sửa category xảy ra lỗi');
+        setSnackbarMessage('Chỉnh sửa danh mục xảy ra lỗi');
+        setOpenSnackbar(true);
       }
     } catch (error) {
       console.error(error);
-      setSnackbarMessage('Đã xảy ra lỗi khi chỉnh sửa category, thử lại sau');
+      setSnackbarMessage('Đã xảy ra lỗi khi chỉnh sửa danh mục, thử lại sau');
+      setOpenSnackbar(true);
     } finally {
+      setNewCatelogo('');
       handleCloseEditCateDialog();
       setOpenSnackbar(true);
     }
@@ -364,6 +356,14 @@ const InventoryManagement = () => {
 
   //CREATE NEW
   const [cateErrors, setCateErrors] = useState({});
+  const handleCloseCategoryDialog = () => {
+    setOpenCategoryDialog(false);
+    setNewCategory('');
+    setNewCateDes('');
+    setNewCategoryImage('');
+    setCateErrors('');
+  };
+
   const handleAddNewCategory = async () => {
     const newErrors = {};
 
@@ -398,24 +398,26 @@ const InventoryManagement = () => {
         description: newCateDes
       };
 
-      // console.log('body: ', body);
-
-      if (!body.name || !body.image || !body.description) {
+      if (!body.name || !body.image) {
         setSnackbarMessage('Dữ liệu không đầy đủ, vui lòng kiểm tra lại');
+        setOpenSnackbar(true);
         return;
       }
 
       const response = await createCate(body);
 
       if (response) {
-        setCategories([...categories, { name: newCategory, image: newCategoryImage, description: newCateDes }]);
+        setCategories([response.data, ...categories]);
         setSnackbarMessage('Thêm danh mục thành công');
+        setOpenSnackbar(true);
       } else {
         setSnackbarMessage('Thêm danh mục thất bại, thử lại sau');
+        setOpenSnackbar(true);
       }
     } catch (error) {
       console.error(error);
       setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
+      setOpenSnackbar(true);
     } finally {
       setNewCategory('');
       setNewCateDes('');
@@ -450,8 +452,10 @@ const InventoryManagement = () => {
         if (response) {
           setBrands([...brands, { name: newBrand, image: newBrandImg }]);
           setSnackbarMessage('Thêm thương hiệu thành công');
+          setOpenSnackbar(true);
         } else {
           setSnackbarMessage('Thêm thương hiệu thất bại, thử lại sau');
+          setOpenSnackbar(true);
         }
       } else {
         setSnackbarMessage('Thương hiệu đã tồn tại');
@@ -461,6 +465,7 @@ const InventoryManagement = () => {
     } catch (error) {
       console.error(error);
       setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
+      setOpenSnackbar(true);
     } finally {
       setNewBrand('');
       setNewBrandImg('');
@@ -468,6 +473,7 @@ const InventoryManagement = () => {
       setOpenSnackbar(true);
     }
   };
+
   const handleAddNewSize = async () => {
     if (newSize && !sizes.includes(newSize)) {
       const response = await createSize(newSize);
@@ -475,6 +481,9 @@ const InventoryManagement = () => {
         setSizes([...sizes, newSize]);
         setNewSize('');
         setSnackbarMessage('Thêm kích thước thành công!');
+        setOpenSnackbar(true);
+      } else {
+        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau!');
         setOpenSnackbar(true);
       }
       handleCloseSizeDialog();
@@ -486,8 +495,6 @@ const InventoryManagement = () => {
   const [ListBrands, setListBrands] = useState([]);
   const [ListCategories, setListCategories] = useState([]);
   const [ListSizes, setListSizes] = useState([]);
-  const dispatch = useDispatch();
-  const products = useSelector((state) => state.products);
   const [loadingProduct, setLoadingProduct] = useState(false);
 
   useEffect(() => {
@@ -530,26 +537,22 @@ const InventoryManagement = () => {
   });
 
   useEffect(() => {
-    const fetchdata = async () => {
+    const fetchProductData = async () => {
       setLoadingProduct(true);
       try {
-        await dispatch(fetchProducts());
+        const response = await getProducts();
+        if (response.status) {
+          const data = response.data;
+          setListProducts(data.reverse());
+        }
       } catch (error) {
         console.error('Lỗi khi tải sản phẩm:', error);
       } finally {
         setLoadingProduct(false);
       }
     };
-    fetchdata();
+    fetchProductData();
   }, []);
-
-  useEffect(() => {
-    if (products && products.products && products.products.length > 0) {
-      setListProducts([...products.products].reverse());
-    }
-  }, [products]);
-
-  // console.log('ListProducts------------------>', listProducts);
 
   // Trạng thái cho lọc khác (giá, danh mục, thương hiệu, tình trạng hàng)
   const [minPrice, setMinPrice] = useState('');
@@ -654,6 +657,7 @@ const InventoryManagement = () => {
         }
         // Thêm sản phẩm mới
         const newProduct = await addProduct(formData);
+        console.log('newProduct.data==============>', newProduct.data);
 
         if (newProduct && newProduct.status) {
           setListProducts([newProduct.data, ...listProducts]);
@@ -819,6 +823,43 @@ const InventoryManagement = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // XÁC NHẬN
+  const [openModalCate, setOpenModalCate] = useState(false);
+  const [selectedCate, setSelectedCate] = useState(null);
+  const handleCloseModalCate = () => {
+    setOpenModalCate(false);
+  };
+
+  const handleClickOpenCateModal = (cate) => {
+    setOpenModalCate(true);
+    setSelectedCate(cate);
+  };
+
+  const handleDeleteCate = async () => {
+    if (selectedCate?.products?.length !== 0) {
+      setSnackbarMessage(`Danh mục ${selectedCate.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
+      setOpenSnackbar(true);
+      handleCloseModalCate();
+      return;
+    }
+
+    try {
+      const response = await deleteCate(selectedCate._id);
+      if (response.status) {
+        setCategories((prevCategories) => prevCategories.filter((category) => category._id !== selectedCate._id));
+        setSnackbarMessage(`Danh mục ${selectedCate.name} đã được xóa!`);
+        setOpenSnackbar(true);
+      } else {
+        setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      console.log('Xay ra loi khi xoa danh muc: ', error);
+    } finally {
+      handleCloseModalCate();
+    }
+  };
+
   return (
     <MainCard title="QUẢN LÝ KHO HÀNG" style={{ padding: 20 }}>
       <Box sx={{ width: '100%' }}>
@@ -903,12 +944,12 @@ const InventoryManagement = () => {
                           <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
                           <TableCell style={{ width: '15%', textAlign: 'center', flex: 1 }}>Tên</TableCell>
                           <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>Kích thước</TableCell>
+                          <TableCell>Kích thước</TableCell>
                           <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
                           <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
                           <TableCell style={{ textAlign: 'center' }}>Thương hiệu</TableCell>
                           <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
-                          <TableCell style={{ width: '13%' }}>Trạng thái</TableCell>
+                          <TableCell style={{ width: '13%', textAlign: 'center' }}>Trạng thái</TableCell>
                           <TableCell style={{ textAlign: 'center', flex: 1 }}>Hoạt động</TableCell>
                         </TableRow>
                       </TableHead>
@@ -943,13 +984,9 @@ const InventoryManagement = () => {
                                     ? updatedProduct?.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
                                     : 'Không có kích thước'}
                                 </TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>
+                                <TableCell>
                                   {updatedProduct?.size && updatedProduct?.size.length > 0
-                                    ? updatedProduct?.size.map((s) => (
-                                        <TableRow style={{ textAlign: 'center' }} key={s._id}>
-                                          {s && s.quantity}
-                                        </TableRow>
-                                      ))
+                                    ? updatedProduct?.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
                                     : 'Không có số lượng'}
                                 </TableCell>
                                 <TableCell style={{ textAlign: 'center' }}>
@@ -1072,7 +1109,7 @@ const InventoryManagement = () => {
                               >
                                 Chỉnh sửa
                               </Button>
-                              <Button>Xóa</Button>
+                              <Button onClick={() => handleClickOpenCateModal(category)}>Xóa</Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1219,7 +1256,9 @@ const InventoryManagement = () => {
       {/* QUAN LY SP */}
       <>
         <Dialog open={openDialog} onClose={handleCloseDialog}>
-          <DialogTitle>{selectedProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</DialogTitle>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+            {selectedProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}
+          </DialogTitle>
           <DialogContent>
             <TextField
               error={!!errorsProduct.name}
@@ -1287,7 +1326,7 @@ const InventoryManagement = () => {
             </FormControl>
 
             <FormControl component="fieldset" error={!!errorsProduct.size}>
-              <FormLabel component="legend">Sizes</FormLabel>
+              <FormLabel component="legend">Kích thước:</FormLabel>
               {ListSizes.map((size) => {
                 const isChecked = formData.size.some((selectedSize) => selectedSize.sizeId === size._id);
                 const selectedSize = formData.size.find((selectedSize) => selectedSize.sizeId === size._id);
@@ -1393,7 +1432,7 @@ const InventoryManagement = () => {
       <>
         {/* Dialog for Adding New Category */}
         <Dialog open={openCategoryDialog} onClose={handleCloseCategoryDialog}>
-          <DialogTitle>Thêm danh mục mới</DialogTitle>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Thêm danh mục mới</DialogTitle>
           <DialogContent>
             <TextField
               error={!!cateErrors.newCategory}
@@ -1404,23 +1443,26 @@ const InventoryManagement = () => {
               onChange={(e) => setNewCategory(e.target.value)}
             />
 
-            <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
-              <Button variant="outlined" component="span">
-                Chọn ảnh
-              </Button>
-              <input
-                id="image-upload"
-                type="file"
-                accept="image/*"
-                onChange={(event) => handleImageChange(event, 'category')}
-                style={{ display: 'none' }}
-              />
-            </label>
+            <FormControl fullWidth error={!!cateErrors.newCategoryImage}>
+              <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+                <Button variant="outlined" component="span">
+                  Chọn ảnh
+                </Button>
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleImageChange(event, 'category')}
+                  style={{ display: 'none' }}
+                />
+                <FormHelperText>{cateErrors.newCategoryImage}</FormHelperText>
+              </label>
+            </FormControl>
 
-            <div style={{ marginTop: 10, marginBottom: 10 }}>
-              <strong>File đã chọn:</strong>
-              <br />
-              {newCategoryImage && (
+            {newCategoryImage && (
+              <FormControl fullWidth margin="normal" style={{ marginTop: 10, marginBottom: 10 }}>
+                <strong>File đã chọn:</strong>
+                <br />
                 <div style={{ marginTop: 10 }}>
                   <img
                     src={newCategoryImage}
@@ -1428,10 +1470,10 @@ const InventoryManagement = () => {
                     style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 10 }}
                   />
                 </div>
-              )}
-            </div>
+              </FormControl>
+            )}
 
-            <TextField label="Mô tả" fullWidth value={newCateDes} onChange={(e) => setNewCateDes(e.target.value)} />
+            <TextField fullWidth label="Mô tả" value={newCateDes} onChange={(e) => setNewCateDes(e.target.value)} />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseCategoryDialog} color="primary">
@@ -1505,9 +1547,11 @@ const InventoryManagement = () => {
         </Dialog>
 
         {/* Dialog Chinh sua logo danh muc */}
-        <Dialog style={{ padding: 10, textAlign: 'center' }} fullWidth open={openCateEditDialog} onClose={handleCloseEditCateDialog}>
+        <Dialog style={{ textAlign: 'center' }} fullWidth open={openCateEditDialog} onClose={handleCloseEditCateDialog}>
           <div style={{ padding: 20 }}>
-            <DialogTitle>Chỉnh sửa danh mục {selectedCatesName}</DialogTitle>
+            <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+              Chỉnh sửa danh mục {selectedCatesName}
+            </DialogTitle>
             <TextField
               error={!!cateErrors.newCategory}
               helperText={cateErrors.newCategory}
@@ -1547,6 +1591,22 @@ const InventoryManagement = () => {
               Lưu
             </Button>
           </div>
+        </Dialog>
+
+        {/* Modal Xác nhận */}
+        <Dialog open={openModalCate} onClose={handleCloseModalCate}>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+            Xác nhận xóa danh mục {selectedCate?.name}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>Bạn có chắc chắn muốn xóa danh mục này không? Hành động này không thể hoàn tác.</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseModalCate}>Hủy</Button>
+            <Button onClick={handleDeleteCate} color="error" variant="contained">
+              Xóa
+            </Button>
+          </DialogActions>
         </Dialog>
       </>
 
