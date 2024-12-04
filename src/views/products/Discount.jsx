@@ -477,31 +477,6 @@ const PromotionManagement = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
-      {/* Lịch sử thao tác */}
-      <Typography variant="h1" style={{ marginTop: 50, textAlign: 'center', marginBottom: 10 }}>
-        Lịch Sử Thao Tác
-      </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Thời Gian</TableCell>
-              <TableCell>Hành Động</TableCell>
-              <TableCell>Khuyến Mãi</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {history.map((entry, index) => (
-              <TableRow key={index}>
-                <TableCell>{new Date().toLocaleString()}</TableCell>
-                <TableCell>{entry.action}</TableCell>
-                <TableCell>{entry.promotion.name}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
     </MainCard>
   );
 };
