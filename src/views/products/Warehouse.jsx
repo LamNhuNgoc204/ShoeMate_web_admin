@@ -35,7 +35,7 @@ import { getAllBrands, getAllCategories, getAllSizes, getProductOfBrand, getProd
 import { createCate, createNewBrand, createSize } from 'api/createNew';
 import MainCard from 'ui-component/cards/MainCard';
 import { uploadToCloundinary } from 'functions/processingFunction';
-import { deleteCate, updateCate, updateLogoBrand } from 'api/updateData';
+import { deleteBrand, deleteCate, updateCate, updateLogoBrand } from 'api/updateData';
 import { fetchProducts } from 'redux/thunks/productsThunk';
 import { addProduct, getProducts, stopSellingPd, updateProduct } from 'api/products';
 import { Box } from '@mui/system';
@@ -159,7 +159,9 @@ const InventoryManagement = () => {
           const sortedListSizes = [...freeSize, ...sortedSizes];
           setSizes(sortedListSizes);
         }
-        if (brands) setBrands(brands);
+        if (brands) {
+          setBrands(brands.reverse());
+        }
         if (categories) setCategories(categories.reverse());
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu:', error);
@@ -227,8 +229,6 @@ const InventoryManagement = () => {
 
     fetchdataDetailCate();
   }, [selectIdForDetailCate]);
-
-  // console.log('productOfCate', productOfCate);
 
   const handleOpenEditCateDialog = async (id, name, img, description) => {
     setSelectedsCateId(id);
@@ -313,6 +313,7 @@ const InventoryManagement = () => {
   };
   const handleCloseEditBrandDialog = () => {
     setopenEditBrandDialog(false);
+    setNewBrandLogo('');
   };
   const handleOpenEditDialog = (id, name, img) => {
     setSelectedBrandId(id);
@@ -332,6 +333,9 @@ const InventoryManagement = () => {
       console.log('response new logo brands: ', response);
 
       if (response.status) {
+        setNewBrandLogo('');
+        // Set brands
+        setBrands((prev) => prev.map((brand) => (brand._id === selectedBrandId ? { ...brand, image: response.data.image } : brand)));
         setSnackbarMessage('Chỉnh sửa logo thành công');
       } else {
         setSnackbarMessage('Chỉnh sửa logo xảy ra lỗi');
@@ -450,7 +454,7 @@ const InventoryManagement = () => {
       if (newBrand && !brands.includes(newBrand)) {
         const response = await createNewBrand(body);
         if (response) {
-          setBrands([...brands, { name: newBrand, image: newBrandImg }]);
+          setBrands([{ name: newBrand, image: newBrandImg }, ...brands]);
           setSnackbarMessage('Thêm thương hiệu thành công');
           setOpenSnackbar(true);
         } else {
@@ -824,22 +828,23 @@ const InventoryManagement = () => {
   };
 
   // XÁC NHẬN
+  const [isCate, setIsCate] = useState(false);
   const [openModalCate, setOpenModalCate] = useState(false);
   const [selectedCate, setSelectedCate] = useState(null);
-  const handleCloseModalCate = () => {
+  const handleCloseModalConfirmDelete = () => {
     setOpenModalCate(false);
   };
 
-  const handleClickOpenCateModal = (cate) => {
+  const handleClickOpenDeleteModal = (data) => {
+    setSelectedCate(data);
     setOpenModalCate(true);
-    setSelectedCate(cate);
   };
 
   const handleDeleteCate = async () => {
     if (selectedCate?.products?.length !== 0) {
       setSnackbarMessage(`Danh mục ${selectedCate.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
       setOpenSnackbar(true);
-      handleCloseModalCate();
+      handleCloseModalConfirmDelete();
       return;
     }
 
@@ -856,7 +861,44 @@ const InventoryManagement = () => {
     } catch (error) {
       console.log('Xay ra loi khi xoa danh muc: ', error);
     } finally {
-      handleCloseModalCate();
+      handleCloseModalConfirmDelete();
+    }
+  };
+
+  const [openModalDelBrand, setopenModalDelBrand] = useState(false);
+  const [selectedBrand, setselectedBrand] = useState(null);
+
+  const handleCloseModalConfirmBrand = () => {
+    setopenModalDelBrand(false);
+  };
+
+  const handleClickOpenDeleteBrand = (data) => {
+    setselectedBrand(data);
+    setopenModalDelBrand(true);
+  };
+
+  const handleDeleteBrand = async () => {
+    if (selectedBrand?.products?.length !== 0) {
+      setSnackbarMessage(`Thương hiệu ${selectedBrand.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
+      setOpenSnackbar(true);
+      handleCloseModalConfirmBrand();
+      return;
+    }
+
+    try {
+      const response = await deleteBrand(selectedBrand._id);
+      if (response.status) {
+        setBrands((prevCategories) => prevCategories.filter((category) => category._id !== selectedBrand._id));
+        setSnackbarMessage(`Thương hiệu ${selectedBrand.name} đã được xóa!`);
+        setOpenSnackbar(true);
+      } else {
+        setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      console.log('Xay ra loi khi xoa thuong hieu: ', error);
+    } finally {
+      handleCloseModalConfirmBrand();
     }
   };
 
@@ -1109,7 +1151,7 @@ const InventoryManagement = () => {
                               >
                                 Chỉnh sửa
                               </Button>
-                              <Button onClick={() => handleClickOpenCateModal(category)}>Xóa</Button>
+                              <Button onClick={() => handleClickOpenDeleteModal(category)}>Xóa</Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1172,7 +1214,7 @@ const InventoryManagement = () => {
                             <TableCell>
                               <Button onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
                               <Button onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}>Chỉnh sửa</Button>
-                              <Button>Xóa</Button>
+                              <Button onClick={() => handleClickOpenDeleteBrand(brand)}>Xóa</Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1592,22 +1634,6 @@ const InventoryManagement = () => {
             </Button>
           </div>
         </Dialog>
-
-        {/* Modal Xác nhận */}
-        <Dialog open={openModalCate} onClose={handleCloseModalCate}>
-          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
-            Xác nhận xóa danh mục {selectedCate?.name}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>Bạn có chắc chắn muốn xóa danh mục này không? Hành động này không thể hoàn tác.</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseModalCate}>Hủy</Button>
-            <Button onClick={handleDeleteCate} color="error" variant="contained">
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
       </>
 
       {/* QUẢN LÝ BRAND */}
@@ -1629,9 +1655,9 @@ const InventoryManagement = () => {
                 <TableRow>
                   <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
                   <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Giá</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Size</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
+                  <TableCell>Kích thước</TableCell>
+                  <TableCell>Số lượng</TableCell>
                   <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
                   <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
                   <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
@@ -1642,7 +1668,7 @@ const InventoryManagement = () => {
                   productOfBrands.map((product, index) => (
                     <TableRow key={product._id}>
                       <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product?.name || 'N/A'}</TableCell>
+                      <TableCell>{product?.name || 'N/A'}</TableCell>
                       <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
                       <TableCell style={{ textAlign: 'center' }}>
                         {product.size && product.size.length > 0
@@ -1672,33 +1698,45 @@ const InventoryManagement = () => {
         </Dialog>
 
         {/* Dialog Chinh sua logo thuong hieu */}
-        <Dialog style={{ padding: 10, textAlign: 'center' }} fullWidth open={openEditBrandDialog} onClose={handleCloseEditBrandDialog}>
-          <DialogTitle>Chỉnh sửa logo thương hiệu {selectedBrandsName}</DialogTitle>
+        <Dialog
+          style={{ paddingInline: 10, textAlign: 'center' }}
+          fullWidth
+          open={openEditBrandDialog}
+          onClose={handleCloseEditBrandDialog}
+        >
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+            Chỉnh sửa logo thương hiệu {selectedBrandsName}
+          </DialogTitle>
           <div style={{ padding: 10 }}>
-            <p>Logo hiện tại</p>
+            <Typography>Logo hiện tại:</Typography>
             <img style={{ width: '100px', height: '100px' }} src={currBrandLogo} />
           </div>
-          <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
-            <Button variant="outlined" component="span">
-              Chọn ảnh
-            </Button>
-            <input
-              id="image-upload"
-              type="file"
-              accept="image/*"
-              onChange={(event) => handleImageChange(event, 'newBrandLogo')}
-              style={{ display: 'none' }}
-            />
-          </label>
 
           <div style={{ padding: 10 }}>
-            <p>Logo mới</p>
-            <img style={{ width: '100px', height: '100px' }} src={newBrandLogo} />
+            <Typography>Logo mới:</Typography>
+            <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+              <Button variant="outlined" component="span">
+                Chọn ảnh
+              </Button>
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={(event) => handleImageChange(event, 'newBrandLogo')}
+                style={{ display: 'none' }}
+              />
+            </label>
+            {newBrandLogo && <img style={{ width: '100px', height: '100px' }} src={newBrandLogo} />}
           </div>
 
-          <Button type="primary" onClick={() => handleEditBrand()}>
-            Lưu
-          </Button>
+          <DialogActions>
+            <Button type="primary" onClick={() => handleCloseEditBrandDialog()}>
+              Hủy
+            </Button>
+            <Button type="primary" onClick={() => handleEditBrand()}>
+              Lưu
+            </Button>
+          </DialogActions>
         </Dialog>
 
         {/* Dialog for Adding New Brand */}
@@ -1758,6 +1796,41 @@ const InventoryManagement = () => {
           </DialogActions>
         </Dialog>
       </>
+
+      {/* Modal Xác nhận */}
+      <Dialog open={openModalCate} onClose={handleCloseModalConfirmDelete}>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+          Xác nhận xóa danh mục {selectedCate?.name}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Bạn có chắc chắn muốn xóa danh mục {selectedCate?.name} không? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModalConfirmDelete}>Hủy</Button>
+          <Button onClick={handleDeleteCate} color="error" variant="contained">
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openModalDelBrand} onClose={handleCloseModalConfirmBrand}>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+          Xác nhận xóa thương hiệu {selectedBrand?.name}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Bạn có chắc chắn muốn xóa thương hiệu {selectedBrand?.name} không? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModalConfirmBrand}>Hủy</Button>
+          <Button onClick={handleDeleteBrand} color="error" variant="contained">
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Thông báo */}
       <Snackbar open={openSnackbar} autoHideDuration={3000} onClose={() => setOpenSnackbar(false)}>

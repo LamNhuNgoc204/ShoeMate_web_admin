@@ -25,3 +25,14 @@ export const deleteCate = async (categoryId) => {
     console.log('Loi xoa danh muc', error);
   }
 };
+
+export const deleteBrand = async (brandId) => {
+  try {
+    const response = await AxiosInstance().delete(`/brands/delete-brand-by-id/${brandId}`);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Loi xoa danh muc', error);
+  }
+};
