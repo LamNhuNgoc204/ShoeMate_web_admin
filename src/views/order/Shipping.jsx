@@ -38,7 +38,7 @@ const ShippingManagement = () => {
   const [data, setData] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const rowsPerPage = 5;
 
   useEffect(() => {
     fetchData();
@@ -82,7 +82,8 @@ const ShippingManagement = () => {
     try {
       const response = await AxiosInstance().get('/ship/get-order-forship');
       if (response.status) {
-        setData(response.data);
+        const data = response.data;
+        setData(data.reverse());
       }
     } catch (error) {
       console.log('Get order failed: ', error);
@@ -201,7 +202,7 @@ const ShippingManagement = () => {
             {filteredOrders.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((shipment) => (
               <TableRow key={shipment._id}>
                 <TableCell>{shipment._id && shipment._id.slice(0, 8) && shipment._id.slice(0, 8).toUpperCase()}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{shipment.receiver}</TableCell>
+                <TableCell>{shipment.receiver}</TableCell>
                 <TableCell>{shipment.address}</TableCell>
                 <TableCell style={{ textAlign: 'center' }}>{shipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}</TableCell>
                 <TableCell>

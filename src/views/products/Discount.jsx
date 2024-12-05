@@ -35,34 +35,6 @@ const PromotionManagement = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [history, setHistory] = useState([
-    {
-      action: 'Thêm khuyến mãi',
-      promotion: { name: 'Khuyến mãi 10% cho đơn hàng trên 1 triệu đồng' },
-      timestamp: '2024-10-01T10:30:00Z'
-    },
-    {
-      action: 'Cập nhật khuyến mãi',
-      promotion: { name: 'Khuyến mãi 15% cho đơn hàng trên 1 triệu đồng' },
-      timestamp: '2024-10-02T11:45:00Z'
-    },
-    {
-      action: 'Xóa khuyến mãi',
-      promotion: { name: 'Khuyến mãi hết hiệu lực tháng trước' },
-      timestamp: '2024-10-03T12:00:00Z'
-    },
-    {
-      action: 'Từ chối yêu cầu hoàn',
-      promotion: { name: 'Không đạt yêu cầu hoàn khuyến mãi' },
-      timestamp: '2024-10-04T14:15:00Z'
-    },
-    {
-      action: 'Xác nhận hoàn khuyến mãi',
-      promotion: { name: 'Hoàn khuyến mãi cho khách hàng' },
-      timestamp: '2024-10-05T15:20:00Z'
-    }
-  ]);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -100,69 +72,173 @@ const PromotionManagement = () => {
     };
     fetchData();
   }, []);
-  console.log('vouchers ================>', vouchers);
+  // console.log('vouchers ================>', vouchers);
 
   const handleOpenDialog = (promotion) => {
     setSelectedPromotion(promotion);
     setOpenDialog(true);
   };
 
+  const [error, setError] = useState({
+    voucher_nameError: '',
+    quantityError: '',
+    discount_valueError: '',
+    voucher_codeError: '',
+    startDateError: '',
+    endDateError: '',
+    min_order_valueError: '',
+    max_discount_valueError: '',
+    usage_conditionsError: '',
+    usage_scopeError: ''
+  });
+
+  const validateForm = () => {
+    let isValid = true;
+    const errors = {
+      voucher_nameError: '',
+      quantityError: '',
+      discount_valueError: '',
+      voucher_codeError: '',
+      startDateError: '',
+      endDateError: '',
+      min_order_valueError: '',
+      max_discount_valueError: '',
+      usage_conditionsError: '',
+      usage_scopeError: ''
+    };
+
+    if (!selectedPromotion || !selectedPromotion.voucher_name?.trim()) {
+      errors.voucher_nameError = 'Vui lòng nhập tên voucher';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.quantity || selectedPromotion.quantity <= 0) {
+      errors.quantityError = 'Vui lòng nhập số lượng hợp lệ';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.discount_value || selectedPromotion.discount_value <= 0) {
+      errors.discount_valueError = 'Vui lòng nhập giá trị giảm giá hợp lệ';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.voucher_code.trim()) {
+      errors.voucher_codeError = 'Vui lòng nhập mã voucher';
+      isValid = false;
+    }
+
+    const today = new Date();
+    const selectedStartDate = new Date(selectedPromotion.startDate);
+
+    // Kiểm tra ngày bắt đầu
+    if (!selectedPromotion.startDate) {
+      errors.startDateError = 'Vui lòng chọn thời gian bắt đầu';
+      isValid = false;
+    } else if (selectedStartDate < today.setHours(0, 0, 0, 0)) {
+      errors.startDateError = 'Thời gian bắt đầu phải từ hôm nay trở đi';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.endDate) {
+      errors.endDateError = 'Vui lòng chọn thời gian kết thúc';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.min_order_value || selectedPromotion.min_order_value <= 0) {
+      errors.min_order_valueError = 'Vui lòng nhập giá trị đơn hàng nhỏ nhất hợp lệ';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.max_discount_value || selectedPromotion.max_discount_value <= 0) {
+      errors.max_discount_valueError = 'Vui lòng nhập giá trị giảm lớn nhất hợp lệ';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.usage_conditions.trim()) {
+      errors.usage_conditionsError = 'Vui lòng nhập điều kiện sử dụng';
+      isValid = false;
+    }
+
+    if (!selectedPromotion.usage_scope.trim()) {
+      errors.usage_scopeError = 'Vui lòng nhập phạm vi sử dụng';
+      isValid = false;
+    }
+
+    setError(errors);
+    return isValid;
+  };
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setError({
+      voucher_nameError: '',
+      quantityError: '',
+      discount_valueError: '',
+      voucher_codeError: '',
+      startDateError: '',
+      endDateError: '',
+      min_order_valueError: '',
+      max_discount_valueError: '',
+      usage_conditionsError: '',
+      usage_scopeError: ''
+    });
     setSelectedPromotion(null);
   };
 
   const handleSavePromotion = async () => {
-    if (selectedPromotion) {
-      const {
-        name: voucher_name,
-        discount_value,
-        quantity,
-        voucher_code,
-        startDate: start_date,
-        endDate: expiry_date,
-        condition: usage_conditions,
-        usage_scope,
-        isInMiniGame,
-        min_order_value,
-        max_discount_value
-      } = selectedPromotion;
+    if (!selectedPromotion) {
+      // Thêm
+      if (validateForm()) {
+        const {
+          name: voucher_name,
+          discount_value,
+          quantity,
+          voucher_code,
+          startDate: start_date,
+          endDate: expiry_date,
+          condition: usage_conditions,
+          usage_scope,
+          min_order_value,
+          max_discount_value
+        } = selectedPromotion;
 
-      const formData = {
-        voucher_name,
-        discount_value,
-        quantity,
-        voucher_code,
-        start_date,
-        expiry_date,
-        usage_conditions,
-        usage_scope,
-        isInMiniGame,
-        min_order_value,
-        max_discount_value
-      };
+        const formData = {
+          voucher_name,
+          discount_value,
+          quantity,
+          voucher_code,
+          start_date,
+          expiry_date,
+          usage_conditions,
+          usage_scope,
+          min_order_value,
+          max_discount_value
+        };
 
-      try {
-        const response = await addVoucher(formData);
+        try {
+          const response = await addVoucher(formData);
 
-        if (response.status) {
-          setSnackbarMessage('Voucher created successfully!');
-          setSnackbarSeverity('success');
-          setSnackbarOpen(true);
-          setPromotions([...promotions, response.data]);
-        } else {
-          setSnackbarMessage(response.message || 'Failed to create voucher');
+          if (response.status) {
+            setSnackbarMessage('Voucher created successfully!');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            setPromotions([...promotions, response.data]);
+          } else {
+            setSnackbarMessage(response.message || 'Failed to create voucher');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+          }
+        } catch (error) {
+          setSnackbarMessage('Error creating voucher');
           setSnackbarSeverity('error');
           setSnackbarOpen(true);
+        } finally {
+          handleCloseDialog();
         }
-      } catch (error) {
-        setSnackbarMessage('Error creating voucher');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
       }
+    } else {
+      //Cập nhật
     }
-
-    handleCloseDialog();
   };
 
   const handleCloseWarning = () => {
@@ -193,7 +269,7 @@ const PromotionManagement = () => {
                 Khuyến mãi hiệu lực
               </Typography>
               <Typography variant="h4" align="center">
-                {vouchers.filter((p) => p.active).length}
+                {vouchers.filter((p) => p.status === 'active').length}
               </Typography>
             </Paper>
           </Grid>
@@ -203,7 +279,7 @@ const PromotionManagement = () => {
                 Khuyến mãi không hiệu lực
               </Typography>
               <Typography variant="h4" align="center">
-                {vouchers.filter((p) => !p.active).length}
+                {vouchers.filter((p) => p.status !== 'active').length}
               </Typography>
             </Paper>
           </Grid>
@@ -225,7 +301,7 @@ const PromotionManagement = () => {
           <Select value={statusFilter} onChange={handleFilterChange}>
             <MenuItem value="all">Tất cả</MenuItem>
             <MenuItem value="active">Hiệu lực</MenuItem>
-            <MenuItem value="inactive">Không hiệu lực</MenuItem>
+            <MenuItem value="inactive">Hết hiệu lực</MenuItem>
           </Select>
         </FormControl>
       </Grid>
@@ -256,7 +332,7 @@ const PromotionManagement = () => {
                 <TableCell style={{ textAlign: 'center' }}>
                   {(voucher.max_discount_value && voucher.max_discount_value.toLocaleString('vi-VN')) || 'N/A'}
                 </TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{voucher.status === 'active' ? 'Hiệu lực' : 'Không hiệu lực'}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{voucher.status === 'active' ? 'Hiệu lực' : 'Hết hiệu lực'}</TableCell>
                 <TableCell style={{ textAlign: 'center' }}>{voucher.quantity}</TableCell>
                 <TableCell style={{ textAlign: 'center' }}>
                   <Button onClick={() => handleOpenDialog(voucher)}>Sửa</Button>
@@ -280,7 +356,9 @@ const PromotionManagement = () => {
 
       {/* Dialog cho Thêm/Sửa Khuyến Mãi */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>{selectedPromotion ? 'Sửa Khuyến Mãi' : 'Thêm Khuyến Mãi'}</DialogTitle>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+          {selectedPromotion ? 'Sửa Khuyến Mãi' : 'Thêm Khuyến Mãi'}
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -292,6 +370,8 @@ const PromotionManagement = () => {
                 fullWidth
                 value={selectedPromotion ? selectedPromotion.voucher_name : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, voucher_name: e.target.value })}
+                error={!!error.voucher_nameError}
+                helperText={error.voucher_nameError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -303,7 +383,8 @@ const PromotionManagement = () => {
                 value={selectedPromotion ? selectedPromotion.quantity : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, quantity: e.target.value })}
                 placeholder="Nhập số lượng"
-                required
+                error={!!error.quantityError}
+                helperText={error.quantityError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -316,6 +397,8 @@ const PromotionManagement = () => {
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, discount_value: e.target.value })}
                 placeholder="Nhập giá trị giảm giá"
                 required
+                error={!!error.discount_valueError}
+                helperText={error.discount_valueError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -327,6 +410,8 @@ const PromotionManagement = () => {
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, voucher_code: e.target.value })}
                 placeholder="Nhập mã voucher"
                 required
+                error={!!error.voucher_codeError}
+                helperText={error.voucher_codeError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -338,6 +423,8 @@ const PromotionManagement = () => {
                 value={selectedPromotion ? selectedPromotion.startDate : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, startDate: e.target.value })}
                 InputLabelProps={{ shrink: true }}
+                error={!!error.startDateError}
+                helperText={error.startDateError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -349,6 +436,8 @@ const PromotionManagement = () => {
                 value={selectedPromotion ? selectedPromotion.endDate : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, endDate: e.target.value })}
                 InputLabelProps={{ shrink: true }}
+                error={!!error.endDateError}
+                helperText={error.endDateError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -360,6 +449,8 @@ const PromotionManagement = () => {
                 name="min_order_value"
                 value={selectedPromotion ? selectedPromotion.min_order_value : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, min_order_value: e.target.value })}
+                error={!!error.min_order_valueError}
+                helperText={error.min_order_valueError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -371,6 +462,8 @@ const PromotionManagement = () => {
                 name="max_discount_value"
                 value={selectedPromotion ? selectedPromotion.max_discount_value : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, max_discount_value: e.target.value })}
+                error={!!error.max_discount_valueError}
+                helperText={error.max_discount_valueError}
               />
             </Grid>
             <Grid item xs={12}>
@@ -382,33 +475,20 @@ const PromotionManagement = () => {
                 name="usage_conditions"
                 value={selectedPromotion ? selectedPromotion.usage_conditions : ''}
                 onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_conditions: e.target.value })}
+                error={!!error.usage_conditionsError}
+                helperText={error.usage_conditionsError}
               />
             </Grid>
             <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Phạm vi sử dụng</InputLabel>
-                <Select
-                  value={selectedPromotion ? selectedPromotion.usage_scope : true}
-                  onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_scope: e.target.value })}
-                >
-                  <MenuItem value="toan_quoc">Toàn quốc</MenuItem>
-                  <MenuItem value="giay_cao_got">Giày cao gót</MenuItem>
-                  <MenuItem value="giay_the_thao">Giày thể thao</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Trạng Thái</InputLabel>
-                <Select
-                  value={selectedPromotion ? selectedPromotion.status : true}
-                  onChange={(e) => setSelectedPromotion({ ...selectedPromotion, status: e.target.value })}
-                >
-                  <MenuItem value={true}>Hiệu lực</MenuItem>
-                  <MenuItem value={false}>Không hiệu lực</MenuItem>
-                </Select>
-              </FormControl>
+              <TextField
+                label="Phạm vi sử dụng"
+                fullWidth
+                required
+                type="text"
+                name="usage_scope"
+                value={selectedPromotion ? selectedPromotion.usage_scope : ''}
+                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_scope: e.target.value })}
+              />
             </Grid>
 
             <Grid item xs={12}>
