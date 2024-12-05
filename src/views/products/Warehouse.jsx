@@ -861,7 +861,6 @@ const InventoryManagement = () => {
   };
 
   // XÁC NHẬN
-  const [isCate, setIsCate] = useState(false);
   const [openModalCate, setOpenModalCate] = useState(false);
   const [selectedCate, setSelectedCate] = useState(null);
   const handleCloseModalConfirmDelete = () => {

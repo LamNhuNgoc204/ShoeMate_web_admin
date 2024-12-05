@@ -17,3 +17,12 @@ export const getListVoucher = async () => {
     console.log('get vourcher error: ', error);
   }
 };
+
+export const updateVoucher = async (id, body) => {
+  try {
+    const response = await AxiosInstance().put(`/vouchers/update/${id}`, body);
+    return response;
+  } catch (error) {
+    console.log('add vourcher error: ', error);
+  }
+};

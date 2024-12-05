@@ -24,17 +24,34 @@ import {
   TablePagination
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
-import { addVoucher, getListVoucher } from 'api/voucher';
+import { addVoucher, getListVoucher, updateVoucher } from 'api/voucher';
 import { formatDate } from 'utils/date';
 
 const PromotionManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [selectedPromotion, setSelectedPromotion] = useState({});
   const [vouchers, setVouchers] = useState([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+  const [formData, setFormData] = useState({
+    discount_value: 0,
+    voucher_name: '',
+    quantity: 1,
+    voucher_image: '',
+    voucher_code: '',
+    expiry_date: '',
+    start_date: '',
+    usage_conditions: '',
+    usage_scope: '',
+    min_order_value: 0,
+    max_discount_value: 0
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -63,19 +80,54 @@ const PromotionManagement = () => {
   useEffect(() => {
     const fetchData = async () => {
       const response = await getListVoucher();
-      console.log('response==>', response);
+      // console.log('response==>', response);
 
       if (response.status) {
-        setVouchers(response.data);
-        console.log('vouchers:', response.data);
+        const data = response.data;
+        setVouchers(data.reverse());
+        // console.log('vouchers:', response.data);
       }
     };
     fetchData();
   }, []);
   // console.log('vouchers ================>', vouchers);
 
-  const handleOpenDialog = (promotion) => {
-    setSelectedPromotion(promotion);
+  const handleOpenDialog = (promotion = null) => {
+    console.log('mã giảm giá cần sửa: ', promotion);
+    if (promotion) {
+      setSelectedPromotion(promotion);
+    }
+    if (selectedPromotion) {
+      setFormData({
+        discount_value: promotion.discount_value || 0,
+        voucher_name: promotion.voucher_name || '',
+        quantity: promotion.quantity || 1,
+        voucher_image: promotion.voucher_image || '',
+        voucher_code: promotion.voucher_code || '',
+        expiry_date: promotion.expiry_date || '',
+        start_date: promotion.start_date || '',
+        usage_conditions: promotion.usage_conditions || '',
+        usage_scope: promotion.usage_scope || '',
+        min_order_value: promotion.min_order_value || 0,
+        max_discount_value: promotion.max_discount_value || 0
+      });
+    } else {
+      setFormData({
+        discount_value: 0,
+        voucher_name: '',
+        quantity: 1,
+        voucher_image: '',
+        voucher_code: '',
+        expiry_date: '',
+        start_date: '',
+        usage_conditions: '',
+        usage_scope: '',
+        min_order_value: 0,
+        max_discount_value: 0
+      });
+    }
+    // console.log('form data================>', formData);
+    console.log('selectedPromotion===============>', selectedPromotion);
     setOpenDialog(true);
   };
 
@@ -94,44 +146,33 @@ const PromotionManagement = () => {
 
   const validateForm = () => {
     let isValid = true;
-    const errors = {
-      voucher_nameError: '',
-      quantityError: '',
-      discount_valueError: '',
-      voucher_codeError: '',
-      startDateError: '',
-      endDateError: '',
-      min_order_valueError: '',
-      max_discount_valueError: '',
-      usage_conditionsError: '',
-      usage_scopeError: ''
-    };
+    const errors = {};
 
-    if (!selectedPromotion || !selectedPromotion.voucher_name?.trim()) {
+    if (!formData || !formData.voucher_name?.trim()) {
       errors.voucher_nameError = 'Vui lòng nhập tên voucher';
       isValid = false;
     }
 
-    if (!selectedPromotion.quantity || selectedPromotion.quantity <= 0) {
-      errors.quantityError = 'Vui lòng nhập số lượng hợp lệ';
+    if (!formData.quantity || formData.quantity <= 0) {
+      errors.quantityError = 'Vui lòng nhập số lượng là số dương lớn hơn 0';
       isValid = false;
     }
 
-    if (!selectedPromotion.discount_value || selectedPromotion.discount_value <= 0) {
-      errors.discount_valueError = 'Vui lòng nhập giá trị giảm giá hợp lệ';
+    if (formData.discount_value < 0) {
+      errors.discount_valueError = 'Vui lòng nhập giá trị giảm giá là số dương lớn hơn 0';
       isValid = false;
     }
 
-    if (!selectedPromotion.voucher_code.trim()) {
+    if (!formData.voucher_code.trim()) {
       errors.voucher_codeError = 'Vui lòng nhập mã voucher';
       isValid = false;
     }
 
     const today = new Date();
-    const selectedStartDate = new Date(selectedPromotion.startDate);
+    const selectedStartDate = new Date(formData.start_date);
 
     // Kiểm tra ngày bắt đầu
-    if (!selectedPromotion.startDate) {
+    if (!formData.start_date) {
       errors.startDateError = 'Vui lòng chọn thời gian bắt đầu';
       isValid = false;
     } else if (selectedStartDate < today.setHours(0, 0, 0, 0)) {
@@ -139,27 +180,27 @@ const PromotionManagement = () => {
       isValid = false;
     }
 
-    if (!selectedPromotion.endDate) {
+    if (!formData.expiry_date) {
       errors.endDateError = 'Vui lòng chọn thời gian kết thúc';
       isValid = false;
     }
 
-    if (!selectedPromotion.min_order_value || selectedPromotion.min_order_value <= 0) {
-      errors.min_order_valueError = 'Vui lòng nhập giá trị đơn hàng nhỏ nhất hợp lệ';
+    if (formData.min_order_value < 0) {
+      errors.min_order_valueError = 'Vui lòng nhập giá trị đơn hàng nhỏ nhất là số dương';
       isValid = false;
     }
 
-    if (!selectedPromotion.max_discount_value || selectedPromotion.max_discount_value <= 0) {
-      errors.max_discount_valueError = 'Vui lòng nhập giá trị giảm lớn nhất hợp lệ';
+    if (formData.max_discount_value < 0) {
+      errors.max_discount_valueError = 'Vui lòng nhập giá trị giảm lớn nhất là số dương';
       isValid = false;
     }
 
-    if (!selectedPromotion.usage_conditions.trim()) {
+    if (!formData.usage_conditions.trim()) {
       errors.usage_conditionsError = 'Vui lòng nhập điều kiện sử dụng';
       isValid = false;
     }
 
-    if (!selectedPromotion.usage_scope.trim()) {
+    if (!formData.usage_scope.trim()) {
       errors.usage_scopeError = 'Vui lòng nhập phạm vi sử dụng';
       isValid = false;
     }
@@ -169,7 +210,6 @@ const PromotionManagement = () => {
   };
 
   const handleCloseDialog = () => {
-    setOpenDialog(false);
     setError({
       voucher_nameError: '',
       quantityError: '',
@@ -183,66 +223,52 @@ const PromotionManagement = () => {
       usage_scopeError: ''
     });
     setSelectedPromotion(null);
+    setOpenDialog(false);
   };
 
   const handleSavePromotion = async () => {
-    if (!selectedPromotion) {
-      // Thêm
-      if (validateForm()) {
-        const {
-          name: voucher_name,
-          discount_value,
-          quantity,
-          voucher_code,
-          startDate: start_date,
-          endDate: expiry_date,
-          condition: usage_conditions,
-          usage_scope,
-          min_order_value,
-          max_discount_value
-        } = selectedPromotion;
+    if (selectedPromotion) {
+      // Cập nhật
+      if (!validateForm()) {
+        return;
+      }
 
-        const formData = {
-          voucher_name,
-          discount_value,
-          quantity,
-          voucher_code,
-          start_date,
-          expiry_date,
-          usage_conditions,
-          usage_scope,
-          min_order_value,
-          max_discount_value
-        };
-
-        try {
-          const response = await addVoucher(formData);
-
-          if (response.status) {
-            setSnackbarMessage('Voucher created successfully!');
-            setSnackbarSeverity('success');
-            setSnackbarOpen(true);
-            setPromotions([...promotions, response.data]);
-          } else {
-            setSnackbarMessage(response.message || 'Failed to create voucher');
-            setSnackbarSeverity('error');
-            setSnackbarOpen(true);
-          }
-        } catch (error) {
-          setSnackbarMessage('Error creating voucher');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-        } finally {
-          handleCloseDialog();
-        }
+      const response = await updateVoucher(selectedPromotion._id, formData);
+      if (response.status) {
+        setVouchers((prevVouchers) =>
+          prevVouchers.map((voucher) => (voucher._id === selectedPromotion._id ? { ...voucher, ...response.data } : voucher))
+        );
+        // setVouchers((prevVouchers) => prevVouchers.map((voucher) => (voucher._id === selectedPromotion._id ? response.data : voucher)));
+        setSnackbarMessage('Cập nhật mã giảm giá thành công!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        handleCloseDialog();
+      } else {
+        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        handleCloseDialog();
       }
     } else {
-      //Cập nhật
-    }
-  };
+      // Thêm
+      if (!validateForm()) {
+        return;
+      }
 
-  const handleCloseWarning = () => {
-    setShowDeleteWarning(false);
+      const response = await addVoucher(formData);
+      if (response.status) {
+        setSnackbarMessage('Thêm mã giảm giá thành công!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        setVouchers([response.data, ...vouchers]);
+        handleCloseDialog();
+      } else {
+        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        handleCloseDialog();
+      }
+    }
   };
 
   return (
@@ -335,7 +361,14 @@ const PromotionManagement = () => {
                 <TableCell style={{ textAlign: 'center' }}>{voucher.status === 'active' ? 'Hiệu lực' : 'Hết hiệu lực'}</TableCell>
                 <TableCell style={{ textAlign: 'center' }}>{voucher.quantity}</TableCell>
                 <TableCell style={{ textAlign: 'center' }}>
-                  <Button onClick={() => handleOpenDialog(voucher)}>Sửa</Button>
+                  <Button
+                    onClick={() => {
+                      setSelectedPromotion(voucher);
+                      handleOpenDialog(voucher);
+                    }}
+                  >
+                    Sửa
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -363,13 +396,12 @@ const PromotionManagement = () => {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
-                required
                 label="Tên Voucher"
                 name="voucher_name"
                 placeholder="Nhập tên voucher"
                 fullWidth
-                value={selectedPromotion ? selectedPromotion.voucher_name : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, voucher_name: e.target.value })}
+                value={formData.voucher_name}
+                onChange={handleInputChange}
                 error={!!error.voucher_nameError}
                 helperText={error.voucher_nameError}
               />
@@ -380,8 +412,8 @@ const PromotionManagement = () => {
                 fullWidth
                 type="number"
                 name="quantity"
-                value={selectedPromotion ? selectedPromotion.quantity : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, quantity: e.target.value })}
+                value={formData.quantity}
+                onChange={handleInputChange}
                 placeholder="Nhập số lượng"
                 error={!!error.quantityError}
                 helperText={error.quantityError}
@@ -393,10 +425,9 @@ const PromotionManagement = () => {
                 fullWidth
                 type="number"
                 name="discount_value"
-                value={selectedPromotion ? selectedPromotion.discount_value : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, discount_value: e.target.value })}
+                value={formData.discount_value}
+                onChange={handleInputChange}
                 placeholder="Nhập giá trị giảm giá"
-                required
                 error={!!error.discount_valueError}
                 helperText={error.discount_valueError}
               />
@@ -406,10 +437,9 @@ const PromotionManagement = () => {
                 label="Mã Voucher"
                 fullWidth
                 name="voucher_code"
-                value={selectedPromotion ? selectedPromotion.voucher_code : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, voucher_code: e.target.value })}
+                value={formData.voucher_code}
+                onChange={handleInputChange}
                 placeholder="Nhập mã voucher"
-                required
                 error={!!error.voucher_codeError}
                 helperText={error.voucher_codeError}
               />
@@ -419,9 +449,9 @@ const PromotionManagement = () => {
                 label="Thời Gian Bắt Đầu"
                 type="date"
                 fullWidth
-                name="startDate"
-                value={selectedPromotion ? selectedPromotion.startDate : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, startDate: e.target.value })}
+                name="start_date"
+                value={formData.start_date}
+                onChange={handleInputChange}
                 InputLabelProps={{ shrink: true }}
                 error={!!error.startDateError}
                 helperText={error.startDateError}
@@ -432,9 +462,9 @@ const PromotionManagement = () => {
                 label="Thời Gian Kết Thúc"
                 type="date"
                 fullWidth
-                name="endDate"
-                value={selectedPromotion ? selectedPromotion.endDate : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, endDate: e.target.value })}
+                name="expiry_date"
+                value={formData.expiry_date}
+                onChange={handleInputChange}
                 InputLabelProps={{ shrink: true }}
                 error={!!error.endDateError}
                 helperText={error.endDateError}
@@ -444,11 +474,10 @@ const PromotionManagement = () => {
               <TextField
                 label="Giá Trị đơn hàng nhỏ nhất"
                 fullWidth
-                required
                 type="number"
                 name="min_order_value"
-                value={selectedPromotion ? selectedPromotion.min_order_value : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, min_order_value: e.target.value })}
+                value={formData.min_order_value}
+                onChange={handleInputChange}
                 error={!!error.min_order_valueError}
                 helperText={error.min_order_valueError}
               />
@@ -457,11 +486,10 @@ const PromotionManagement = () => {
               <TextField
                 label="Giá Trị giảm lớn nhất"
                 fullWidth
-                required
                 type="number"
                 name="max_discount_value"
-                value={selectedPromotion ? selectedPromotion.max_discount_value : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, max_discount_value: e.target.value })}
+                value={formData.max_discount_value}
+                onChange={handleInputChange}
                 error={!!error.max_discount_valueError}
                 helperText={error.max_discount_valueError}
               />
@@ -470,11 +498,10 @@ const PromotionManagement = () => {
               <TextField
                 label="Điều kiện sử dụng"
                 fullWidth
-                required
                 type="text"
                 name="usage_conditions"
-                value={selectedPromotion ? selectedPromotion.usage_conditions : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_conditions: e.target.value })}
+                value={formData.usage_conditions}
+                onChange={handleInputChange}
                 error={!!error.usage_conditionsError}
                 helperText={error.usage_conditionsError}
               />
@@ -483,16 +510,17 @@ const PromotionManagement = () => {
               <TextField
                 label="Phạm vi sử dụng"
                 fullWidth
-                required
                 type="text"
                 name="usage_scope"
-                value={selectedPromotion ? selectedPromotion.usage_scope : ''}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, usage_scope: e.target.value })}
+                value={formData.usage_scope}
+                onChange={handleInputChange}
+                error={!!error.usage_scopeError}
+                helperText={error.usage_scopeError}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <input accept="image/*" type="file" style={{ width: '100%' }} />
+              <input value={formData.voucher_image} onChange={handleInputChange} accept="image/*" type="file" style={{ width: '100%' }} />
             </Grid>
           </Grid>
         </DialogContent>
@@ -501,18 +529,6 @@ const PromotionManagement = () => {
           <Button onClick={handleSavePromotion} color="primary">
             Lưu
           </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Cảnh Báo Xóa Khuyến Mãi */}
-      <Dialog open={showDeleteWarning} onClose={handleCloseWarning}>
-        <DialogTitle>Cảnh Báo</DialogTitle>
-        <DialogContent>
-          <Typography>Bạn có chắc chắn muốn xóa khuyến mãi này không?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseWarning}>Hủy</Button>
-          <Button color="error">Xóa</Button>
         </DialogActions>
       </Dialog>
 
