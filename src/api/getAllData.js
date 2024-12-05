@@ -29,3 +29,8 @@ export const getProductOfCate = async (categoryId) => {
   const response = await AxiosInstance().get(`/categories/get-product-of-cate/${categoryId}`);
   return response;
 };
+
+export const getSizeDetail = async (sizeId) => {
+  const response = await AxiosInstance().get(`/sizes/get-products-by-sizeid/${sizeId}`);
+  return response;
+};

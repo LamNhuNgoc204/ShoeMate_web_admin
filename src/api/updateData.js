@@ -36,3 +36,14 @@ export const deleteBrand = async (brandId) => {
     console.log('Loi xoa danh muc', error);
   }
 };
+
+export const deleteSize = async (sizeID) => {
+  try {
+    const response = await AxiosInstance().delete(`/sizes/delete-size/${sizeID}`);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Loi xoa danh muc', error);
+  }
+};

@@ -165,24 +165,6 @@ const PromotionManagement = () => {
     handleCloseDialog();
   };
 
-  const handleDeletePromotion = (id) => {
-    setDeleteId(id);
-    setShowDeleteWarning(true);
-  };
-
-  const confirmDelete = () => {
-    const updatedPromotions = promotions.filter((promo) => promo.id !== deleteId);
-    setPromotions(updatedPromotions);
-    setShowDeleteWarning(false);
-    setSnackbarMessage('Xóa khuyến mãi thành công!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-
-    // Ghi lại lịch sử
-    const deletedPromotion = promotions.find((promo) => promo.id === deleteId);
-    setHistory([...history, { action: 'Xóa', promotion: deletedPromotion }]);
-  };
-
   const handleCloseWarning = () => {
     setShowDeleteWarning(false);
   };
@@ -252,15 +234,15 @@ const PromotionManagement = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Tên Khuyến Mãi</TableCell>
-              <TableCell>Điều kiện sử dụng</TableCell>
-              <TableCell>Thời Gian Bắt Đầu</TableCell>
-              <TableCell>Thời Gian Kết Thúc</TableCell>
-              <TableCell>Mã khuyến mãi</TableCell>
-              <TableCell>Giá Trị giam gia toi da</TableCell>
-              <TableCell>Trạng Thái</TableCell>
-              <TableCell>So luong</TableCell>
-              <TableCell>Thao Tác</TableCell>
+              <TableCell>Tên</TableCell>
+              <TableCell>Điều Kiện</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Bắt Đầu</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Kết Thúc</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Mã Code</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Giảm Tối Đa (VNĐ)</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Số Lượng</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -268,17 +250,16 @@ const PromotionManagement = () => {
               <TableRow key={voucher._id}>
                 <TableCell>{voucher.voucher_name}</TableCell>
                 <TableCell>{voucher.usage_conditions || 'N/A'}</TableCell>
-                <TableCell>{formatDate(voucher.start_date) || 'N/A'}</TableCell>
-                <TableCell>{formatDate(voucher.expiry_date) || 'N/A'}</TableCell>
-                <TableCell>{voucher.voucher_code || 'N/A'}</TableCell>
-                <TableCell>{voucher.max_discount_value || 'N/A'}</TableCell>
-                <TableCell>{voucher.status === 'active' ? 'Hiệu lực' : 'Không hiệu lực'}</TableCell>
-                <TableCell>{voucher.quantity}</TableCell>
-                <TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{formatDate(voucher.start_date) || 'N/A'}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{formatDate(voucher.expiry_date) || 'N/A'}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{voucher.voucher_code || 'N/A'}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>
+                  {(voucher.max_discount_value && voucher.max_discount_value.toLocaleString('vi-VN')) || 'N/A'}
+                </TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{voucher.status === 'active' ? 'Hiệu lực' : 'Không hiệu lực'}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{voucher.quantity}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>
                   <Button onClick={() => handleOpenDialog(voucher)}>Sửa</Button>
-                  {/* <Button onClick={() => handleDeletePromotion(voucher._id)} color="error">
-                    Xóa
-                  </Button> */}
                 </TableCell>
               </TableRow>
             ))}
@@ -433,20 +414,6 @@ const PromotionManagement = () => {
             <Grid item xs={12}>
               <input accept="image/*" type="file" style={{ width: '100%' }} />
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Chơi Mini Game"
-                fullWidth
-                select
-                name="isInMiniGame"
-                value={selectedPromotion ? selectedPromotion.isInMiniGame : true}
-                onChange={(e) => setSelectedPromotion({ ...selectedPromotion, isInMiniGame: e.target.value })}
-                SelectProps={{ native: true }}
-              >
-                <option value={false}>Không</option>
-                <option value={true}>Có</option>
-              </TextField>
-            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -465,9 +432,7 @@ const PromotionManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseWarning}>Hủy</Button>
-          <Button onClick={confirmDelete} color="error">
-            Xóa
-          </Button>
+          <Button color="error">Xóa</Button>
         </DialogActions>
       </Dialog>
 
