@@ -188,22 +188,22 @@ const ShippingManagement = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Mã Đơn</TableCell>
-              <TableCell>Tên Khách Hàng</TableCell>
-              <TableCell>Địa Chỉ</TableCell>
-              <TableCell>Trạng Thái</TableCell>
-              <TableCell>Thời gian</TableCell>
-              <TableCell>Đơn vị vận chuyển</TableCell>
-              <TableCell>Thao Tác</TableCell>
+              <TableCell>ID</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Khách Hàng</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Địa Chỉ</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Thời gian</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Đơn vị vận chuyển</TableCell>
+              <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredOrders.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((shipment) => (
               <TableRow key={shipment._id}>
                 <TableCell>{shipment._id && shipment._id.slice(0, 8) && shipment._id.slice(0, 8).toUpperCase()}</TableCell>
-                <TableCell>{shipment.receiver}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{shipment.receiver}</TableCell>
                 <TableCell>{shipment.address}</TableCell>
-                <TableCell>{shipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}</TableCell>
+                <TableCell style={{ textAlign: 'center' }}>{shipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}</TableCell>
                 <TableCell>
                   {new Date(
                     shipment.status === 'processing'
@@ -212,7 +212,7 @@ const ShippingManagement = () => {
                   ).toLocaleDateString()}
                 </TableCell>
                 <TableCell style={{ textAlign: 'center' }}>{shipment.shipping_id && shipment.shipping_id.name}</TableCell>
-                <TableCell>
+                <TableCell style={{ textAlign: 'center' }}>
                   <Button onClick={() => handleOpenDialog(shipment)}>Xem Chi Tiết</Button>
                 </TableCell>
               </TableRow>
@@ -230,12 +230,12 @@ const ShippingManagement = () => {
 
       {/* Dialog cho Chi Tiết Vận Chuyển */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Chi Tiết Vận Chuyển</DialogTitle>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Chi Tiết Vận Chuyển</DialogTitle>
         <DialogContent>
           {selectedShipment && (
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField label="Mã Đơn" fullWidth value={selectedShipment._id} disabled />
+                <TextField label="Mã Đơn" fullWidth value={selectedShipment._id && selectedShipment._id.toUpperCase()} disabled />
               </Grid>
               <Grid item xs={12}>
                 <TextField label="Tên Khách Hàng" fullWidth value={selectedShipment.receiver} disabled />

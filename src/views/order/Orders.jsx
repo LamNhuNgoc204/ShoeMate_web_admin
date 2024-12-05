@@ -234,7 +234,7 @@ const OrderManagement = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Mã Đơn Hàng</TableCell>
+              <TableCell>Mã Đơn</TableCell>
               <TableCell>Tên Khách Hàng</TableCell>
               <TableCell>Tổng Giá Trị</TableCell>
               <TableCell>Trạng Thái</TableCell>
@@ -250,7 +250,7 @@ const OrderManagement = () => {
                 <TableCell>{order.total_price && order.total_price.toLocaleString('vi-VN')} VND</TableCell>
                 <TableCell>
                   {order.status === 'pending'
-                    ? 'Đang chờ xử lý'
+                    ? 'Chờ xác nhận'
                     : order.status === 'processing'
                       ? 'Đang vận chuyển'
                       : order.status === 'completed'
@@ -278,17 +278,14 @@ const OrderManagement = () => {
 
       {/* Dialog cho Chi Tiết Đơn Hàng */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Chi Tiết Đơn Hàng</DialogTitle>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+          Chi Tiết Đơn Hàng {selectedOrder?._id && selectedOrder?._id?.slice(0, 5) && selectedOrder?._id?.slice(0, 8)?.toUpperCase()}
+        </DialogTitle>
         <DialogContent>
           {selectedOrder && (
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField
-                  label="Mã Đơn Hàng"
-                  fullWidth
-                  value={selectedOrder._id && selectedOrder._id.slice(0, 5) && selectedOrder._id.slice(0, 8).toUpperCase()}
-                  disabled
-                />
+                <TextField label="Mã Đơn Hàng" fullWidth value={selectedOrder._id && selectedOrder._id.toUpperCase()} disabled />
               </Grid>
               <Grid item xs={12}>
                 <TextField label="Tên Khách Hàng" fullWidth value={selectedOrder.receiver} disabled />
@@ -302,10 +299,30 @@ const OrderManagement = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Trạng Thái" fullWidth value={selectedOrder.status} disabled />
+                <TextField
+                  label="Trạng Thái"
+                  fullWidth
+                  value={
+                    selectedOrder.status === 'pending'
+                      ? 'Chờ xác nhận'
+                      : selectedOrder.status === 'processing'
+                        ? 'Đang vận chuyển'
+                        : selectedOrder.status === 'completed'
+                          ? 'Đã hoàn thành'
+                          : selectedOrder.status === 'cancelled'
+                            ? 'Đã hủy'
+                            : 'Hoàn hàng'
+                  }
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Ngày Đặt Hàng" fullWidth value={new Date(selectedOrder.createdAt).toLocaleDateString()} disabled />
+                <TextField
+                  label="Ngày Đặt Hàng"
+                  fullWidth
+                  value={new Date(selectedOrder.timestamps && selectedOrder.timestamps.placedAt).toLocaleDateString()}
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField

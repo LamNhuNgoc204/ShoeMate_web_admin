@@ -19,7 +19,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TablePagination
+  TablePagination,
+  Modal,
+  DialogContentText
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { ROLE } from 'constants/mockData';
@@ -163,16 +165,26 @@ const UserManagement = () => {
     setPage(0);
   };
 
-  const handleLockAccound = async (user) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleDialogOpen = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleLockAccount = async (user) => {
     try {
       const response = await AxiosInstance().put(`/users/lock-accound/${user._id}`);
       if (response.status) {
         setSnackbarMessage(`Tải khoản của ${user.name} đã bị khóa`);
         setSnackbarSeverity('success');
-
         const updatedUsers = users.map((u) => (u._id === user._id ? { ...u, isActive: false } : u));
         setUsers(updatedUsers);
         setFilteredUsers(updatedUsers);
+        handleDialogClose();
       }
     } catch (error) {
       setSnackbarMessage('Xảy ra lỗi khi cập nhật vai trò');
@@ -180,6 +192,7 @@ const UserManagement = () => {
     } finally {
       setSnackbarOpen(true);
       setOpenDialogRole(false);
+      handleDialogClose();
     }
   };
 
@@ -212,7 +225,26 @@ const UserManagement = () => {
                 <TableCell>
                   <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
                   {user.isActive === true ? (
-                    <Button onClick={() => handleLockAccound(user)}>Khóa tài khoản</Button>
+                    <>
+                      <Button onClick={handleDialogOpen}>Khóa tài khoản</Button>
+                      {/* Dialog xác nhận */}
+                      <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+                        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+                          Xác nhận khóa tài khoản
+                        </DialogTitle>
+                        <DialogContent>
+                          <DialogContentText>Bạn có chắc chắn muốn khóa tài khoản của {user.name}?</DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                          <Button onClick={handleDialogClose} color="secondary">
+                            Hủy
+                          </Button>
+                          <Button onClick={() => handleLockAccount(user)} color="primary" variant="contained">
+                            Xác nhận
+                          </Button>
+                        </DialogActions>
+                      </Dialog>
+                    </>
                   ) : (
                     <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 5 }}>Đã khóa</span>
                   )}
@@ -309,7 +341,7 @@ const UserManagement = () => {
 
       {/* Chinh sua role */}
       <Dialog open={openDialogRole} onClose={() => setOpenDialogRole(false)}>
-        <DialogTitle>Chỉnh Sửa Người Dùng</DialogTitle>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Chỉnh Sửa Người Dùng</DialogTitle>
         <DialogContent>
           <FormControl fullWidth style={{ marginTop: '10px' }}>
             <InputLabel>Vai Trò</InputLabel>
