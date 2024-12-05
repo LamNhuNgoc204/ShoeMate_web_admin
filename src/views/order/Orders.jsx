@@ -178,8 +178,6 @@ const OrderManagement = () => {
     setFilteredOrders(filtered);
   };
 
-  console.log('selectedOrder==>', selectedOrder);
-
   return (
     <MainCard title="QUẢN LÝ ĐƠN HÀNG">
       <div>
@@ -228,9 +226,6 @@ const OrderManagement = () => {
 
       {/* TẤT CẢ ĐƠN HÀNG */}
       <TableContainer component={Paper}>
-        {/* <Typography variant="h2" align="center" sx={{ padding: 2 }}>
-          QUẢN LÝ ĐƠN HÀNG
-        </Typography> */}
         <Table>
           <TableHead>
             <TableRow>
@@ -289,6 +284,18 @@ const OrderManagement = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField label="Tên Khách Hàng" fullWidth value={selectedOrder.receiver} disabled />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Phương thức thanh toán"
+                  fullWidth
+                  value={`${
+                    selectedOrder.payment_id &&
+                    selectedOrder.payment_id.payment_method_id &&
+                    selectedOrder.payment_id.payment_method_id.payment_method
+                  } VND`}
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField
