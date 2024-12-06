@@ -22,7 +22,8 @@ import {
   TextField,
   DialogActions,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import AxiosInstance from 'helper/AxiosInstance';
@@ -39,6 +40,7 @@ const Review = () => {
     'Cảm ơn quý khách đã tin tưởng và sử dụng sản phẩm/dịch vụ của ShoeMate.\n' +
       'ShoeMate rất trân trọng ý kiến đóng góp của quý khách và sẽ nỗ lực cải thiện dịch vụ để mang lại trải nghiệm tốt nhất. Nếu có bất kỳ vấn đề nào, xin vui lòng liên hệ với chúng tôi qua 0123456789 hoặc shoemate@gmail.com để được hỗ trợ kịp thời.'
   );
+  const [loading, setloading] = useState(false);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -67,6 +69,7 @@ const Review = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setloading(true);
         const response = await AxiosInstance().get('/reviews/get-all-reviews');
         if (response.status) {
           setReviews(response?.data?.reverse());
@@ -75,6 +78,7 @@ const Review = () => {
       } catch (error) {
         console.log('Không lấy được đánh giá', error);
       }
+      setloading(false);
     };
     fetchData();
   }, []);
@@ -173,69 +177,77 @@ const Review = () => {
         </FormControl>
       </div>
 
-      <Box sx={{ marginBottom: 4 }}>
-        <Typography variant="h4">Duyệt Đánh Giá</Typography>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Hình ảnh</TableCell>
-                <TableCell>Sản phẩm</TableCell>
-                <TableCell>Người Dùng</TableCell>
-                <TableCell>Hành Động</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedReviews.map((review, index) => (
-                <TableRow key={review._id}>
-                  <TableCell>{index + 1 + (currentPage - 1) * pageSize}</TableCell>
-                  <TableCell>
-                    {review?.product_id?.assets && review.product_id.assets.length > 0 ? (
-                      (() => {
-                        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-                        const images = review.product_id.assets.filter((asset) => {
-                          const extension = asset.split('.').pop().toLowerCase();
-                          return imageExtensions.includes(extension);
-                        });
+      <>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+            <CircularProgress />
+          </div>
+        ) : (
+          <Box sx={{ marginBottom: 4 }}>
+            <Typography variant="h4">Duyệt Đánh Giá</Typography>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Hình ảnh</TableCell>
+                    <TableCell>Sản phẩm</TableCell>
+                    <TableCell>Người Dùng</TableCell>
+                    <TableCell>Hành Động</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedReviews.map((review, index) => (
+                    <TableRow key={review._id}>
+                      <TableCell>{index + 1 + (currentPage - 1) * pageSize}</TableCell>
+                      <TableCell>
+                        {review?.product_id?.assets && review.product_id.assets.length > 0 ? (
+                          (() => {
+                            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                            const images = review.product_id.assets.filter((asset) => {
+                              const extension = asset.split('.').pop().toLowerCase();
+                              return imageExtensions.includes(extension);
+                            });
 
-                        const imageSrc =
-                          images.length > 0 ? images[0] : 'https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg';
+                            const imageSrc =
+                              images.length > 0 ? images[0] : 'https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg';
 
-                        return <img style={{ width: '70px', height: '70px', borderRadius: '5px' }} src={imageSrc} alt="product" />;
-                      })()
-                    ) : (
-                      <img
-                        style={{ width: '70px', height: '70px', borderRadius: '5px' }}
-                        src="https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg"
-                        alt="default"
-                      />
-                    )}
-                  </TableCell>
+                            return <img style={{ width: '70px', height: '70px', borderRadius: '5px' }} src={imageSrc} alt="product" />;
+                          })()
+                        ) : (
+                          <img
+                            style={{ width: '70px', height: '70px', borderRadius: '5px' }}
+                            src="https://i.pinimg.com/736x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg"
+                            alt="default"
+                          />
+                        )}
+                      </TableCell>
 
-                  <TableCell>{review?.product_id?.name}</TableCell>
-                  <TableCell>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <span>Tên: {review?.reviewer_id?.name}</span>
-                      <span>Email: {review?.reviewer_id?.email}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button onClick={() => handleOpenDialog(review)}>Xem chi tiết</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Pagination
-            count={Math.ceil(filteredReviews.length / pageSize)}
-            page={currentPage}
-            onChange={handlePageChange}
-            color="primary"
-            sx={{ marginTop: 2, display: 'flex', justifyContent: 'center' }}
-          />
-        </TableContainer>
-      </Box>
+                      <TableCell>{review?.product_id?.name}</TableCell>
+                      <TableCell>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <span>Tên: {review?.reviewer_id?.name}</span>
+                          <span>Email: {review?.reviewer_id?.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button onClick={() => handleOpenDialog(review)}>Xem chi tiết</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Pagination
+                count={Math.ceil(filteredReviews.length / pageSize)}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                sx={{ marginTop: 2, display: 'flex', justifyContent: 'center' }}
+              />
+            </TableContainer>
+          </Box>
+        )}
+      </>
 
       {/* Dialog cho Chi Tiết Đánh Giá */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

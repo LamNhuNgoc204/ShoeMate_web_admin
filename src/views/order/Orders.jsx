@@ -22,7 +22,8 @@ import {
   InputLabel,
   MenuItem,
   Typography,
-  Pagination
+  Pagination,
+  CircularProgress
 } from '@mui/material';
 import AxiosInstance from 'helper/AxiosInstance';
 import { formatDate } from 'utils/date';
@@ -41,10 +42,12 @@ const OrderManagement = () => {
   const [orderCancel, setOrderCancel] = useState([]);
   const [data, setData] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState(data);
+  const [loading, setloading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setloading(true);
         const response = await AxiosInstance().get('/orders/get-all-orders');
         if (response.status) {
           const reversedData = response.data && response.data.reverse();
@@ -56,6 +59,7 @@ const OrderManagement = () => {
       } catch (error) {
         console.log('error get data order: ', error);
       }
+      setloading(false);
     };
 
     const updateOrderCounts = (orders) => {
@@ -68,7 +72,7 @@ const OrderManagement = () => {
     fetchData();
   }, []);
 
-  console.log('data orders =>>>>', data);
+  // console.log('data orders =>>>>', data);
 
   useEffect(() => {
     if (filterStatus === 'all') {
@@ -225,51 +229,59 @@ const OrderManagement = () => {
       </div>
 
       {/* TẤT CẢ ĐƠN HÀNG */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Mã Đơn</TableCell>
-              <TableCell>Tên Khách Hàng</TableCell>
-              <TableCell>Tổng Giá Trị</TableCell>
-              <TableCell>Trạng Thái</TableCell>
-              <TableCell>Ngày Đặt Hàng</TableCell>
-              <TableCell>Thao Tác</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedOrder.map((order) => (
-              <TableRow key={order._id}>
-                <TableCell>{order._id && order._id.slice(0, 5) && order._id.slice(0, 8).toUpperCase()}</TableCell>
-                <TableCell>{order.receiver}</TableCell>
-                <TableCell>{order.total_price && order.total_price.toLocaleString('vi-VN')} VND</TableCell>
-                <TableCell>
-                  {order.status === 'pending'
-                    ? 'Chờ xác nhận'
-                    : order.status === 'processing'
-                      ? 'Đang vận chuyển'
-                      : order.status === 'completed'
-                        ? 'Đã hoàn thành'
-                        : order.status === 'cancelled'
-                          ? 'Đã hủy'
-                          : 'Hoàn hàng'}
-                </TableCell>
-                <TableCell>{order.timestamps && order.timestamps.placedAt && formatDate(order.timestamps.placedAt)}</TableCell>
-                <TableCell>
-                  <Button onClick={() => handleOpenDialog(order)}>Xem Chi Tiết</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Pagination
-          count={Math.ceil(filteredOrders.length / itemsPerPageOrder)}
-          page={currentOrderPage}
-          onChange={handlePageOrderChange}
-          color="primary"
-          style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
-        />
-      </TableContainer>
+      <>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+            <CircularProgress />
+          </div>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Mã Đơn</TableCell>
+                  <TableCell>Tên Khách Hàng</TableCell>
+                  <TableCell>Tổng Giá Trị</TableCell>
+                  <TableCell>Trạng Thái</TableCell>
+                  <TableCell>Ngày Đặt Hàng</TableCell>
+                  <TableCell>Thao Tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedOrder.map((order) => (
+                  <TableRow key={order._id}>
+                    <TableCell>{order._id && order._id.slice(0, 5) && order._id.slice(0, 8).toUpperCase()}</TableCell>
+                    <TableCell>{order.receiver}</TableCell>
+                    <TableCell>{order.total_price && order.total_price.toLocaleString('vi-VN')} VND</TableCell>
+                    <TableCell>
+                      {order.status === 'pending'
+                        ? 'Chờ xác nhận'
+                        : order.status === 'processing'
+                          ? 'Đang vận chuyển'
+                          : order.status === 'completed'
+                            ? 'Đã hoàn thành'
+                            : order.status === 'cancelled'
+                              ? 'Đã hủy'
+                              : 'Hoàn hàng'}
+                    </TableCell>
+                    <TableCell>{order.timestamps && order.timestamps.placedAt && formatDate(order.timestamps.placedAt)}</TableCell>
+                    <TableCell>
+                      <Button onClick={() => handleOpenDialog(order)}>Xem Chi Tiết</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <Pagination
+              count={Math.ceil(filteredOrders.length / itemsPerPageOrder)}
+              page={currentOrderPage}
+              onChange={handlePageOrderChange}
+              color="primary"
+              style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
+            />
+          </TableContainer>
+        )}
+      </>
 
       {/* Dialog cho Chi Tiết Đơn Hàng */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
@@ -289,11 +301,11 @@ const OrderManagement = () => {
                 <TextField
                   label="Phương thức thanh toán"
                   fullWidth
-                  value={`${
+                  value={
                     selectedOrder.payment_id &&
                     selectedOrder.payment_id.payment_method_id &&
                     selectedOrder.payment_id.payment_method_id.payment_method
-                  } VND`}
+                  }
                   disabled
                 />
               </Grid>

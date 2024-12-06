@@ -21,7 +21,8 @@ import {
   MenuItem,
   TablePagination,
   Modal,
-  DialogContentText
+  DialogContentText,
+  CircularProgress
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { ROLE } from 'constants/mockData';
@@ -54,16 +55,23 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loading, setloading] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const response = await getAllUsers();
-      if (!response) {
-        setSnackbarMessage('Lay danh sach người dùng failed!');
-        setSnackbarOpen(true);
+      try {
+        setloading(true);
+        const response = await getAllUsers();
+        if (!response) {
+          setSnackbarMessage('Lay danh sach người dùng failed!');
+          setSnackbarOpen(true);
+        }
+        setUsers(response.data);
+        setFilteredUsers(response.data);
+      } catch (error) {
+        console.log('Lỗi: ', error);
       }
-      setUsers(response.data);
-      setFilteredUsers(response.data);
+      setloading(false);
     };
 
     fetchUserData();
@@ -204,65 +212,73 @@ const UserManagement = () => {
         Thêm Người Dùng
       </Button>
 
-      <TableContainer component={Paper} style={{ marginTop: '20px' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Email</TableCell>
-              <TableCell>Tên</TableCell>
-              <TableCell>Số Điện Thoại</TableCell>
-              <TableCell>Vai Trò</TableCell>
-              <TableCell>Thao Tác</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user, index) => (
-              <TableRow key={index + 1}>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>
-                  <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
-                  {user.isActive === true ? (
-                    <>
-                      <Button onClick={handleDialogOpen}>Khóa tài khoản</Button>
-                      {/* Dialog xác nhận */}
-                      <Dialog open={isDialogOpen} onClose={handleDialogClose}>
-                        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
-                          Xác nhận khóa tài khoản
-                        </DialogTitle>
-                        <DialogContent>
-                          <DialogContentText>Bạn có chắc chắn muốn khóa tài khoản của {user.name}?</DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                          <Button onClick={handleDialogClose} color="secondary">
-                            Hủy
-                          </Button>
-                          <Button onClick={() => handleLockAccount(user)} color="primary" variant="contained">
-                            Xác nhận
-                          </Button>
-                        </DialogActions>
-                      </Dialog>
-                    </>
-                  ) : (
-                    <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 5 }}>Đã khóa</span>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={filteredUsers.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Số dòng mỗi trang"
-        />
-      </TableContainer>
+      <>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+            <CircularProgress />
+          </div>
+        ) : (
+          <TableContainer component={Paper} style={{ marginTop: '20px' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Tên</TableCell>
+                  <TableCell>Số Điện Thoại</TableCell>
+                  <TableCell>Vai Trò</TableCell>
+                  <TableCell>Thao Tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user, index) => (
+                  <TableRow key={index + 1}>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>
+                      <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
+                      {user.isActive === true ? (
+                        <>
+                          <Button onClick={handleDialogOpen}>Khóa tài khoản</Button>
+                          {/* Dialog xác nhận */}
+                          <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+                            <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+                              Xác nhận khóa tài khoản
+                            </DialogTitle>
+                            <DialogContent>
+                              <DialogContentText>Bạn có chắc chắn muốn khóa tài khoản của {user.name}?</DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                              <Button onClick={handleDialogClose} color="secondary">
+                                Hủy
+                              </Button>
+                              <Button onClick={() => handleLockAccount(user)} color="primary" variant="contained">
+                                Xác nhận
+                              </Button>
+                            </DialogActions>
+                          </Dialog>
+                        </>
+                      ) : (
+                        <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 5 }}>Đã khóa</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <TablePagination
+              component="div"
+              count={filteredUsers.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage="Số dòng mỗi trang"
+            />
+          </TableContainer>
+        )}
+      </>
 
       {/* Dialog cho thêm/chỉnh sửa người dùng */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

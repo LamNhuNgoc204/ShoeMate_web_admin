@@ -21,7 +21,8 @@ import {
   FormControl,
   Typography,
   Grid,
-  TablePagination
+  TablePagination,
+  CircularProgress
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { addVoucher, getListVoucher, updateVoucher } from 'api/voucher';
@@ -34,6 +35,7 @@ const PromotionManagement = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     discount_value: 0,
     voucher_name: '',
@@ -79,14 +81,20 @@ const PromotionManagement = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getListVoucher();
-      // console.log('response==>', response);
+      setLoading(true);
+      try {
+        const response = await getListVoucher();
+        // console.log('response==>', response);
 
-      if (response.status) {
-        const data = response.data;
-        setVouchers(data.reverse());
-        // console.log('vouchers:', response.data);
+        if (response.status) {
+          const data = response.data;
+          setVouchers(data.reverse());
+          // console.log('vouchers:', response.data);
+        }
+      } catch (error) {
+        console.log('error==>', error);
       }
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -327,60 +335,68 @@ const PromotionManagement = () => {
         </FormControl>
       </Grid>
 
-      <TableContainer component={Paper} style={{ marginTop: '20px' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Tên</TableCell>
-              <TableCell>Điều Kiện</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Bắt Đầu</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Kết Thúc</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Mã Code</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Giảm Tối Đa (VNĐ)</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Số Lượng</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedVouchers.map((voucher) => (
-              <TableRow key={voucher._id}>
-                <TableCell>{voucher.voucher_name}</TableCell>
-                <TableCell>{voucher.usage_conditions || 'N/A'}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{formatDate(voucher.start_date) || 'N/A'}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{formatDate(voucher.expiry_date) || 'N/A'}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{voucher.voucher_code || 'N/A'}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>
-                  {(voucher.max_discount_value && voucher.max_discount_value.toLocaleString('vi-VN')) || 'N/A'}
-                </TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{voucher.status === 'active' ? 'Hiệu lực' : 'Hết hiệu lực'}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{voucher.quantity}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>
-                  <Button
-                    onClick={() => {
-                      setSelectedPromotion(voucher);
-                      handleOpenDialog(voucher);
-                    }}
-                  >
-                    Sửa
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+            <CircularProgress />
+          </div>
+        ) : (
+          <TableContainer component={Paper} style={{ marginTop: '20px' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Tên</TableCell>
+                  <TableCell>Điều Kiện</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Bắt Đầu</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Kết Thúc</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Mã Code</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Giảm Tối Đa (VNĐ)</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Số Lượng</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedVouchers.map((voucher) => (
+                  <TableRow key={voucher._id}>
+                    <TableCell>{voucher.voucher_name}</TableCell>
+                    <TableCell>{voucher.usage_conditions || 'N/A'}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{formatDate(voucher.start_date) || 'N/A'}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{formatDate(voucher.expiry_date) || 'N/A'}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{voucher.voucher_code || 'N/A'}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>
+                      {(voucher.max_discount_value && voucher.max_discount_value.toLocaleString('vi-VN')) || 'N/A'}
+                    </TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{voucher.status === 'active' ? 'Hiệu lực' : 'Hết hiệu lực'}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{voucher.quantity}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>
+                      <Button
+                        onClick={() => {
+                          setSelectedPromotion(voucher);
+                          handleOpenDialog(voucher);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
-        <TablePagination
-          component="div"
-          count={filteredVouchers.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          color="primary"
-          labelRowsPerPage="Số hàng mỗi trang"
-        />
-      </TableContainer>
+            <TablePagination
+              component="div"
+              count={filteredVouchers.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              color="primary"
+              labelRowsPerPage="Số hàng mỗi trang"
+            />
+          </TableContainer>
+        )}
+      </>
 
       {/* Dialog cho Thêm/Sửa Khuyến Mãi */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

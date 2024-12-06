@@ -21,7 +21,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Pagination
+  Pagination,
+  CircularProgress
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import AxiosInstance from 'helper/AxiosInstance';
@@ -39,10 +40,18 @@ const ShippingManagement = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
+  const [loading, setloading] = useState(false);
 
   useEffect(() => {
-    fetchData();
-    fetchShipData();
+    const fetchDataAsync = async () => {
+      try {
+        await Promise.all([fetchData(), fetchShipData()]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchDataAsync();
   }, []);
 
   useEffect(() => {
@@ -80,6 +89,7 @@ const ShippingManagement = () => {
 
   const fetchData = async () => {
     try {
+      setloading(true);
       const response = await AxiosInstance().get('/ship/get-order-forship');
       if (response.status) {
         const data = response.data;
@@ -88,11 +98,13 @@ const ShippingManagement = () => {
     } catch (error) {
       console.log('Get order failed: ', error);
     }
+    setloading(false);
   };
-  console.log('data=============>', data);
+  // console.log('data=============>', data);
 
   const fetchShipData = async () => {
     try {
+      setloading(true);
       const response = await AxiosInstance().get('/ship/get-shipping');
       if (response.status) {
         setShips(response.data);
@@ -100,6 +112,7 @@ const ShippingManagement = () => {
     } catch (error) {
       console.log('Get ship failed: ', error);
     }
+    setloading(false);
   };
 
   const handleOpenDialog = (shipment) => {
@@ -185,49 +198,57 @@ const ShippingManagement = () => {
         </FormControl>
       </>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Khách Hàng</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Địa Chỉ</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Thời gian</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Đơn vị vận chuyển</TableCell>
-              <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredOrders.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((shipment) => (
-              <TableRow key={shipment._id}>
-                <TableCell>{shipment._id && shipment._id.slice(0, 8) && shipment._id.slice(0, 8).toUpperCase()}</TableCell>
-                <TableCell>{shipment.receiver}</TableCell>
-                <TableCell>{shipment.address}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{shipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}</TableCell>
-                <TableCell>
-                  {new Date(
-                    shipment.status === 'processing'
-                      ? shipment.timestamps && shipment.timestamps.shippedAt
-                      : shipment.timestamps && shipment.timestamps.deliveredAt
-                  ).toLocaleDateString()}
-                </TableCell>
-                <TableCell style={{ textAlign: 'center' }}>{shipment.shipping_id && shipment.shipping_id.name}</TableCell>
-                <TableCell style={{ textAlign: 'center' }}>
-                  <Button onClick={() => handleOpenDialog(shipment)}>Xem Chi Tiết</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Pagination
-          count={Math.ceil(filteredOrders.length / rowsPerPage)}
-          page={page}
-          onChange={handlePageChange}
-          color="primary"
-          sx={{ padding: 2, display: 'flex', justifyContent: 'center' }}
-        />
-      </TableContainer>
+      <>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+            <CircularProgress />
+          </div>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Khách Hàng</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Địa Chỉ</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Thời gian</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Đơn vị vận chuyển</TableCell>
+                  <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredOrders.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((shipment) => (
+                  <TableRow key={shipment._id}>
+                    <TableCell>{shipment._id && shipment._id.slice(0, 8) && shipment._id.slice(0, 8).toUpperCase()}</TableCell>
+                    <TableCell>{shipment.receiver}</TableCell>
+                    <TableCell>{shipment.address}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{shipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}</TableCell>
+                    <TableCell>
+                      {new Date(
+                        shipment.status === 'processing'
+                          ? shipment.timestamps && shipment.timestamps.shippedAt
+                          : shipment.timestamps && shipment.timestamps.deliveredAt
+                      ).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>{shipment.shipping_id && shipment.shipping_id.name}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>
+                      <Button onClick={() => handleOpenDialog(shipment)}>Xem Chi Tiết</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <Pagination
+              count={Math.ceil(filteredOrders.length / rowsPerPage)}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+              sx={{ padding: 2, display: 'flex', justifyContent: 'center' }}
+            />
+          </TableContainer>
+        )}
+      </>
 
       {/* Dialog cho Chi Tiết Vận Chuyển */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
