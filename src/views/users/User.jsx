@@ -63,7 +63,8 @@ const UserManagement = () => {
         setloading(true);
         const response = await getAllUsers();
         if (!response) {
-          setSnackbarMessage('Lay danh sach người dùng failed!');
+          setSnackbarSeverity('error');
+          setSnackbarMessage('Xảy ta lỗi khi lấy danh sách người dùng!');
           setSnackbarOpen(true);
         }
         setUsers(response.data);
@@ -107,8 +108,9 @@ const UserManagement = () => {
 
   const handleSaveUser = async () => {
     if (!newEmail || !newPass || !newRole) {
-      setSnackbarMessage('Khong duoc de trong!');
+      setSnackbarMessage('Vui lòng không để trống các trường!');
       setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
 
     try {
@@ -139,9 +141,11 @@ const UserManagement = () => {
     try {
       const response = await updateRole(userId, role);
       if (response.status) {
-        setSnackbarMessage('Cap nhat thanh cong');
+        setSnackbarMessage('Cập nhật thông tin thành công');
+        setSnackbarSeverity('success');
       } else {
-        setSnackbarMessage('Ban khong co quyen su dung chuc nang nay');
+        setSnackbarMessage('Bạn không có quyền hạn sử dụng chức năng này!');
+        setSnackbarSeverity('error');
       }
     } catch (error) {
       console.error('Error updating role:', error);
@@ -174,12 +178,16 @@ const UserManagement = () => {
   };
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  const handleDialogOpen = () => {
+  const handleDialogOpen = (user) => {
+    setSelectedUser(user);
     setIsDialogOpen(true);
   };
+  // console.log('selectedUser', selectedUser);
 
   const handleDialogClose = () => {
+    setSelectedUser(null);
     setIsDialogOpen(false);
   };
 
@@ -240,24 +248,7 @@ const UserManagement = () => {
                       <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
                       {user.isActive === true ? (
                         <>
-                          <Button onClick={handleDialogOpen}>Khóa tài khoản</Button>
-                          {/* Dialog xác nhận */}
-                          <Dialog open={isDialogOpen} onClose={handleDialogClose}>
-                            <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
-                              Xác nhận khóa tài khoản
-                            </DialogTitle>
-                            <DialogContent>
-                              <DialogContentText>Bạn có chắc chắn muốn khóa tài khoản của {user.name}?</DialogContentText>
-                            </DialogContent>
-                            <DialogActions>
-                              <Button onClick={handleDialogClose} color="secondary">
-                                Hủy
-                              </Button>
-                              <Button onClick={() => handleLockAccount(user)} color="primary" variant="contained">
-                                Xác nhận
-                              </Button>
-                            </DialogActions>
-                          </Dialog>
+                          <Button onClick={() => handleDialogOpen(user)}>Khóa tài khoản</Button>
                         </>
                       ) : (
                         <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 5 }}>Đã khóa</span>
@@ -372,6 +363,22 @@ const UserManagement = () => {
           <Button onClick={() => setOpenDialogRole(false)}>Đóng</Button>
           <Button onClick={handleSaveRole} color="primary">
             Lưu
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog xác nhận */}
+      <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Xác nhận khóa tài khoản</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.name}?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} color="secondary">
+            Hủy
+          </Button>
+          <Button onClick={() => handleLockAccount(selectedUser)} color="primary" variant="contained">
+            Xác nhận
           </Button>
         </DialogActions>
       </Dialog>

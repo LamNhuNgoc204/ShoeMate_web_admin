@@ -60,6 +60,7 @@ const InventoryManagement = () => {
   const [newCateName, setnewCateName] = useState('');
   const [newCateDescription, setnewCateDescription] = useState('');
   const [productOfCate, setproductOfCate] = useState([]);
+  const [loadingCateDetail, setloadingCateDetail] = useState(false);
   const [selectIdForDetailCate, setselectIdForDetailCate] = useState('');
   const [filterCate, setfilterCate] = useState('all');
   const [currentPageCate, setCurrentPageCate] = useState(1);
@@ -80,6 +81,7 @@ const InventoryManagement = () => {
   const [openBrandDialog, setOpenBrandDialog] = useState(false);
   const [openBrandDetailDialog, setopenBrandDetailDialog] = useState(false);
   const [productOfBrands, setProductOfBrands] = useState([]);
+  const [loadingBrandDetail, setloadingBrandDetail] = useState(false);
   const [selectedBrandsName, setSelectedBrandsName] = useState(null);
   const [selectedBrandId, setSelectedBrandId] = useState(null);
   const [currBrandLogo, setCurrBrandLogo] = useState('');
@@ -173,14 +175,20 @@ const InventoryManagement = () => {
 
   useEffect(() => {
     const fetchdata = async () => {
-      const response = await getProductOfBrand(selectedBrandId);
-      console.log('Response:', response);
-      if (!response || !response.data) {
-        // setSnackbarMessage('Lấy dữ liệu thất bại!');
-        // setOpenSnackbar(true);
-        return;
+      try {
+        setloadingBrandDetail(true);
+        const response = await getProductOfBrand(selectedBrandId);
+        console.log('Response:', response);
+        if (!response || !response.data) {
+          // setSnackbarMessage('Lấy dữ liệu thất bại!');
+          // setOpenSnackbar(true);
+          return;
+        }
+        setProductOfBrands(response.data);
+      } catch (error) {
+        console.log('Lỗi lấy brand detail: ', error);
       }
-      setProductOfBrands(response.data);
+      setloadingBrandDetail(false);
     };
 
     fetchdata();
@@ -211,12 +219,18 @@ const InventoryManagement = () => {
 
   useEffect(() => {
     const fetchdataDetailCate = async () => {
-      const response = await getProductOfCate(selectIdForDetailCate);
-      console.log('Response:', response);
-      if (!response || !response.data) {
-        return;
+      try {
+        setloadingCateDetail(true);
+        const response = await getProductOfCate(selectIdForDetailCate);
+        // console.log('Response:', response);
+        if (!response || !response.data) {
+          return;
+        }
+        setproductOfCate(response.data);
+      } catch (error) {
+        console.log('Lỗi lấy cate detail: ', error);
       }
-      setproductOfCate(response.data);
+      setloadingCateDetail(false);
     };
 
     fetchdataDetailCate();
@@ -944,6 +958,7 @@ const InventoryManagement = () => {
 
   const [selectSize, setselectSize] = useState('');
   const [productsOfSize, setProductsOfSize] = useState([]);
+  const [loadingSizeDetail, setloadingSizeDetail] = useState(false);
   const [openDialogSizeDetail, setOpenDialogSizeDetail] = useState(false);
   const [openModalDelsize, setOpenModalDelsize] = useState(false);
   const [selectSizeDel, setselectSizeDel] = useState('');
@@ -951,6 +966,7 @@ const InventoryManagement = () => {
   useEffect(() => {
     const fetchSizeDetail = async () => {
       try {
+        setloadingSizeDetail(true);
         const response = await getSizeDetail(selectSize._id);
         if (response.status) {
           setProductsOfSize(response.data);
@@ -958,6 +974,7 @@ const InventoryManagement = () => {
       } catch (error) {
         console.log('Lỗi lấy dữ liệu: ', error);
       }
+      setloadingSizeDetail(false);
     };
     fetchSizeDetail();
   }, [selectSize]);
@@ -1652,60 +1669,68 @@ const InventoryManagement = () => {
           <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
             Chi tiết danh mục {catenamefordetail}
           </DialogTitle>
-          <DialogContent>Tổng sản phẩm: {productOfCate.length}</DialogContent>
-          <TableContainer
-            style={{
-              maxHeight: '500px'
-            }}
-            component={Paper}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Kích thước</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {productOfCate && productOfCate.length > 0 ? (
-                  productOfCate.map((product, index) => (
-                    <TableRow key={product._id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{product?.name || 'N/A'}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
-                      <TableCell style={{ textAlign: 'center', justifyContent: 'center', alignItems: 'center' }}>
-                        {product.size && product.size.length > 0
-                          ? product.size.map((s) => (
-                              <TableRow style={{ textAlign: 'center' }} key={s._id}>
-                                {s.sizeId && s.sizeId.name}
-                              </TableRow>
-                            ))
-                          : 'Không có kích thước'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.size && product.size.length > 0
-                          ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
-                          : 'Không có số lượng'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.brand ? product.brand.name : 'Không có danh mục'}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
+          {loadingCateDetail ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+              <CircularProgress />
+            </div>
+          ) : (
+            <>
+              <DialogContent>Tổng sản phẩm: {productOfCate.length}</DialogContent>
+              <TableContainer
+                style={{
+                  maxHeight: '500px'
+                }}
+                component={Paper}
+              >
+                <Table stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Kích thước</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {productOfCate && productOfCate.length > 0 ? (
+                      productOfCate.map((product, index) => (
+                        <TableRow key={product._id}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{product?.name || 'N/A'}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
+                          <TableCell style={{ textAlign: 'center', justifyContent: 'center', alignItems: 'center' }}>
+                            {product.size && product.size.length > 0
+                              ? product.size.map((s) => (
+                                  <TableRow style={{ textAlign: 'center' }} key={s._id}>
+                                    {s.sizeId && s.sizeId.name}
+                                  </TableRow>
+                                ))
+                              : 'Không có kích thước'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.size && product.size.length > 0
+                              ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                              : 'Không có số lượng'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.brand ? product.brand.name : 'Không có danh mục'}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
         </Dialog>
 
         {/* Dialog Chinh sua logo danh muc */}
@@ -1763,58 +1788,66 @@ const InventoryManagement = () => {
           <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
             Chi tiết thương hiệu {selectedBrandsName}
           </DialogTitle>
-          <DialogContent>Tổng sản phẩm: {productOfBrands.length}</DialogContent>
-          <TableContainer
-            style={{
-              maxHeight: '500px'
-            }}
-            component={Paper}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
-                  <TableCell>Kích thước</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {productOfBrands && productOfBrands.length > 0 ? (
-                  productOfBrands.map((product, index) => (
-                    <TableRow key={product._id}>
-                      <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
-                      <TableCell>{product?.name || 'N/A'}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.size && product.size.length > 0
-                          ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
-                          : 'Không có kích thước'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.size && product.size.length > 0
-                          ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
-                          : 'Không có số lượng'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.category ? product.category.name : 'Không có danh mục'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
+          {loadingBrandDetail ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+              <CircularProgress />
+            </div>
+          ) : (
+            <>
+              <DialogContent>Tổng sản phẩm: {productOfBrands.length}</DialogContent>
+              <TableContainer
+                style={{
+                  maxHeight: '500px'
+                }}
+                component={Paper}
+              >
+                <Table stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
+                      <TableCell>Kích thước</TableCell>
+                      <TableCell>Số lượng</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {productOfBrands && productOfBrands.length > 0 ? (
+                      productOfBrands.map((product, index) => (
+                        <TableRow key={product._id}>
+                          <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
+                          <TableCell>{product?.name || 'N/A'}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.size && product.size.length > 0
+                              ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
+                              : 'Không có kích thước'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.size && product.size.length > 0
+                              ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                              : 'Không có số lượng'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.category ? product.category.name : 'Không có danh mục'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
         </Dialog>
 
         {/* Dialog Chinh sua logo thuong hieu */}
@@ -1920,58 +1953,66 @@ const InventoryManagement = () => {
           <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
             Chi tiết kích thước {selectSize.name}
           </DialogTitle>
-          <DialogContent>Tổng sản phẩm: {productsOfSize.length}</DialogContent>
-          <TableContainer
-            style={{
-              maxHeight: '500px'
-            }}
-            component={Paper}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
-                  <TableCell>Kích thước</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {productsOfSize && productsOfSize.length > 0 ? (
-                  productsOfSize.map((product, index) => (
-                    <TableRow key={product._id}>
-                      <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
-                      <TableCell>{product?.name || 'N/A'}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.size && product.size.length > 0
-                          ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
-                          : 'Không có kích thước'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.size && product.size.length > 0
-                          ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
-                          : 'Không có số lượng'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>
-                        {product.category ? product.category.name : 'Không có danh mục'}
-                      </TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
+          {loadingSizeDetail ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', height: '50vh', alignItems: 'center' }}>
+              <CircularProgress />
+            </div>
+          ) : (
+            <>
+              <DialogContent>Tổng sản phẩm: {productsOfSize.length}</DialogContent>
+              <TableContainer
+                style={{
+                  maxHeight: '500px'
+                }}
+                component={Paper}
+              >
+                <Table stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Tên</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
+                      <TableCell>Kích thước</TableCell>
+                      <TableCell>Số lượng</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
+                      <TableCell style={{ textAlign: 'center' }}>Trạng thái</TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {productsOfSize && productsOfSize.length > 0 ? (
+                      productsOfSize.map((product, index) => (
+                        <TableRow key={product._id}>
+                          <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
+                          <TableCell>{product?.name || 'N/A'}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.size && product.size.length > 0
+                              ? product.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
+                              : 'Không có kích thước'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.size && product.size.length > 0
+                              ? product.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                              : 'Không có số lượng'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>
+                            {product.category ? product.category.name : 'Không có danh mục'}
+                          </TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
+                          <TableCell style={{ textAlign: 'center' }}>{product.status}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7}>Không có sản phẩm nào.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
         </Dialog>
       </>
 

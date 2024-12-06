@@ -70,6 +70,8 @@ const ShippingManagement = () => {
     setFilteredOrders(filtered);
   }, [data, filterStatus, filterShip]);
 
+  // console.log('filtered', filteredOrders);
+
   const handleFilterChange = (event) => {
     setFilterStatus(event.target.value);
   };
