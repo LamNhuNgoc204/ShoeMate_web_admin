@@ -93,41 +93,32 @@ const PromotionManagement = () => {
   // console.log('vouchers ================>', vouchers);
 
   const handleOpenDialog = (promotion = null) => {
-    console.log('mã giảm giá cần sửa: ', promotion);
+    const defaultForm = {
+      discount_value: 0,
+      voucher_name: '',
+      quantity: 1,
+      voucher_image: '',
+      voucher_code: '',
+      expiry_date: '',
+      start_date: '',
+      usage_conditions: '',
+      usage_scope: '',
+      min_order_value: 0,
+      max_discount_value: 0
+    };
+
+    setSelectedPromotion(promotion);
+
     if (promotion) {
-      setSelectedPromotion(promotion);
-    }
-    if (selectedPromotion) {
       setFormData({
-        discount_value: promotion.discount_value || 0,
-        voucher_name: promotion.voucher_name || '',
-        quantity: promotion.quantity || 1,
-        voucher_image: promotion.voucher_image || '',
-        voucher_code: promotion.voucher_code || '',
-        expiry_date: promotion.expiry_date || '',
-        start_date: promotion.start_date || '',
-        usage_conditions: promotion.usage_conditions || '',
-        usage_scope: promotion.usage_scope || '',
-        min_order_value: promotion.min_order_value || 0,
-        max_discount_value: promotion.max_discount_value || 0
+        ...defaultForm,
+        ...promotion,
+        start_date: promotion.start_date ? new Date(promotion.start_date).toISOString().slice(0, 10) : '', // format YYYY-MM-DD
+        expiry_date: promotion.expiry_date ? new Date(promotion.expiry_date).toISOString().slice(0, 10) : '' // format YYYY-MM-DD
       });
     } else {
-      setFormData({
-        discount_value: 0,
-        voucher_name: '',
-        quantity: 1,
-        voucher_image: '',
-        voucher_code: '',
-        expiry_date: '',
-        start_date: '',
-        usage_conditions: '',
-        usage_scope: '',
-        min_order_value: 0,
-        max_discount_value: 0
-      });
+      setFormData(defaultForm);
     }
-    // console.log('form data================>', formData);
-    console.log('selectedPromotion===============>', selectedPromotion);
     setOpenDialog(true);
   };
 
@@ -236,7 +227,11 @@ const PromotionManagement = () => {
       const response = await updateVoucher(selectedPromotion._id, formData);
       if (response.status) {
         setVouchers((prevVouchers) =>
-          prevVouchers.map((voucher) => (voucher._id === selectedPromotion._id ? { ...voucher, ...response.data } : voucher))
+          prevVouchers.map((voucher) =>
+            voucher._id === selectedPromotion._id
+              ? { ...voucher, ...response.data } // Thay voucher cũ bằng dữ liệu mới
+              : voucher
+          )
         );
         // setVouchers((prevVouchers) => prevVouchers.map((voucher) => (voucher._id === selectedPromotion._id ? response.data : voucher)));
         setSnackbarMessage('Cập nhật mã giảm giá thành công!');
