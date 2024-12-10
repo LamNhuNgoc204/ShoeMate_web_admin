@@ -58,3 +58,23 @@ export const updateInfor = async (body) => {
     console.log('Lỗi cập nhật thông tin: ', error);
   }
 };
+
+export const updateShipping = async (id, body) => {
+  try {
+    const response = await AxiosInstance().put(`/ship/update-ship/${id}`, body);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Lỗi cập nhật dvvc: ', error);
+  }
+};
+
+export const stopCollaborationWithShipping = async (id, body) => {
+  try {
+    const response = await AxiosInstance().put(`/ship/update-status/${id}`, body);
+    return response;
+  } catch (error) {
+    console.log('Lỗi cập nhật dvvc: ', error);
+  }
+};

@@ -54,3 +54,15 @@ export const createNewBrand = async (body) => {
     console.error('error category: ', error);
   }
 };
+
+export const addShipping = async (body) => {
+  try {
+    const response = await AxiosInstance().post('/ship/shipping-companies', body);
+    if (!response) {
+      console.log('Lỗi không tạo được đvvc mới');
+    }
+    return response;
+  } catch (error) {
+    console.error('error add new ship: ', error);
+  }
+};

@@ -34,3 +34,13 @@ export const getSizeDetail = async (sizeId) => {
   const response = await AxiosInstance().get(`/sizes/get-products-by-sizeid/${sizeId}`);
   return response;
 };
+
+export const getShips = async () => {
+  const response = await AxiosInstance().get(`/ship/get-shipping`);
+  return response;
+};
+
+export const getPayments = async () => {
+  const response = await AxiosInstance().get(`/payment-method/getall-payment`);
+  return response;
+};
