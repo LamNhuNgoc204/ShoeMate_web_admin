@@ -37,6 +37,7 @@ import { uploadToCloundinary } from 'functions/processingFunction';
 import { deleteBrand, deleteCate, deleteSize, updateCate, updateLogoBrand } from 'api/updateData';
 import { addProduct, getProducts, stopSellingPd, updateProduct } from 'api/products';
 import { Box } from '@mui/system';
+import AxiosInstance from 'helper/AxiosInstance';
 
 const InventoryManagement = () => {
   //COMMON
@@ -580,14 +581,51 @@ const InventoryManagement = () => {
     assets: []
   });
 
+  // Trạng thái cho lọc khác (giá, danh mục, thương hiệu, tình trạng hàng)
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [category, setCategory] = useState('');
+  const [brand, setBrand] = useState('');
+  const [stockStatus, setStockStatus] = useState('');
+  const [currentPageProduct, setCurrentPageProduct] = useState(1);
+  const itemsPerPageProduct = 5;
+  const [lstPD, setlstPD] = useState({});
+
   useEffect(() => {
     const fetchProductData = async () => {
       setLoadingProduct(true);
       try {
-        const response = await getProducts();
+        setCurrentPageProduct(1);
+
+        const response = await getProducts(currentPageProduct, itemsPerPageProduct, minPrice, maxPrice, category, brand, stockStatus);
+        // console.log('response data: ', response);
+
         if (response.status) {
+          setlstPD(response);
           const data = response.data;
-          setListProducts(data.reverse());
+          setListProducts(data);
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải sản phẩm:', error);
+      } finally {
+        setLoadingProduct(false);
+      }
+    };
+
+    fetchProductData();
+  }, [minPrice, maxPrice, category, brand, stockStatus]);
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      setLoadingProduct(true);
+      try {
+        const response = await getProducts(currentPageProduct, itemsPerPageProduct, minPrice, maxPrice, category, brand, stockStatus);
+        // console.log('response data: ', response);
+
+        if (response.status) {
+          setlstPD(response);
+          const data = response.data;
+          setListProducts(data);
         }
       } catch (error) {
         console.error('Lỗi khi tải sản phẩm:', error);
@@ -596,14 +634,7 @@ const InventoryManagement = () => {
       }
     };
     fetchProductData();
-  }, []);
-
-  // Trạng thái cho lọc khác (giá, danh mục, thương hiệu, tình trạng hàng)
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [category, setCategory] = useState('');
-  const [brand, setBrand] = useState('');
-  const [stockStatus, setStockStatus] = useState('');
+  }, [currentPageProduct]);
 
   const resetFilterProduct = () => {
     setMinPrice('');
@@ -612,37 +643,6 @@ const InventoryManagement = () => {
     setBrand('');
     setStockStatus('');
   };
-
-  const [currentPageProduct, setCurrentPageProduct] = useState(1);
-  const itemsPerPageProduct = 5;
-
-  // Lọc danh sách sản phẩm
-  const filteredProducts =
-    listProducts &&
-    listProducts.filter((product) => {
-      const matchesPrice = (minPrice === '' || product.price >= minPrice) && (maxPrice === '' || product.price <= maxPrice);
-      const matchesCategory = category === '' || product.category._id === category;
-      const matchesBrands = brand === '' || brand === product.brand._id;
-      // const matchesStockStatus =
-      //   stockStatus === '' ||
-      //   (stockStatus === 'in-stock' && product.quantity > 0) ||
-      //   (stockStatus === 'out-of-stock' && product.quantity === 0);
-      const matchesStockStatus =
-        stockStatus === '' ||
-        (stockStatus === 'in-stock' && product.size.some((s) => s.quantity > 0)) ||
-        (stockStatus === 'out-of-stock' && product.size.every((s) => s.quantity === 0));
-
-      return matchesPrice && matchesCategory && matchesBrands && matchesStockStatus;
-    });
-
-  // Phân trang dựa trên danh sách đã lọc
-  const paginateProduct = filteredProducts.slice((currentPageProduct - 1) * itemsPerPageProduct, currentPageProduct * itemsPerPageProduct);
-
-  const handlePageProductChange = (_, value) => {
-    setCurrentPageProduct(value);
-  };
-
-  // console.log('Filtered Products:', filteredProducts);
 
   const handleOpenDialog = (product = null) => {
     setSelectedProduct(product);
@@ -1039,6 +1039,16 @@ const InventoryManagement = () => {
     }
   };
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     // ?page=1&limit=10
+  //     const response = await AxiosInstance().get(`/products/lst-products/?page=${1}&limit=${10}`);
+  //     console.log('sp co phân trang: ', response);
+  //   };
+
+  //   fetchData();
+  // }, []);
+
   return (
     <MainCard title="QUẢN LÝ KHO HÀNG" style={{ padding: 20 }}>
       <Box sx={{ width: '100%' }}>
@@ -1101,7 +1111,7 @@ const InventoryManagement = () => {
                   <InputLabel>Trạng thái</InputLabel>
                   <Select value={stockStatus} onChange={(e) => setStockStatus(e.target.value)} displayEmpty style={{ width: 150 }}>
                     <MenuItem value="in-stock">Còn hàng</MenuItem>
-                    <MenuItem value="off-stock">Hết hàng</MenuItem>
+                    <MenuItem value="out-of-stock">Hết hàng</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -1133,52 +1143,36 @@ const InventoryManagement = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {paginateProduct ? (
-                          paginateProduct.map((product, index) => {
-                            // Lọc kích thước theo trạng thái
-                            const filteredSizes =
-                              stockStatus === 'in-stock'
-                                ? product.size.filter((s) => s.quantity > 0)
-                                : stockStatus === 'off-stock'
-                                  ? product.size.filter((s) => s.quantity === 0)
-                                  : product.size;
-
-                            // Bỏ qua sản phẩm nếu không có kích thước phù hợp
-                            if (filteredSizes.length === 0) return null;
-
-                            const updatedProduct = {
-                              ...product,
-                              size: filteredSizes
-                            };
-
+                        {listProducts ? (
+                          listProducts.map((product, index) => {
                             return (
-                              <TableRow key={updatedProduct._id}>
+                              <TableRow key={product._id}>
                                 <TableCell style={{ textAlign: 'center' }}>
                                   {(currentPageProduct - 1) * itemsPerPageProduct + index + 1}
                                 </TableCell>
-                                <TableCell>{updatedProduct?.name || 'N/A'}</TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>{updatedProduct.price.toLocaleString('vi-VN')}</TableCell>
+                                <TableCell>{product?.name || 'N/A'}</TableCell>
+                                <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
                                 <TableCell>
-                                  {updatedProduct?.size && updatedProduct?.size.length > 0
-                                    ? updatedProduct?.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
+                                  {product?.size && product?.size.length > 0
+                                    ? product?.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
                                     : 'Không có kích thước'}
                                 </TableCell>
                                 <TableCell>
-                                  {updatedProduct?.size && updatedProduct?.size.length > 0
-                                    ? updatedProduct?.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
+                                  {product?.size && product?.size.length > 0
+                                    ? product?.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
                                     : 'Không có số lượng'}
                                 </TableCell>
                                 <TableCell style={{ textAlign: 'center' }}>
-                                  {updatedProduct.category ? updatedProduct.category.name : 'Không có danh mục'}
+                                  {product.category ? product.category.name : 'Không có danh mục'}
                                 </TableCell>
                                 <TableCell style={{ textAlign: 'center' }}>
-                                  {updatedProduct.brand ? updatedProduct.brand.name : 'Không có thương hiệu'}
+                                  {product.brand ? product.brand.name : 'Không có thương hiệu'}
                                 </TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>{updatedProduct.sold}</TableCell>
+                                <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
                                 {/* <TableCell >{product.status}</TableCell> */}
                                 <TableCell>
-                                  {updatedProduct?.size && updatedProduct?.size.length > 0
-                                    ? updatedProduct?.size.map((s) => (
+                                  {product?.size && product?.size.length > 0
+                                    ? product?.size.map((s) => (
                                         <TableRow key={s._id}>{s && s.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}</TableRow>
                                       ))
                                     : 'Không có số lượng'}
@@ -1228,9 +1222,9 @@ const InventoryManagement = () => {
                       </TableBody>
                     </Table>
                     <Pagination
-                      count={Math.ceil(filteredProducts.length / itemsPerPageProduct)}
+                      count={lstPD?.totalPages}
                       page={currentPageProduct}
-                      onChange={handlePageProductChange}
+                      onChange={(e, value) => setCurrentPageProduct(value)}
                       color="primary"
                       style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
                     />

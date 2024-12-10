@@ -9,9 +9,9 @@ export const addVoucher = async (body) => {
   }
 };
 
-export const getListVoucher = async () => {
+export const getListVoucher = async (page, limit, statusFilter) => {
   try {
-    const response = await AxiosInstance().get('/vouchers/list');
+    const response = await AxiosInstance().get(`/vouchers/lst-voucher-for-web?page=${page}&limit=${limit}&statusFilter=${statusFilter}`);
     return response;
   } catch (error) {
     console.log('get vourcher error: ', error);

@@ -1,7 +1,16 @@
 import AxiosInstance from 'helper/AxiosInstance';
 
-export const getProducts = async () => {
-  const response = await AxiosInstance().get('/products/list-products');
+export const getProducts = async (page, limit, minPrice, maxPrice, category, brand, quantityStatus) => {
+  const query = new URLSearchParams({
+    page,
+    limit,
+    minPrice,
+    maxPrice,
+    category,
+    brand,
+    quantityStatus // Trạng thái: "in-stock" hoặc "out-of-stock"
+  }).toString();
+  const response = await AxiosInstance().get(`/products/lst-products?${query}`);
   return response;
 };
 

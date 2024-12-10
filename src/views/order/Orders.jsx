@@ -36,25 +36,30 @@ const OrderManagement = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [filterStatus, setFilterStatus] = useState('all');
 
+  const [lstOd, setlstOd] = useState({});
   const [pendingOrders, setPendingOrders] = useState([]);
   const [orderRenturn, setOrderRenturn] = useState([]);
-  const [orderComplete, setOrderComplete] = useState([]);
   const [orderCancel, setOrderCancel] = useState([]);
   const [data, setData] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState(data);
   const [loading, setloading] = useState(false);
+  const [page, setpage] = useState(1);
+  const limit = 10;
 
   useEffect(() => {
     const fetchData = async () => {
+      setpage(1);
       try {
         setloading(true);
-        const response = await AxiosInstance().get('/orders/get-all-orders');
+        const response = await AxiosInstance().get(`/orders/get-all-orders?page=${page}&limit=${limit}&filterStatus=${filterStatus}`);
+        console.log('order respose==>', response);
+
         if (response.status) {
+          setlstOd(response);
+          setPendingOrders(response.pendingOrders);
+          setOrderCancel(response.ordersCancel);
+          setOrderRenturn(response.refundedOrder);
           const reversedData = response.data && response.data.reverse();
-          setData(reversedData);
-          // Initial filter
-          setFilteredOrders(reversedData);
-          updateOrderCounts(reversedData);
+          setData(response.data);
         }
       } catch (error) {
         console.log('error get data order: ', error);
@@ -62,33 +67,36 @@ const OrderManagement = () => {
       setloading(false);
     };
 
-    const updateOrderCounts = (orders) => {
-      setPendingOrders(orders.filter((item) => item.status === 'pending'));
-      setOrderRenturn(orders.filter((item) => item.returnRequest && item.returnRequest.status === 'pending'));
-      setOrderCancel(orders.filter((item) => item.status === 'cancelled'));
-      setOrderComplete(orders.filter((item) => item.status === 'completed'));
+    fetchData();
+  }, [filterStatus]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setloading(true);
+        const response = await AxiosInstance().get(`/orders/get-all-orders?page=${page}&limit=${limit}&filterStatus=${filterStatus}`);
+        console.log('order respose==>', response);
+
+        if (response.status) {
+          setlstOd(response);
+          setPendingOrders(response.pendingOrders);
+          setOrderCancel(response.ordersCancel);
+          setOrderRenturn(response.refundedOrder);
+          setlstOd(response);
+          const reversedData = response.data.reduceRight((acc, item) => {
+            acc.push(item);
+            return acc;
+          }, []);
+          setData(response.data);
+        }
+      } catch (error) {
+        console.log('error get data order: ', error);
+      }
+      setloading(false);
     };
 
     fetchData();
-  }, []);
-
-  // console.log('data orders =>>>>', data);
-
-  useEffect(() => {
-    if (filterStatus === 'all') {
-      setFilteredOrders(data);
-    } else {
-      setFilteredOrders(data.filter((order) => order.status === filterStatus));
-    }
-  }, [filterStatus, data]);
-
-  const [currentOrderPage, setCurrentOrderPage] = useState(1);
-  const itemsPerPageOrder = 10;
-  const paginatedOrder = filteredOrders.slice((currentOrderPage - 1) * itemsPerPageOrder, currentOrderPage * itemsPerPageOrder);
-
-  const handlePageOrderChange = (_, value) => {
-    setCurrentOrderPage(value);
-  };
+  }, [page]);
 
   const handleOpenDialog = (order) => {
     setSelectedOrder(order);
@@ -178,8 +186,6 @@ const OrderManagement = () => {
   const handleFilterChange = (event) => {
     const value = event.target.value;
     setFilterStatus(value);
-    const filtered = value === 'all' ? data : data.filter((order) => order.status === value);
-    setFilteredOrders(filtered);
   };
 
   return (
@@ -189,25 +195,25 @@ const OrderManagement = () => {
           <Grid item xs={3}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Đơn Đã Hoàn Thành</Typography>
-              <Typography variant="h4">{orderComplete.length}</Typography>
+              <Typography variant="h4">{lstOd?.completedOrder || 0}</Typography>
             </Paper>
           </Grid>
           <Grid item xs={3}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Đơn Đã Hủy</Typography>
-              <Typography variant="h4">{orderCancel.length}</Typography>
+              <Typography variant="h4">{orderCancel.length || 0}</Typography>
             </Paper>
           </Grid>
           <Grid item xs={3}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Đơn Đang Xử Lý</Typography>
-              <Typography variant="h4">{pendingOrders.length}</Typography>
+              <Typography variant="h4">{pendingOrders.length || 0}</Typography>
             </Paper>
           </Grid>
           <Grid item xs={3}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Yêu Cầu Hoàn hàng</Typography>
-              <Typography variant="h4">{orderRenturn.length}</Typography>
+              <Typography variant="h4">{orderRenturn.length || 0}</Typography>
             </Paper>
           </Grid>
         </Grid>
@@ -248,7 +254,7 @@ const OrderManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedOrder.map((order) => (
+                {data.map((order) => (
                   <TableRow key={order._id}>
                     <TableCell>{order._id && order._id.slice(0, 5) && order._id.slice(0, 8).toUpperCase()}</TableCell>
                     <TableCell>{order.receiver}</TableCell>
@@ -273,9 +279,9 @@ const OrderManagement = () => {
               </TableBody>
             </Table>
             <Pagination
-              count={Math.ceil(filteredOrders.length / itemsPerPageOrder)}
-              page={currentOrderPage}
-              onChange={handlePageOrderChange}
+              count={lstOd?.totalPages}
+              page={page}
+              onChange={(e, value) => setpage(value)}
               color="primary"
               style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
             />

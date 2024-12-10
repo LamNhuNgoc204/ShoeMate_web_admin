@@ -21,8 +21,8 @@ import {
   FormControl,
   Typography,
   Grid,
-  TablePagination,
-  CircularProgress
+  CircularProgress,
+  Pagination
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { addVoucher, getListVoucher, updateVoucher } from 'api/voucher';
@@ -55,40 +55,27 @@ const PromotionManagement = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 5;
   const [statusFilter, setStatusFilter] = useState('all');
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const [lstVC, setlstVC] = useState({});
 
   const handleFilterChange = (event) => {
     setStatusFilter(event.target.value);
   };
 
-  const filteredVouchers = vouchers.filter((voucher) => {
-    if (statusFilter === 'all') return true;
-    return statusFilter === 'active' ? voucher.status === 'active' : voucher.status !== 'active';
-  });
-
-  const paginatedVouchers = filteredVouchers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
   useEffect(() => {
     const fetchData = async () => {
+      setPage(1);
       setLoading(true);
       try {
-        const response = await getListVoucher();
+        const response = await getListVoucher(page, rowsPerPage, statusFilter);
         // console.log('response==>', response);
 
         if (response.status) {
+          setlstVC(response);
           const data = response.data;
-          setVouchers(data.reverse());
+          setVouchers(data);
           // console.log('vouchers:', response.data);
         }
       } catch (error) {
@@ -97,7 +84,28 @@ const PromotionManagement = () => {
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await getListVoucher(page, rowsPerPage, statusFilter);
+        // console.log('response==>', response);
+
+        if (response.status) {
+          setlstVC(response);
+          const data = response.data;
+          setVouchers(data);
+          // console.log('vouchers:', response.data);
+        }
+      } catch (error) {
+        console.log('error==>', error);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, [page]);
   // console.log('vouchers ================>', vouchers);
 
   const handleOpenDialog = (promotion = null) => {
@@ -288,7 +296,7 @@ const PromotionManagement = () => {
                 Tổng số khuyến mãi
               </Typography>
               <Typography variant="h4" align="center">
-                {vouchers.length}
+                {lstVC?.activeVC?.length + lstVC?.inactiveVC?.length || 0}
               </Typography>
             </Paper>
           </Grid>
@@ -298,7 +306,7 @@ const PromotionManagement = () => {
                 Khuyến mãi hiệu lực
               </Typography>
               <Typography variant="h4" align="center">
-                {vouchers.filter((p) => p.status === 'active').length}
+                {lstVC?.activeVC?.length || 0}
               </Typography>
             </Paper>
           </Grid>
@@ -308,7 +316,7 @@ const PromotionManagement = () => {
                 Khuyến mãi không hiệu lực
               </Typography>
               <Typography variant="h4" align="center">
-                {vouchers.filter((p) => p.status !== 'active').length}
+                {lstVC?.inactiveVC?.length || 0}
               </Typography>
             </Paper>
           </Grid>
@@ -357,7 +365,7 @@ const PromotionManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedVouchers.map((voucher) => (
+                {vouchers.map((voucher) => (
                   <TableRow key={voucher._id}>
                     <TableCell>{voucher.voucher_name}</TableCell>
                     <TableCell>{voucher.usage_conditions || 'N/A'}</TableCell>
@@ -384,15 +392,12 @@ const PromotionManagement = () => {
               </TableBody>
             </Table>
 
-            <TablePagination
-              component="div"
-              count={filteredVouchers.length}
+            <Pagination
+              count={lstVC?.totalPages}
               page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
+              onChange={(e, value) => setPage(value)}
               color="primary"
-              labelRowsPerPage="Số hàng mỗi trang"
+              style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
             />
           </TableContainer>
         )}
