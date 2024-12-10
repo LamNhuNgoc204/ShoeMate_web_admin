@@ -47,3 +47,14 @@ export const deleteSize = async (sizeID) => {
     console.log('Loi xoa danh muc', error);
   }
 };
+
+export const updateInfor = async (body) => {
+  try {
+    const response = await AxiosInstance().put(`/admins/update-infor`, body);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Lỗi cập nhật thông tin: ', error);
+  }
+};
