@@ -96,13 +96,20 @@ const ShippingManagement = () => {
       if (response.status) {
         const data = response.data;
         setData(data.reverse());
+
+        // // ["processing", "delivered"]
+        // // Lọc lại các đơn hàng có trạng thái "processing" hoặc "delivered"
+        // const filteredData = data.filter((order) => ['processing', 'delivered'].includes(order.status));
+
+        // // Đảo ngược và set vào data
+        // setData(filteredData.reverse());
       }
     } catch (error) {
       console.log('Get order failed: ', error);
     }
     setloading(false);
   };
-  // console.log('data=============>', data);
+  console.log('data=============>', data);
 
   const fetchShipData = async () => {
     try {
@@ -330,7 +337,7 @@ const ShippingManagement = () => {
               </Grid>
 
               <Grid item xs={12}>
-                {selectedShipment.status !== 'delivered' ? (
+                {!selectedShipment?.returnRequest && selectedShipment.status !== 'delivered' ? (
                   <Button
                     variant="contained"
                     onClick={() => handleUpdateStatus('delivered')}
@@ -341,7 +348,22 @@ const ShippingManagement = () => {
                   </Button>
                 ) : (
                   <Typography variant="h4" align="center">
-                    Đơn hàng đã được giao thành công
+                    {!selectedShipment?.returnRequest && 'Đơn hàng đã được giao thành công'}
+                  </Typography>
+                )}
+
+                {selectedShipment?.returnRequest?.status === 'accepted' ? (
+                  <Button
+                    variant="contained"
+                    // onClick={() => handleUpdateStatus('delivered')}
+                    color="success"
+                    style={{ marginRight: '10px', marginTop: 10 }}
+                  >
+                    Đã Hoàn Hàng
+                  </Button>
+                ) : (
+                  <Typography variant="h4" align="center">
+                    Đơn hàng đã được hoàn về shop
                   </Typography>
                 )}
 

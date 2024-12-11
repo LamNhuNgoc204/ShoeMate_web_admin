@@ -51,14 +51,13 @@ const OrderManagement = () => {
       try {
         setloading(true);
         const response = await AxiosInstance().get(`/orders/get-all-orders?page=${page}&limit=${limit}&filterStatus=${filterStatus}`);
-        console.log('order respose==>', response);
+        // console.log('order respose==>', response);
 
         if (response.status) {
           setlstOd(response);
           setPendingOrders(response.pendingOrders);
           setOrderCancel(response.ordersCancel);
           setOrderRenturn(response.refundedOrder);
-          const reversedData = response.data && response.data.reverse();
           setData(response.data);
         }
       } catch (error) {
@@ -149,37 +148,42 @@ const OrderManagement = () => {
 
   const handleConfirmReturn = async (orderId) => {
     try {
-      const response = await AxiosInstance().put(`/orders/return-request/${orderId}`, { status: 'accepted' });
+      const response = await AxiosInstance().put(`/orders/return-request/${orderId}`, { returnStatus: 'accepted' });
+      console.log('accepted==>', response);
+
       if (response.status) {
-        handleCloseDialog();
+        setData((prevData) => prevData.map((order) => (order.id === orderId ? { ...order, 'returnRequest.status': 'accepted' } : order)));
         setSnackbarMessage('Xác nhận hoàn hàng!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
       }
     } catch (error) {
-      console.log('Huy don failed');
-      handleCloseDialog();
-      setSnackbarMessage('Lỗi server!');
+      console.log('Huy don failed: ', error);
+      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+    } finally {
+      handleCloseDialog();
     }
   };
 
   const handleDeclineReturn = async (orderId) => {
     try {
-      const response = await AxiosInstance().put(`/orders/return-request/${orderId}`, { status: 'rejected' });
+      const response = await AxiosInstance().put(`/orders/return-request/${orderId}`, { returnStatus: 'rejected' });
+      console.log('rejected==>', response);
+
       if (response.status) {
-        handleCloseDialog();
         setSnackbarMessage('Từ chối yêu cầu hoàn hàng!');
         setSnackbarSeverity('info');
         setSnackbarOpen(true);
       }
     } catch (error) {
-      handleCloseDialog();
-      console.log('Huy don failed');
-      setSnackbarMessage('Lỗi server!');
+      console.log('Huy don failed: ', error);
+      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+    } finally {
+      handleCloseDialog();
     }
   };
 
@@ -228,6 +232,11 @@ const OrderManagement = () => {
                 <MenuItem value="completed">Đã hoàn thành</MenuItem>
                 <MenuItem value="cancelled">Đã hủy</MenuItem>
                 <MenuItem value="refunded">Hoàn hàng</MenuItem>
+                {/* Thêm trạng thái hoàn trả */}
+                <MenuItem value="return-pending">Hoàn trả - Chờ xác nhận</MenuItem>
+                <MenuItem value="return-accepted">Hoàn trả - Được chấp nhận</MenuItem>
+                <MenuItem value="return-rejected">Hoàn trả - Bị từ chối</MenuItem>
+                <MenuItem value="return-refunded">Hoàn trả - Đã hoàn tiền</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -260,15 +269,21 @@ const OrderManagement = () => {
                     <TableCell>{order.receiver}</TableCell>
                     <TableCell>{order.total_price && order.total_price.toLocaleString('vi-VN')} VND</TableCell>
                     <TableCell>
-                      {order.status === 'pending'
+                      {order?.status === 'pending'
                         ? 'Chờ xác nhận'
-                        : order.status === 'processing'
+                        : order?.status === 'processing'
                           ? 'Đang vận chuyển'
-                          : order.status === 'completed'
+                          : order?.status === 'completed'
                             ? 'Đã hoàn thành'
-                            : order.status === 'cancelled'
+                            : order?.status === 'cancelled'
                               ? 'Đã hủy'
-                              : 'Hoàn hàng'}
+                              : order?.returnRequest?.status === 'pending'
+                                ? 'Đang yêu cầu hoàn hàng'
+                                : order?.returnRequest?.status === 'accepted'
+                                  ? 'Yêu cầu hoàn hàng đã được chấp nhận'
+                                  : order?.returnRequest?.status === 'rejected'
+                                    ? 'Yêu cầu hoàn hàng đã bị từ chối'
+                                    : 'Đã trả hàng - hoàn tiền'}
                     </TableCell>
                     <TableCell>{order.timestamps && order.timestamps.placedAt && formatDate(order.timestamps.placedAt)}</TableCell>
                     <TableCell>
@@ -328,15 +343,21 @@ const OrderManagement = () => {
                   label="Trạng Thái"
                   fullWidth
                   value={
-                    selectedOrder.status === 'pending'
+                    selectedOrder?.status === 'pending'
                       ? 'Chờ xác nhận'
-                      : selectedOrder.status === 'processing'
+                      : selectedOrder?.status === 'processing'
                         ? 'Đang vận chuyển'
-                        : selectedOrder.status === 'completed'
+                        : selectedOrder?.status === 'completed'
                           ? 'Đã hoàn thành'
-                          : selectedOrder.status === 'cancelled'
+                          : selectedOrder?.status === 'cancelled'
                             ? 'Đã hủy'
-                            : 'Hoàn hàng'
+                            : selectedOrder?.returnRequest?.status === 'pending'
+                              ? 'Đang yêu cầu hoàn hàng'
+                              : selectedOrder?.returnRequest?.status === 'accepted'
+                                ? 'Yêu cầu hoàn hàng đã được chấp nhận'
+                                : selectedOrder?.returnRequest?.status === 'rejected'
+                                  ? 'Yêu cầu hoàn hàng đã bị từ chối'
+                                  : 'Đã trả hàng - hoàn tiền'
                   }
                   disabled
                 />
@@ -405,18 +426,25 @@ const OrderManagement = () => {
                   </div>
                 )}
               </Grid>
+
+              {selectedOrder.returnRequest && selectedOrder.returnRequest.status !== '' && (
+                <Grid item xs={12}>
+                  <TextField label="Lý do hoàn hàng" fullWidth value={selectedOrder.returnRequest.reason || 'Không có lý do'} disabled />
+                </Grid>
+              )}
+
               <Grid item xs={12}>
                 {selectedOrder.returnRequest && selectedOrder.returnRequest.status === 'pending' && (
                   <div>
                     <Button
                       variant="contained"
-                      onClick={handleConfirmReturn(selectedOrder._id)}
+                      onClick={() => handleConfirmReturn(selectedOrder._id)}
                       color="primary"
                       style={{ marginRight: '10px' }}
                     >
                       Xác Nhận Hoàn Hàng
                     </Button>
-                    <Button variant="contained" onClick={handleDeclineReturn(selectedOrder._id)} color="secondary">
+                    <Button variant="contained" onClick={() => handleDeclineReturn(selectedOrder._id)} color="secondary">
                       Từ Chối Hoàn Hàng
                     </Button>
                   </div>
