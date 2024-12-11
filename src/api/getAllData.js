@@ -36,11 +36,11 @@ export const getSizeDetail = async (sizeId) => {
 };
 
 export const getShips = async () => {
-  const response = await AxiosInstance().get(`/ship/get-shipping`);
+  const response = await AxiosInstance().get(`/ship/lst-shipping`);
   return response;
 };
 
 export const getPayments = async () => {
-  const response = await AxiosInstance().get(`/payment-method/getall-payment`);
+  const response = await AxiosInstance().get(`/payment-method/lst-payment`);
   return response;
 };

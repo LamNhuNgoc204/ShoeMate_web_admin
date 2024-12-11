@@ -78,3 +78,25 @@ export const stopCollaborationWithShipping = async (id, body) => {
     console.log('Lỗi cập nhật dvvc: ', error);
   }
 };
+
+export const updatePaymentMethod = async (id, body) => {
+  try {
+    const response = await AxiosInstance().put(`/payment-method/update-payment/${id}`, body);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Lỗi cập nhật dvvc: ', error);
+  }
+};
+
+export const updatePaymentStatus = async (id, body) => {
+  try {
+    const response = await AxiosInstance().put(`/payment-method/update-payment-status/${id}`, body);
+    if (response.status) {
+      return response;
+    }
+  } catch (error) {
+    console.log('Lỗi cập nhật dvvc: ', error);
+  }
+};

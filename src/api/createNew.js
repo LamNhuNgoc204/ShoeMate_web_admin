@@ -66,3 +66,15 @@ export const addShipping = async (body) => {
     console.error('error add new ship: ', error);
   }
 };
+
+export const createNewMethod = async (body) => {
+  try {
+    const response = await AxiosInstance().post('/payment-method/add-payment-method', body);
+    if (!response) {
+      console.log('Lỗi không tạo được payment mới');
+    }
+    return response;
+  } catch (error) {
+    console.error('error add new payment: ', error);
+  }
+};

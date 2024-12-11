@@ -20,17 +20,20 @@ import {
   DialogContent,
   Dialog,
   DialogTitle,
-  CircularProgress
+  CircularProgress,
+  FormControlLabel,
+  Checkbox,
+  DialogContentText
 } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import MainCard from 'ui-component/cards/MainCard';
 import { TabContext, TabPanel } from '@mui/lab';
-import { stopCollaborationWithShipping, updateInfor, updateShipping } from 'api/updateData';
+import { stopCollaborationWithShipping, updateInfor, updatePaymentMethod, updatePaymentStatus, updateShipping } from 'api/updateData';
 import { uploadToCloundinary } from 'functions/processingFunction';
 import { getPayments, getShips } from 'api/getAllData';
 import { formatDate } from 'utils/date';
-import { addShipping } from 'api/createNew';
+import { addShipping, createNewMethod } from 'api/createNew';
 
 const AccountSettings = () => {
   const state = useSelector((state) => state.users);
@@ -246,23 +249,160 @@ const AccountSettings = () => {
 
   const [lstPayment, setlstPayment] = useState([]);
   const [loadingPayment, setloadingPayment] = useState(false);
-  useEffect(() => {
-    const fetchPayment = async () => {
-      try {
-        setloadingPayment(true);
-        const response = await getPayments();
-        if (response.status) {
-          console.log('response.data', response.data);
-
-          setlstPayment(response.data);
-        }
-      } catch (error) {
-        console.log('error: ', error);
+  const fetchPayment = async () => {
+    try {
+      setloadingPayment(true);
+      const response = await getPayments();
+      if (response.status) {
+        setlstPayment(response?.data?.reverse());
       }
-      setloadingPayment(false);
-    };
+    } catch (error) {
+      console.log('error: ', error);
+    }
+    setloadingPayment(false);
+  };
+
+  useEffect(() => {
     fetchPayment();
   }, []);
+
+  const [openPaymentDialog, setopenPaymentDialog] = useState(false);
+  const [paymentMethodToEdit, setpaymentMethodToEdit] = useState({});
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [image, setImage] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleOpenDialogPayment = (payment) => {
+    setpaymentMethodToEdit(payment);
+    if (payment) {
+      setPaymentMethod(payment.payment_method || '');
+      setImage(payment.image || '');
+      setIsDefault(payment.isDefault || false);
+      setIsActive(payment.isActive || false);
+    } else {
+      setPaymentMethod('');
+      setImage('');
+      setIsDefault(false);
+      setIsActive(false);
+    }
+
+    setopenPaymentDialog(true);
+  };
+
+  const onClose = () => {
+    setpaymentMethodToEdit({});
+    setopenPaymentDialog(false);
+  };
+
+  const handleClose = () => {
+    setPaymentMethod('');
+    setImage('');
+    setIsDefault(false);
+    setIsActive(false);
+    setError('');
+    onClose();
+  };
+
+  const handleUploadimg = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const img = await uploadToCloundinary(file);
+      setImage(img);
+    }
+  };
+
+  const validateFormPayment = () => {
+    if (!paymentMethod || !image) {
+      setError('Tên phương thức và hình ảnh là bắt buộc!');
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
+  const handleSavePayment = async () => {
+    if (!validateFormPayment()) return;
+    setLoading(true);
+
+    try {
+      const payload = {
+        payment_method: paymentMethod,
+        image,
+        isDefault,
+        isActive
+      };
+
+      let response;
+      if (paymentMethodToEdit) {
+        // Cập nhật phương thức thanh toán
+        response = await updatePaymentMethod(paymentMethodToEdit._id, payload);
+      } else {
+        // Thêm mới phương thức thanh toán
+        response = await createNewMethod(payload);
+      }
+
+      if (response.status) {
+        fetchPayment();
+        setSnackbarMessage(paymentMethodToEdit ? 'Cập nhật phương thức thanh toán thành công!' : 'Thêm phương thức thanh toán thành công!');
+        setSeveritySnackbar('success');
+        handleClose();
+        return;
+      } else {
+        setSnackbarMessage(response.message);
+      }
+    } catch (error) {
+      setSeveritySnackbar('error');
+      setSnackbarMessage('Lỗi server, vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+      setOpenSnackbar(true);
+      handleClose();
+    }
+  };
+
+  const [openConfirmDialogPayment, setOpenConfirmDialogPayment] = useState(false);
+  const [paymentToDeactivate, setPaymentToDeactivate] = useState(null);
+  const [newActive, setnewActive] = useState(false);
+
+  const handleDialogOpenDialogPayment = (payment) => {
+    setPaymentToDeactivate(payment);
+    setOpenConfirmDialogPayment(true);
+  };
+
+  const handleDialogCloseDialogPayment = () => {
+    setOpenConfirmDialogPayment(false);
+    setPaymentToDeactivate(null);
+  };
+
+  const handleConfirmDeactivate = async () => {
+    console.log('paymentToDeactivate', paymentToDeactivate);
+
+    if (paymentToDeactivate) {
+      const newActiveStatus = !paymentToDeactivate.isActive;
+      console.log('newActive', newActiveStatus);
+      // callapi
+      const response = await updatePaymentStatus(paymentToDeactivate._id, { isActive: newActiveStatus });
+      if (response.status) {
+        fetchPayment();
+        setSnackbarMessage(
+          paymentToDeactivate.isActive
+            ? `Đã tắt phương thức thanh toán bằng ${paymentToDeactivate.payment_method}`
+            : `Đã bậc phương thức thanh toán bằng ${paymentToDeactivate.payment_method}`
+        );
+        setSeveritySnackbar('success');
+        setOpenSnackbar(true);
+        handleDialogCloseDialogPayment();
+      } else {
+        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau!');
+        setSeveritySnackbar('error');
+        setOpenSnackbar(true);
+        handleDialogCloseDialogPayment();
+      }
+    }
+  };
 
   return (
     <MainCard title="QUẢN LÝ" style={{ padding: 20 }}>
@@ -374,7 +514,7 @@ const AccountSettings = () => {
           <Typography variant="h4" align="center" gutterBottom>
             QUẢN LÝ PHƯƠNG THỨC THANH TOÁN
           </Typography>
-          <Button variant="contained" color="primary" onClick={() => {}}>
+          <Button variant="contained" color="primary" onClick={() => handleOpenDialogPayment()}>
             Thêm Đơn Phương Thức Thanh Toán
           </Button>
           {loadingPayment ? (
@@ -408,11 +548,11 @@ const AccountSettings = () => {
                       <TableCell>{payment?.createdAt && formatDate(payment?.createdAt)}</TableCell>
                       <TableCell>
                         <TableRow>
-                          <Button variant="outlined" style={{ marginRight: 5 }} onClick={() => handleDialogOpen(shipping)}>
+                          <Button variant="outlined" style={{ marginRight: 5 }} onClick={() => handleOpenDialogPayment(payment)}>
                             Sửa
                           </Button>
-                          <Button variant="outlined" onClick={() => handleDialogOpen(shipping)}>
-                            Ngừng hoạt động
+                          <Button variant="outlined" onClick={() => handleDialogOpenDialogPayment(payment)}>
+                            {payment?.isActive ? 'Tắt phương thức' : 'Bậc phương thức'}
                           </Button>
                         </TableRow>
                       </TableCell>
@@ -473,6 +613,71 @@ const AccountSettings = () => {
           </Button>
           <Button onClick={handleStopCollaboration} color="secondary" variant="contained">
             Xác Nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openPaymentDialog} onClose={handleClose}>
+        <DialogTitle>{paymentMethodToEdit ? 'Chỉnh Sửa Phương Thức Thanh Toán' : 'Thêm Phương Thức Thanh Toán'}</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Tên Phương Thức Thanh Toán"
+            fullWidth
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            margin="normal"
+            error={!!error}
+            helperText={error}
+          />
+          <TextField
+            label="URL Hình Ảnh"
+            fullWidth
+            value={image}
+            onChange={(e) => setImage(e.target.value)}
+            margin="normal"
+            error={!!error}
+            helperText={error}
+          />
+          {image && (
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <img src={image} alt="Preview" style={{ maxWidth: '100%', maxHeight: 200 }} />
+            </div>
+          )}
+          <input type="file" accept="image/*" onChange={handleUploadimg} style={{ display: 'block', marginBottom: 16 }} />
+          <FormControlLabel
+            control={<Checkbox checked={isActive} onChange={(e) => setIsActive(e.target.checked)} name="isActive" color="primary" />}
+            label="Kích Hoạt"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} name="isDefault" color="primary" />}
+            label="Đặt Là Mặc Định"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="secondary">
+            Hủy
+          </Button>
+          <Button onClick={handleSavePayment} color="primary" disabled={loading}>
+            {loading ? <CircularProgress size={24} color="primary" /> : 'Lưu'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openConfirmDialogPayment} onClose={handleDialogCloseDialogPayment}>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold' }}>
+          Xác nhận tắt phương thức thanh toán : <b>{paymentToDeactivate?.payment_method}</b>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText variant="body1" align="center">
+            Bạn có chắc chắn muốn ngừng hoạt động phương thức thanh toán: <b>{paymentToDeactivate?.payment_method}</b>?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogCloseDialogPayment} color="secondary">
+            Hủy
+          </Button>
+          <Button onClick={handleConfirmDeactivate} color="primary">
+            Đồng ý
           </Button>
         </DialogActions>
       </Dialog>
