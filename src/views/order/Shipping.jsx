@@ -302,33 +302,41 @@ const ShippingManagement = () => {
                     </TableHead>
                     <TableBody>
                       {selectedShipment.orderDetails &&
-                        selectedShipment.orderDetails.map((product, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <img
-                                src={
-                                  product.product &&
-                                  product.product.pd_image &&
-                                  product.product.pd_image &&
-                                  product.product.pd_image.filter((asset) => asset.type === 'jpg')[0]?.url
-                                }
-                                style={{ width: '100px', height: '100px' }}
-                              />
-                            </TableCell>
-                            <TableCell>{product.product && product.product.name}</TableCell>
-                            <TableCell>{product.product && product.product.pd_quantity}</TableCell>
-                            <TableCell>{product.product && product.product.price && product.product.price.toLocaleString()} VNĐ</TableCell>
-                          </TableRow>
-                        ))}
+                        selectedShipment.orderDetails.map((product, index) => {
+                          return (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <img src={product.product?.pd_image[0]} style={{ width: '100px', height: '100px' }} />
+                              </TableCell>
+                              <TableCell>{product.product && product.product.name}</TableCell>
+                              <TableCell>{product.product && product.product.pd_quantity}</TableCell>
+                              <TableCell>
+                                {product.product && product.product.price && product.product.price.toLocaleString()} VNĐ
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                     </TableBody>
                   </Table>
                 </TableContainer>
               </Grid>
 
               <Grid item xs={12}>
-                <Button variant="contained" onClick={() => handleUpdateStatus('delivered')} color="success" style={{ marginRight: '10px' }}>
-                  Đã Giao Hàng
-                </Button>
+                {selectedShipment.status !== 'delivered' ? (
+                  <Button
+                    variant="contained"
+                    onClick={() => handleUpdateStatus('delivered')}
+                    color="success"
+                    style={{ marginRight: '10px' }}
+                  >
+                    Đã Giao Hàng
+                  </Button>
+                ) : (
+                  <Typography variant="h4" align="center">
+                    Đơn hàng đã được giao thành công
+                  </Typography>
+                )}
+
                 {/* <Button variant="contained" onClick={() => handleUpdateStatus('pending')} color="warning">
                   Đang Chờ
                 </Button> */}
