@@ -148,6 +148,8 @@ const ShippingManagement = () => {
     }
   };
 
+  console.log('selectedShipment===>', selectedShipment);
+
   return (
     <MainCard title="QUẢN LÝ VẬN CHUYỂN">
       <>
@@ -306,7 +308,13 @@ const ShippingManagement = () => {
                           return (
                             <TableRow key={index}>
                               <TableCell>
-                                <img src={product.product?.pd_image[0]} style={{ width: '100px', height: '100px' }} />
+                                <img
+                                  src={
+                                    product.product?.pd_image[0] ||
+                                    'https://i.pinimg.com/236x/b4/0a/b2/b40ab2c7bb076494734828022251bce8.jpg'
+                                  }
+                                  style={{ width: '100px', height: '100px' }}
+                                />
                               </TableCell>
                               <TableCell>{product.product && product.product.name}</TableCell>
                               <TableCell>{product.product && product.product.pd_quantity}</TableCell>
