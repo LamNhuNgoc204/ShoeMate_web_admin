@@ -324,15 +324,17 @@ const PromotionManagement = () => {
       </FormControl>
 
       {/* LOC TRANG THAI */}
+
       <Grid item xs={24} alignItems={'center'} style={{ marginTop: 30 }}>
         <Button
           variant="contained"
-          onClick={() => handleOpenDialog(null)}
           color="primary"
+          onClick={() => handleOpenDialog(null)}
           style={{ marginBottom: '20px', marginRight: 20, paddingBlock: 12 }}
         >
           Thêm Khuyến Mãi
         </Button>
+
         <FormControl style={{ width: 200 }}>
           <InputLabel>Trạng Thái</InputLabel>
           <Select value={statusFilter} onChange={handleFilterChange}>
@@ -379,6 +381,8 @@ const PromotionManagement = () => {
                     <TableCell style={{ textAlign: 'center' }}>{voucher.quantity}</TableCell>
                     <TableCell style={{ textAlign: 'center' }}>
                       <Button
+                        variant="outlined"
+                        color="primary"
                         onClick={() => {
                           setSelectedPromotion(voucher);
                           handleOpenDialog(voucher);
@@ -541,8 +545,10 @@ const PromotionManagement = () => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Hủy</Button>
-          <Button onClick={handleSavePromotion} color="primary">
+          <Button variant="contained" color="primary" onClick={handleCloseDialog}>
+            Hủy
+          </Button>
+          <Button variant="contained" color="primary" onClick={handleSavePromotion}>
             Lưu
           </Button>
         </DialogActions>

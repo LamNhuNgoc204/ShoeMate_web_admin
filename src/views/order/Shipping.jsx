@@ -225,7 +225,7 @@ const ShippingManagement = () => {
                   <TableCell style={{ textAlign: 'center' }}>Trạng Thái</TableCell>
                   <TableCell style={{ textAlign: 'center' }}>Thời gian</TableCell>
                   <TableCell style={{ textAlign: 'center' }}>Đơn vị vận chuyển</TableCell>
-                  <TableCell style={{ textAlign: 'center' }}>Thao Tác</TableCell>
+                  <TableCell style={{ textAlign: 'center', width: '15%' }}>Thao Tác</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -243,8 +243,10 @@ const ShippingManagement = () => {
                       ).toLocaleDateString()}
                     </TableCell>
                     <TableCell style={{ textAlign: 'center' }}>{shipment.shipping_id && shipment.shipping_id.name}</TableCell>
-                    <TableCell style={{ textAlign: 'center' }}>
-                      <Button onClick={() => handleOpenDialog(shipment)}>Xem Chi Tiết</Button>
+                    <TableCell style={{ textAlign: 'center', width: '15%' }}>
+                      <Button variant="outlined" color="primary" onClick={() => handleOpenDialog(shipment)}>
+                        Xem Chi Tiết
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -340,8 +342,8 @@ const ShippingManagement = () => {
                 {!selectedShipment?.returnRequest && selectedShipment.status !== 'delivered' ? (
                   <Button
                     variant="contained"
+                    color="primary"
                     onClick={() => handleUpdateStatus('delivered')}
-                    color="success"
                     style={{ marginRight: '10px' }}
                   >
                     Đã Giao Hàng
@@ -353,12 +355,7 @@ const ShippingManagement = () => {
                 )}
 
                 {selectedShipment?.returnRequest?.status === 'accepted' ? (
-                  <Button
-                    variant="contained"
-                    // onClick={() => handleUpdateStatus('delivered')}
-                    color="success"
-                    style={{ marginRight: '10px', marginTop: 10 }}
-                  >
+                  <Button variant="contained" color="primary" style={{ marginRight: '10px', marginTop: 10 }}>
                     Đã Hoàn Hàng
                   </Button>
                 ) : (
@@ -366,19 +363,14 @@ const ShippingManagement = () => {
                     Đơn hàng đã được hoàn về shop
                   </Typography>
                 )}
-
-                {/* <Button variant="contained" onClick={() => handleUpdateStatus('pending')} color="warning">
-                  Đang Chờ
-                </Button> */}
-                {/* <Button variant="contained" onClick={() => handleUpdateStatus('canceled')} color="error" style={{ marginLeft: '10px' }}>
-                  Hủy Vận Chuyển
-                </Button> */}
               </Grid>
             </Grid>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Đóng</Button>
+          <Button variant="contained" color="primary" onClick={handleCloseDialog}>
+            Đóng
+          </Button>
         </DialogActions>
       </Dialog>
 

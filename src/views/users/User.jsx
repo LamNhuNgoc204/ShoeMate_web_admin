@@ -245,13 +245,17 @@ const UserManagement = () => {
                     <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
                     <TableCell>{user.role}</TableCell>
                     <TableCell>
-                      <Button onClick={() => handleOpenDialogRole(user)}>Sửa</Button>
+                      <Button variant="outlined" color="primary" onClick={() => handleOpenDialogRole(user)}>
+                        Sửa
+                      </Button>
                       {user.isActive === true ? (
                         <>
-                          <Button onClick={() => handleDialogOpen(user)}>Khóa tài khoản</Button>
+                          <Button variant="outlined" color="error" style={{ marginLeft: 10 }} onClick={() => handleDialogOpen(user)}>
+                            Khóa tài khoản
+                          </Button>
                         </>
                       ) : (
-                        <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 5 }}>Đã khóa</span>
+                        <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 10 }}>Đã khóa</span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -339,8 +343,10 @@ const UserManagement = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Đóng</Button>
-          <Button onClick={handleSaveUser} color="primary">
+          <Button variant="contained" color="primary" onClick={handleCloseDialog}>
+            Đóng
+          </Button>
+          <Button variant="contained" color="primary" onClick={handleSaveUser}>
             Lưu
           </Button>
         </DialogActions>
@@ -360,8 +366,10 @@ const UserManagement = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialogRole(false)}>Đóng</Button>
-          <Button onClick={handleSaveRole} color="primary">
+          <Button onClick={() => setOpenDialogRole(false)} variant="contained" color="primary">
+            Đóng
+          </Button>
+          <Button onClick={handleSaveRole} variant="contained" color="primary">
             Lưu
           </Button>
         </DialogActions>
@@ -374,7 +382,7 @@ const UserManagement = () => {
           <DialogContentText>Bạn có chắc chắn muốn khóa tài khoản của {selectedUser?.name}?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">
+          <Button onClick={handleDialogClose} variant="contained" color="primary">
             Hủy
           </Button>
           <Button onClick={() => handleLockAccount(selectedUser)} color="primary" variant="contained">

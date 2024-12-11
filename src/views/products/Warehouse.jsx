@@ -1182,10 +1182,10 @@ const InventoryManagement = () => {
                                     <>
                                       <Typography>Sản phẩm này đã tạm ngừng bán</Typography>
                                       <Button
-                                        variant="contained"
-                                        color="secondary"
+                                        variant="outlined"
+                                        color="primary"
                                         onClick={() => handleClickOpen('Đang kinh doanh', product._id)}
-                                        style={{ width: '125px', marginTop: 5 }}
+                                        style={{ width: '125px' }}
                                       >
                                         Tiếp tục kinh doanh
                                       </Button>
@@ -1193,8 +1193,8 @@ const InventoryManagement = () => {
                                   ) : (
                                     <>
                                       <Button
-                                        variant="contained"
-                                        color="secondary"
+                                        variant="outlined"
+                                        color="primary"
                                         onClick={() => handleOpenDialog(product)}
                                         style={{ width: '125px' }}
                                       >
@@ -1202,8 +1202,8 @@ const InventoryManagement = () => {
                                       </Button>
                                       <Button
                                         style={{ marginTop: 10 }}
-                                        variant="contained"
-                                        color="error"
+                                        variant="outlined"
+                                        color="primary"
                                         onClick={() => handleClickOpen('Ngừng bán', product._id)}
                                       >
                                         Tạm ngừng
@@ -1239,7 +1239,7 @@ const InventoryManagement = () => {
         <TabPanel value={value} index={1}>
           {value === 1 && (
             <div style={{ marginBottom: 20 }}>
-              <Button variant="contained" color="secondary" onClick={handleOpenCategoryDialog} style={{ marginTop: 10 }}>
+              <Button variant="contained" color="primary" onClick={handleOpenCategoryDialog} style={{ marginTop: 10 }}>
                 Thêm danh mục
               </Button>
               <FormControl fullWidth margin="normal">
@@ -1276,13 +1276,24 @@ const InventoryManagement = () => {
                             </TableCell>
                             <TableCell>{category.name}</TableCell>
                             <TableCell>
-                              <Button onClick={() => handleOpenCategoryDetailDialog(category._id, category.name)}>Xem chi tiết</Button>
                               <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => handleOpenCategoryDetailDialog(category._id, category.name)}
+                              >
+                                Xem chi tiết
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                style={{ marginInline: 10 }}
                                 onClick={() => handleOpenEditCateDialog(category._id, category.name, category.image, category.description)}
                               >
                                 Chỉnh sửa
                               </Button>
-                              <Button onClick={() => handleClickOpenDeleteModal(category)}>Xóa</Button>
+                              <Button variant="outlined" color="error" onClick={() => handleClickOpenDeleteModal(category)}>
+                                Xóa
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1306,7 +1317,7 @@ const InventoryManagement = () => {
         <TabPanel value={value} index={2}>
           {value === 2 && (
             <div>
-              <Button variant="contained" color="success" onClick={handleOpenBrandDialog}>
+              <Button variant="contained" color="primary" onClick={handleOpenBrandDialog}>
                 Thêm thương hiệu
               </Button>
               <FormControl fullWidth margin="normal">
@@ -1343,9 +1354,20 @@ const InventoryManagement = () => {
                             </TableCell>
                             <TableCell>{brand.name}</TableCell>
                             <TableCell>
-                              <Button onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>Xem chi tiết</Button>
-                              <Button onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}>Chỉnh sửa</Button>
-                              <Button onClick={() => handleClickOpenDeleteBrand(brand)}>Xóa</Button>
+                              <Button variant="outlined" color="primary" onClick={() => handleOpenBrandDetailDialog(brand._id, brand.name)}>
+                                Xem chi tiết
+                              </Button>
+                              <Button
+                                style={{ marginInline: 10 }}
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => handleOpenEditDialog(brand._id, brand.name, brand.image)}
+                              >
+                                Chỉnh sửa
+                              </Button>
+                              <Button variant="outlined" color="error" onClick={() => handleClickOpenDeleteBrand(brand)}>
+                                Xóa
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1369,7 +1391,7 @@ const InventoryManagement = () => {
         <TabPanel value={value} index={3}>
           {value === 3 && (
             <div>
-              <Button variant="contained" color="warning" onClick={handleOpenSizeDialog}>
+              <Button variant="contained" color="primary" onClick={handleOpenSizeDialog}>
                 Thêm kích thước
               </Button>
               <div style={{ display: 'flex', flexDirection: 'row' }}>
@@ -1404,8 +1426,17 @@ const InventoryManagement = () => {
                           <TableRow key={index}>
                             <TableCell align="center">{size.name}</TableCell>
                             <TableCell align="center">
-                              <Button onClick={() => openSizeDetailDialog(size)}>Xem chi tiết</Button>
-                              <Button onClick={() => handleOpenModalConfirmSize(size)}>Xóa</Button>
+                              <Button variant="outlined" color="primary" onClick={() => openSizeDetailDialog(size)}>
+                                Xem chi tiết
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                style={{ marginLeft: 10 }}
+                                onClick={() => handleOpenModalConfirmSize(size)}
+                              >
+                                Xóa
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1565,7 +1596,7 @@ const InventoryManagement = () => {
                           style={{ width: 100, height: 100, margin: 10, position: 'relative', marginRight: '10px' }}
                         />
                       ) : null}
-                      <button onClick={() => handleRemoveFile(url)} style={{ marginLeft: '10px' }}>
+                      <button variant="contained" color="error" onClick={() => handleRemoveFile(url)} style={{ marginLeft: '10px' }}>
                         Xóa
                       </button>
                     </li>
@@ -1575,10 +1606,10 @@ const InventoryManagement = () => {
           </DialogContent>
 
           <DialogActions>
-            <Button onClick={handleCloseDialog} color="primary">
+            <Button variant="contained" onClick={handleCloseDialog} color="primary">
               Hủy
             </Button>
-            <Button size="lg" onClick={handleSaveProduct} color="primary">
+            <Button size="lg" onClick={handleSaveProduct} variant="contained" color="primary">
               Lưu
             </Button>
           </DialogActions>
@@ -1591,10 +1622,10 @@ const InventoryManagement = () => {
             <p>Bạn có chắc chắn muốn thay đổi trạng thái sản phẩm này thành {status}?</p>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose} color="primary">
+            <Button onClick={handleClose} variant="contained" color="primary">
               Hủy
             </Button>
-            <Button onClick={() => handleStopSelling(selectPd)} color="primary">
+            <Button onClick={() => handleStopSelling(selectPd)} variant="contained" color="primary">
               Xác nhận
             </Button>
           </DialogActions>
@@ -1649,10 +1680,10 @@ const InventoryManagement = () => {
             <TextField fullWidth label="Mô tả" value={newCateDes} onChange={(e) => setNewCateDes(e.target.value)} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseCategoryDialog} color="primary">
+            <Button onClick={handleCloseCategoryDialog} variant="contained" color="primary">
               Hủy
             </Button>
-            <Button onClick={handleAddNewCategory} color="primary">
+            <Button onClick={handleAddNewCategory} variant="contained" color="primary">
               Thêm
             </Button>
           </DialogActions>
@@ -1768,7 +1799,7 @@ const InventoryManagement = () => {
               <p>Logo mới</p>
               <img style={{ width: '100px', height: '100px' }} src={newCatelogo} />
             </div>
-            <Button type="primary" onClick={() => handleEditCate()}>
+            <Button variant="contained" color="primary" onClick={() => handleEditCate()}>
               Lưu
             </Button>
           </div>
@@ -1877,10 +1908,10 @@ const InventoryManagement = () => {
           </div>
 
           <DialogActions>
-            <Button type="primary" onClick={() => handleCloseEditBrandDialog()}>
+            <Button variant="contained" color="primary" onClick={() => handleCloseEditBrandDialog()}>
               Hủy
             </Button>
-            <Button type="primary" onClick={() => handleEditBrand()}>
+            <Button variant="contained" color="primary" onClick={() => handleEditBrand()}>
               Lưu
             </Button>
           </DialogActions>
@@ -1915,10 +1946,10 @@ const InventoryManagement = () => {
             </div>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseBrandDialog} color="primary">
+            <Button onClick={handleCloseBrandDialog} variant="contained" color="primary">
               Hủy
             </Button>
-            <Button onClick={handleAddNewBrand} color="primary">
+            <Button onClick={handleAddNewBrand} variant="contained" color="primary">
               Thêm
             </Button>
           </DialogActions>
@@ -1934,10 +1965,10 @@ const InventoryManagement = () => {
             <TextField label="Tên kích thước" fullWidth value={newSize} onChange={(e) => setNewSize(e.target.value)} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseSizeDialog} color="primary">
+            <Button onClick={handleCloseSizeDialog} variant="contained" color="primary">
               Hủy
             </Button>
-            <Button onClick={handleAddNewSize} color="primary">
+            <Button onClick={handleAddNewSize} variant="contained" color="primary">
               Thêm
             </Button>
           </DialogActions>
@@ -2021,8 +2052,10 @@ const InventoryManagement = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModalConfirmDelete}>Hủy</Button>
-          <Button onClick={handleDeleteCate} color="error" variant="contained">
+          <Button variant="contained" color="primary" onClick={handleCloseModalConfirmDelete}>
+            Hủy
+          </Button>
+          <Button onClick={handleDeleteCate} variant="contained" color="error">
             Xóa
           </Button>
         </DialogActions>
@@ -2038,8 +2071,10 @@ const InventoryManagement = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModalConfirmBrand}>Hủy</Button>
-          <Button onClick={handleDeleteBrand} color="error" variant="contained">
+          <Button variant="contained" color="primary" onClick={handleCloseModalConfirmBrand}>
+            Hủy
+          </Button>
+          <Button onClick={handleDeleteBrand} variant="contained" color="error">
             Xóa
           </Button>
         </DialogActions>
@@ -2055,8 +2090,10 @@ const InventoryManagement = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModalConfirmSize}>Hủy</Button>
-          <Button onClick={handleDeleteSize} color="error" variant="contained">
+          <Button variant="contained" color="primary" onClick={handleCloseModalConfirmSize}>
+            Hủy
+          </Button>
+          <Button variant="contained" color="error" onClick={handleDeleteSize}>
             Xóa
           </Button>
         </DialogActions>

@@ -231,7 +231,9 @@ const Review = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Button onClick={() => handleOpenDialog(review)}>Xem chi tiết</Button>
+                        <Button variant="outlined" color="primary" onClick={() => handleOpenDialog(review)}>
+                          Xem chi tiết
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -251,13 +253,12 @@ const Review = () => {
 
       {/* Dialog cho Chi Tiết Đánh Giá */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Chi Tiết Đánh Giá</DialogTitle>
-        <DialogContent>
+        <DialogTitle variant="contained" color="primary">
+          Chi Tiết Đánh Giá
+        </DialogTitle>
+        <DialogContent style={{ marginBottom: 10 }}>
           {selectedReview && (
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField label="Mã Đánh Giá" fullWidth value={selectedReview._id && selectedReview._id.toUpperCase()} disabled />
-              </Grid>
+            <Grid container spacing={3}>
               <Grid item xs={12}>
                 <TextField label="Tên Khách Hàng" fullWidth value={selectedReview?.reviewer_id?.name} disabled />
               </Grid>
@@ -346,7 +347,7 @@ const Review = () => {
                     <Button onClick={() => handleUpdateStatus('approved')} variant="contained" color="primary" sx={{ marginRight: 1 }}>
                       Duyệt
                     </Button>
-                    <Button onClick={() => handleUpdateStatus('rejected')} variant="contained" color="secondary" sx={{ marginRight: 1 }}>
+                    <Button onClick={() => handleUpdateStatus('rejected')} variant="contained" color="primary" sx={{ marginRight: 1 }}>
                       Ẩn đánh giá
                     </Button>
                   </div>
@@ -356,7 +357,9 @@ const Review = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Đóng</Button>
+          <Button variant="contained" color="primary" onClick={handleCloseDialog}>
+            Đóng
+          </Button>
         </DialogActions>
       </Dialog>
 

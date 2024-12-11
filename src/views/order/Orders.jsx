@@ -287,7 +287,9 @@ const OrderManagement = () => {
                     </TableCell>
                     <TableCell>{order.timestamps && order.timestamps.placedAt && formatDate(order.timestamps.placedAt)}</TableCell>
                     <TableCell>
-                      <Button onClick={() => handleOpenDialog(order)}>Xem Chi Tiết</Button>
+                      <Button variant="outlined" color="primary" onClick={() => handleOpenDialog(order)}>
+                        Xem Chi Tiết
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -414,8 +416,8 @@ const OrderManagement = () => {
                   <div>
                     <Button
                       variant="contained"
+                      color="primary"
                       onClick={() => handleUpdateStatus('processing', selectedOrder._id)}
-                      color="success"
                       style={{ marginRight: '10px' }}
                     >
                       Xác Nhận Đơn Hàng
@@ -438,13 +440,13 @@ const OrderManagement = () => {
                   <div>
                     <Button
                       variant="contained"
-                      onClick={() => handleConfirmReturn(selectedOrder._id)}
                       color="primary"
+                      onClick={() => handleConfirmReturn(selectedOrder._id)}
                       style={{ marginRight: '10px' }}
                     >
                       Xác Nhận Hoàn Hàng
                     </Button>
-                    <Button variant="contained" onClick={() => handleDeclineReturn(selectedOrder._id)} color="secondary">
+                    <Button variant="contained" color="primary" onClick={() => handleDeclineReturn(selectedOrder._id)}>
                       Từ Chối Hoàn Hàng
                     </Button>
                   </div>
@@ -454,7 +456,9 @@ const OrderManagement = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Đóng</Button>
+          <Button variant="contained" color="primary" onClick={handleCloseDialog}>
+            Đóng
+          </Button>
         </DialogActions>
       </Dialog>
 
