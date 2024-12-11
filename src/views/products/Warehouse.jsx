@@ -38,12 +38,22 @@ import { deleteBrand, deleteCate, deleteSize, updateCate, updateLogoBrand } from
 import { addProduct, getProducts, stopSellingPd, updateProduct } from 'api/products';
 import { Box } from '@mui/system';
 import AxiosInstance from 'helper/AxiosInstance';
+import Swal from 'sweetalert2';
 
 const InventoryManagement = () => {
   //COMMON
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severitySnackbar, setSeveritySnackbar] = useState('success');
+  const showAlert = () => {
+    Swal.fire({
+      title: 'Thông báo!',
+      text: snackbarMessage,
+      icon: severitySnackbar,
+      showConfirmButton: false,
+      timer: 1500
+    });
+  };
 
   //CATEGORIES
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
@@ -257,7 +267,8 @@ const InventoryManagement = () => {
         newErrors.newCategory = 'Tên danh mục không được để trống!';
         setSnackbarMessage('Vui lòng nhập tên');
         setSeveritySnackbar('info');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
         return;
       }
 
@@ -275,21 +286,25 @@ const InventoryManagement = () => {
         );
         setSeveritySnackbar('success');
         setSnackbarMessage('Chỉnh sửa danh mục thành công');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       } else {
         setSnackbarMessage('Chỉnh sửa danh mục xảy ra lỗi');
         setSeveritySnackbar('error');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       }
     } catch (error) {
       console.error(error);
       setSnackbarMessage('Đã xảy ra lỗi khi chỉnh sửa danh mục, thử lại sau');
       setSeveritySnackbar('error');
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     } finally {
       setNewCatelogo('');
       handleCloseEditCateDialog();
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     }
   };
 
@@ -332,7 +347,8 @@ const InventoryManagement = () => {
     if (!newBrandLogo) {
       setSeveritySnackbar('info');
       setSnackbarMessage('Vui lòng chọn ảnh!');
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
       return;
     }
 
@@ -346,19 +362,24 @@ const InventoryManagement = () => {
         setBrands((prev) => prev.map((brand) => (brand._id === selectedBrandId ? { ...brand, image: response.data.image } : brand)));
         setSeveritySnackbar('success');
         setSnackbarMessage('Chỉnh sửa logo thành công');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       } else {
+        setSeveritySnackbar('error');
         setSnackbarMessage('Chỉnh sửa logo xảy ra lỗi');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       }
     } catch (error) {
       console.error(error);
       setSnackbarMessage('Đã xảy ra lỗi khi cập nhật logo thương hiệu.');
       setSeveritySnackbar('error');
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     } finally {
       handleCloseEditBrandDialog();
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     }
   };
 
@@ -478,28 +499,33 @@ const InventoryManagement = () => {
           setBrands([response.data, ...brands]);
           setSeveritySnackbar('success');
           setSnackbarMessage('Thêm thương hiệu thành công');
-          setOpenSnackbar(true);
+          // setOpenSnackbar(true);
+          showAlert();
         } else {
           setSeveritySnackbar('error');
           setSnackbarMessage('Thêm thương hiệu thất bại, thử lại sau');
-          setOpenSnackbar(true);
+          // setOpenSnackbar(true);
+          showAlert();
         }
       } else {
         setSeveritySnackbar('error');
         setSnackbarMessage('Thương hiệu đã tồn tại');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
         return;
       }
     } catch (error) {
       console.error(error);
       setSeveritySnackbar('error');
       setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     } finally {
       setNewBrand('');
       setNewBrandImg('');
       handleCloseBrandDialog();
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     }
   };
 
@@ -507,7 +533,8 @@ const InventoryManagement = () => {
     if (!newSize) {
       setSeveritySnackbar('info');
       setSnackbarMessage('Vui lòng nhập tên kích thước!!');
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     }
 
     if (newSize && !sizes.includes(newSize)) {
@@ -691,11 +718,13 @@ const InventoryManagement = () => {
           setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct.data : p)));
           setSeveritySnackbar('success');
           setSnackbarMessage('Cập nhật sản phẩm thành công!');
-          setOpenSnackbar(true);
+          // setOpenSnackbar(true);
+          showAlert();
         } else {
           setSeveritySnackbar('error');
           setSnackbarMessage('Xảy ra lỗi! Cập nhật sản phẩm thất bại!');
-          setOpenSnackbar(true);
+          // setOpenSnackbar(true);
+          showAlert();
         }
       } else {
         if (!validateForm()) {
@@ -709,11 +738,13 @@ const InventoryManagement = () => {
           setListProducts([newProduct.data, ...listProducts]);
           setSeveritySnackbar('success');
           setSnackbarMessage('Thêm sản phẩm thành công!');
-          setOpenSnackbar(true);
+          // setOpenSnackbar(true);
+          showAlert();
         } else {
           setSeveritySnackbar('error');
           setSnackbarMessage('Lỗi!!! Thêm sản phẩm không thành công!');
-          setOpenSnackbar(true);
+          // setOpenSnackbar(true);
+          showAlert();
         }
       }
       handleCloseDialog();
@@ -743,19 +774,22 @@ const InventoryManagement = () => {
         setOpen(false);
         setSeveritySnackbar('success');
         setSnackbarMessage('Cập nhật trạng thái thành công');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       } else {
         setOpen(false);
         setSeveritySnackbar('error');
         setSnackbarMessage('Cập nhật trạng thái thất bại');
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       }
     } catch (error) {
       setOpen(false);
       console.log('Lỗi khi cập nhật sp: ', error);
       setSeveritySnackbar('error');
       setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau.');
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
     }
   };
 
@@ -901,11 +935,13 @@ const InventoryManagement = () => {
         setCategories((prevCategories) => prevCategories.filter((category) => category._id !== selectedCate._id));
         setSeveritySnackbar('success');
         setSnackbarMessage(`Danh mục ${selectedCate.name} đã được xóa!`);
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       } else {
         setSeveritySnackbar('error');
         setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-        setOpenSnackbar(true);
+        // setOpenSnackbar(true);
+        showAlert();
       }
     } catch (error) {
       console.log('Xay ra loi khi xoa danh muc: ', error);
@@ -932,7 +968,7 @@ const InventoryManagement = () => {
     if (selectedBrand?.products?.length !== 0) {
       setSeveritySnackbar('error');
       setSnackbarMessage(`Thương hiệu ${selectedBrand.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
-      setOpenSnackbar(true);
+      showAlert();
       handleCloseModalConfirmBrand();
       return;
     }
@@ -943,11 +979,11 @@ const InventoryManagement = () => {
         setBrands((prevCategories) => prevCategories.filter((category) => category._id !== selectedBrand._id));
         setSeveritySnackbar('success');
         setSnackbarMessage(`Thương hiệu ${selectedBrand.name} đã được xóa!`);
-        setOpenSnackbar(true);
+        showAlert();
       } else {
         setSeveritySnackbar('error');
         setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-        setOpenSnackbar(true);
+        showAlert();
       }
     } catch (error) {
       console.log('Xay ra loi khi xoa thuong hieu: ', error);
@@ -1003,7 +1039,8 @@ const InventoryManagement = () => {
     if (selectSizeDel?.products?.length !== 0) {
       setSeveritySnackbar('error');
       setSnackbarMessage(`Kích thước ${selectSizeDel.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
-      setOpenSnackbar(true);
+      // setOpenSnackbar(true);
+      showAlert();
       handleCloseModalConfirmSize();
       return;
     }
@@ -1022,18 +1059,18 @@ const InventoryManagement = () => {
         setSizes(sortedListSizes);
         setSeveritySnackbar('success');
         setSnackbarMessage(`Kích thước ${selectSizeDel.name} đã được xóa!`);
-        setOpenSnackbar(true);
+        showAlert();
         handleCloseModalConfirmSize();
       } else {
         setSeveritySnackbar('error');
         setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-        setOpenSnackbar(true);
+        showAlert();
         handleCloseModalConfirmSize();
       }
     } catch (error) {
       setSeveritySnackbar('error');
       setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-      setOpenSnackbar(true);
+      showAlert();
       handleCloseModalConfirmSize();
       console.log('Xay ra loi khi xoa kích thước: ', error);
     }
@@ -1617,7 +1654,7 @@ const InventoryManagement = () => {
 
         {/* dialog doi trang thai */}
         <Dialog style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} open={open} onClose={handleClose}>
-          <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Xác nhận thay đổi trạng thái</DialogTitle>
           <DialogContent>
             <p>Bạn có chắc chắn muốn thay đổi trạng thái sản phẩm này thành {status}?</p>
           </DialogContent>

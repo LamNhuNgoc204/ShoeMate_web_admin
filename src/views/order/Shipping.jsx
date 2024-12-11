@@ -264,7 +264,7 @@ const ShippingManagement = () => {
       </>
 
       {/* Dialog cho Chi Tiết Vận Chuyển */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <Dialog open={openDialog} fullWidth onClose={handleCloseDialog}>
         <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Chi Tiết Vận Chuyển</DialogTitle>
         <DialogContent>
           {selectedShipment && (

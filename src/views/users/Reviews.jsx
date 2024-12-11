@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import AxiosInstance from 'helper/AxiosInstance';
+import Swal from 'sweetalert2';
 
 const Review = () => {
   const [reviews, setReviews] = useState([]);
@@ -45,6 +46,14 @@ const Review = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  const showAlert = () => {
+    Swal.fire({
+      title: 'Thông báo!',
+      text: { snackbarMessage },
+      icon: { snackbarSeverity }
+    });
+  };
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -105,13 +114,15 @@ const Review = () => {
       if (status === 'approved') {
         setSnackbarMessage('Đánh giá đã được duyệt!');
         setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+        showAlert();
+        // setSnackbarOpen(true);
         return;
       }
       if (status === 'rejected') {
         setSnackbarMessage('Đánh giá đã bị ẩn !');
         setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+        // setSnackbarOpen(true);
+        showAlert();
         return;
       }
     } catch (error) {
@@ -130,7 +141,8 @@ const Review = () => {
       if (response.status) {
         setSnackbarMessage('Phản hồi thành công!');
         setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+        showAlert();
+        // setSnackbarOpen(true);
       }
     } catch (error) {
       setSnackbarMessage('Lỗi server!');
