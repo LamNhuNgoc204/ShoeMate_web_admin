@@ -15,8 +15,6 @@ import {
   TableRow,
   Paper,
   Grid,
-  Snackbar,
-  Alert,
   FormControl,
   Select,
   InputLabel,
@@ -27,13 +25,11 @@ import {
 } from '@mui/material';
 import AxiosInstance from 'helper/AxiosInstance';
 import { formatDate } from 'utils/date';
+import Swal from 'sweetalert2';
 
 const OrderManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [filterStatus, setFilterStatus] = useState('all');
 
   const [lstOd, setlstOd] = useState({});
@@ -69,31 +65,31 @@ const OrderManagement = () => {
     fetchData();
   }, [filterStatus]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setloading(true);
-        const response = await AxiosInstance().get(`/orders/get-all-orders?page=${page}&limit=${limit}&filterStatus=${filterStatus}`);
-        console.log('order respose==>', response);
+  const fetchData = async () => {
+    try {
+      setloading(true);
+      const response = await AxiosInstance().get(`/orders/get-all-orders?page=${page}&limit=${limit}&filterStatus=${filterStatus}`);
+      console.log('order respose==>', response);
 
-        if (response.status) {
-          setlstOd(response);
-          setPendingOrders(response.pendingOrders);
-          setOrderCancel(response.ordersCancel);
-          setOrderRenturn(response.refundedOrder);
-          setlstOd(response);
-          const reversedData = response.data.reduceRight((acc, item) => {
-            acc.push(item);
-            return acc;
-          }, []);
-          setData(response.data);
-        }
-      } catch (error) {
-        console.log('error get data order: ', error);
+      if (response.status) {
+        setlstOd(response);
+        setPendingOrders(response.pendingOrders);
+        setOrderCancel(response.ordersCancel);
+        setOrderRenturn(response.refundedOrder);
+        setlstOd(response);
+        const reversedData = response.data.reduceRight((acc, item) => {
+          acc.push(item);
+          return acc;
+        }, []);
+        setData(response.data);
       }
-      setloading(false);
-    };
+    } catch (error) {
+      console.log('error get data order: ', error);
+    }
+    setloading(false);
+  };
 
+  useEffect(() => {
     fetchData();
   }, [page]);
 
@@ -114,16 +110,26 @@ const OrderManagement = () => {
         if (response.status) {
           const updatedOrders = pendingOrders.filter((order) => order._id !== selectedOrder._id);
           setPendingOrders(updatedOrders);
-          handleCloseDialog();
-          setSnackbarMessage('Đơn hàng đã được xác nhận!');
-          setSnackbarSeverity('success');
-          setSnackbarOpen(true);
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Đơn hàng đã được xác nhận!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
+          fetchData();
         }
       } catch (error) {
         console.log('Xac nhan don failed');
-        setSnackbarMessage('Lỗi server!');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      } finally {
+        handleCloseDialog();
       }
     } else if (status === 'cancelled') {
       try {
@@ -133,15 +139,26 @@ const OrderManagement = () => {
           setPendingOrders(updatedOrders);
           setOrderCancel((prev) => [...prev, selectedOrder]);
           handleCloseDialog();
-          setSnackbarMessage('Đơn hàng đã bị hủy!');
-          setSnackbarSeverity('success');
-          setSnackbarOpen(true);
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Đơn hàng đã bị hủy!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
+          fetchData();
         }
       } catch (error) {
         console.log('Huy don failed');
-        setSnackbarMessage('Lỗi server!');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      } finally {
+        handleCloseDialog();
       }
     }
   };
@@ -153,15 +170,24 @@ const OrderManagement = () => {
 
       if (response.status) {
         setData((prevData) => prevData.map((order) => (order.id === orderId ? { ...order, 'returnRequest.status': 'accepted' } : order)));
-        setSnackbarMessage('Xác nhận hoàn hàng!');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Xác nhận hoàn hàng!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        fetchData();
       }
     } catch (error) {
       console.log('Huy don failed: ', error);
-      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
       handleCloseDialog();
     }
@@ -173,15 +199,24 @@ const OrderManagement = () => {
       console.log('rejected==>', response);
 
       if (response.status) {
-        setSnackbarMessage('Từ chối yêu cầu hoàn hàng!');
-        setSnackbarSeverity('info');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: `Từ chối yêu cầu hoàn hàng!`,
+          icon: 'info',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
+      fetchData();
     } catch (error) {
       console.log('Huy don failed: ', error);
-      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
       handleCloseDialog();
     }
@@ -372,6 +407,36 @@ const OrderManagement = () => {
                   disabled
                 />
               </Grid>
+              {selectedOrder?.timestamps?.cancelledAt ? (
+                <Grid item xs={12}>
+                  <TextField
+                    label="Ngày Hủy"
+                    fullWidth
+                    value={new Date(selectedOrder?.timestamps?.cancelledAt).toLocaleDateString()}
+                    disabled
+                  />
+                </Grid>
+              ) : null}
+              {selectedOrder?.timestamps?.refundedAt ? (
+                <Grid item xs={12}>
+                  <TextField
+                    label="Ngày Yêu Cầu Hoàn Hàng"
+                    fullWidth
+                    value={new Date(selectedOrder?.timestamps?.refundedAt).toLocaleDateString()}
+                    disabled
+                  />
+                </Grid>
+              ) : null}
+              <Grid item xs={12}>
+                {selectedOrder?.timestamps?.completedRefundedAt && (
+                  <TextField
+                    label="Ngày Yêu Hoàn Tất Hoàn Hàng"
+                    fullWidth
+                    value={new Date(selectedOrder?.timestamps?.completedRefundedAt).toLocaleDateString()}
+                    disabled
+                  />
+                )}
+              </Grid>
               <Grid item xs={12}>
                 <TextField
                   label="Ghi Chú"
@@ -461,12 +526,6 @@ const OrderManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </MainCard>
   );
 };
