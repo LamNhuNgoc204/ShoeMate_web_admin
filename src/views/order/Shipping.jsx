@@ -9,8 +9,6 @@ import {
   Paper,
   Typography,
   Grid,
-  Snackbar,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -31,18 +29,6 @@ import Swal from 'sweetalert2';
 const ShippingManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const showAlert = () => {
-    Swal.fire({
-      title: 'Thông báo!',
-      text: snackbarMessage,
-      icon: snackbarSeverity,
-      showConfirmButton: false,
-      timer: 1500
-    });
-  };
 
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterShip, setfilterShip] = useState('all');
@@ -149,16 +135,25 @@ const ShippingManagement = () => {
         );
 
         handleCloseDialog();
-        setSnackbarSeverity('success');
-        setSnackbarMessage('Cập nhật trạng thái thành công!');
+
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Cập nhật trạng thái thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
-      setSnackbarSeverity('error');
-      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau!');
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
       console.log('error update status order: ', error);
     } finally {
-      // setSnackbarOpen(true);
-      showAlert();
       handleCloseDialog();
     }
   };
@@ -393,13 +388,6 @@ const ShippingManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Snackbar thông báo */}
-      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </MainCard>
   );
 };
