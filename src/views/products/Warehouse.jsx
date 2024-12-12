@@ -45,15 +45,6 @@ const InventoryManagement = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severitySnackbar, setSeveritySnackbar] = useState('success');
-  const showAlert = () => {
-    Swal.fire({
-      title: 'Thông báo!',
-      text: snackbarMessage,
-      icon: severitySnackbar,
-      showConfirmButton: false,
-      timer: 1500
-    });
-  };
 
   //CATEGORIES
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
@@ -267,8 +258,7 @@ const InventoryManagement = () => {
         newErrors.newCategory = 'Tên danh mục không được để trống!';
         setSnackbarMessage('Vui lòng nhập tên');
         setSeveritySnackbar('info');
-        // setOpenSnackbar(true);
-        showAlert();
+        setOpenSnackbar(true);
         return;
       }
 
@@ -284,27 +274,31 @@ const InventoryManagement = () => {
         setCategories((prevCategories) =>
           prevCategories.map((category) => (category._id === selectedCateId ? { ...category, ...response.data } : category))
         );
-        setSeveritySnackbar('success');
-        setSnackbarMessage('Chỉnh sửa danh mục thành công');
-        // setOpenSnackbar(true);
-        showAlert();
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Chỉnh sửa danh mục thành công',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
         setSnackbarMessage('Chỉnh sửa danh mục xảy ra lỗi');
         setSeveritySnackbar('error');
-        // setOpenSnackbar(true);
-        showAlert();
+        Swal.fire({
+          title: 'Oop...',
+          text: 'Chỉnh sửa danh mục xảy ra lỗi',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       console.error(error);
       setSnackbarMessage('Đã xảy ra lỗi khi chỉnh sửa danh mục, thử lại sau');
       setSeveritySnackbar('error');
-      // setOpenSnackbar(true);
-      showAlert();
     } finally {
       setNewCatelogo('');
       handleCloseEditCateDialog();
-      // setOpenSnackbar(true);
-      showAlert();
     }
   };
 
@@ -347,8 +341,7 @@ const InventoryManagement = () => {
     if (!newBrandLogo) {
       setSeveritySnackbar('info');
       setSnackbarMessage('Vui lòng chọn ảnh!');
-      // setOpenSnackbar(true);
-      showAlert();
+      setOpenSnackbar(true);
       return;
     }
 
@@ -360,26 +353,34 @@ const InventoryManagement = () => {
         setNewBrandLogo('');
         // Set brands
         setBrands((prev) => prev.map((brand) => (brand._id === selectedBrandId ? { ...brand, image: response.data.image } : brand)));
-        setSeveritySnackbar('success');
-        setSnackbarMessage('Chỉnh sửa logo thành công');
-        // setOpenSnackbar(true);
-        showAlert();
+
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Chỉnh sửa logo thương hiệu thành công',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
-        setSeveritySnackbar('error');
-        setSnackbarMessage('Chỉnh sửa logo xảy ra lỗi');
-        // setOpenSnackbar(true);
-        showAlert();
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
-      console.error(error);
-      setSnackbarMessage('Đã xảy ra lỗi khi cập nhật logo thương hiệu.');
-      setSeveritySnackbar('error');
-      // setOpenSnackbar(true);
-      showAlert();
+      console.log('error: ', error);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
       handleCloseEditBrandDialog();
-      // setOpenSnackbar(true);
-      showAlert();
     }
   };
 
@@ -449,25 +450,36 @@ const InventoryManagement = () => {
 
       if (response) {
         setCategories([response.data, ...categories]);
-        setSeveritySnackbar('success');
-        setSnackbarMessage('Thêm danh mục thành công');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Thêm danh mục thành công',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
-        setSeveritySnackbar('error');
-        setSnackbarMessage('Thêm danh mục thất bại, thử lại sau');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Xảy ra lỗi vui lòng thử lại sau',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       console.error(error);
-      setSeveritySnackbar('error');
-      setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
-      setOpenSnackbar(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: 'Xảy ra lỗi vui lòng thử lại sau',
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
       setNewCategory('');
       setNewCateDes('');
       setNewCategoryImage('');
       handleCloseCategoryDialog();
-      setOpenSnackbar(true);
     }
   };
   const handleAddNewBrand = async () => {
@@ -497,35 +509,44 @@ const InventoryManagement = () => {
         const response = await createNewBrand(body);
         if (response.status) {
           setBrands([response.data, ...brands]);
-          setSeveritySnackbar('success');
-          setSnackbarMessage('Thêm thương hiệu thành công');
-          // setOpenSnackbar(true);
-          showAlert();
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Thêm thương hiệu thành công',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
         } else {
-          setSeveritySnackbar('error');
-          setSnackbarMessage('Thêm thương hiệu thất bại, thử lại sau');
-          // setOpenSnackbar(true);
-          showAlert();
+          Swal.fire({
+            title: 'Oops...',
+            text: 'Xảy ra lỗi vui lòng thử lại sau',
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 1500
+          });
         }
       } else {
-        setSeveritySnackbar('error');
-        setSnackbarMessage('Thương hiệu đã tồn tại');
-        // setOpenSnackbar(true);
-        showAlert();
-        return;
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Thương hiệu đã tồn tại',
+          icon: 'warning',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       console.error(error);
-      setSeveritySnackbar('error');
-      setSnackbarMessage('Đã xảy ra lỗi, thử lại sau');
-      // setOpenSnackbar(true);
-      showAlert();
+      Swal.fire({
+        title: 'Oops...',
+        text: 'Xảy ra lỗi vui lòng thử lại sau',
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
       setNewBrand('');
       setNewBrandImg('');
       handleCloseBrandDialog();
-      // setOpenSnackbar(true);
-      showAlert();
     }
   };
 
@@ -533,8 +554,7 @@ const InventoryManagement = () => {
     if (!newSize) {
       setSeveritySnackbar('info');
       setSnackbarMessage('Vui lòng nhập tên kích thước!!');
-      // setOpenSnackbar(true);
-      showAlert();
+      setOpenSnackbar(true);
     }
 
     if (newSize && !sizes.includes(newSize)) {
@@ -550,13 +570,21 @@ const InventoryManagement = () => {
           return [...freeSize, ...sortedSizes];
         });
         setNewSize('');
-        setSeveritySnackbar('success');
-        setSnackbarMessage('Thêm kích thước thành công!');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Thêm kích thước thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
-        setSeveritySnackbar('error');
-        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau!');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Xảy ra lỗi vui lòng thử lại sau',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
       handleCloseSizeDialog();
     }
@@ -716,15 +744,21 @@ const InventoryManagement = () => {
           console.log('updatedProduct.data', updatedProduct.data);
 
           setListProducts(listProducts.map((p) => (p._id === selectedProduct._id ? updatedProduct.data : p)));
-          setSeveritySnackbar('success');
-          setSnackbarMessage('Cập nhật sản phẩm thành công!');
-          // setOpenSnackbar(true);
-          showAlert();
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Cập nhật sản phẩm thành công!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
         } else {
-          setSeveritySnackbar('error');
-          setSnackbarMessage('Xảy ra lỗi! Cập nhật sản phẩm thất bại!');
-          // setOpenSnackbar(true);
-          showAlert();
+          Swal.fire({
+            title: 'Oops...',
+            text: 'Xảy ra lỗi vui lòng thử lại sau',
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 1500
+          });
         }
       } else {
         if (!validateForm()) {
@@ -736,15 +770,22 @@ const InventoryManagement = () => {
 
         if (newProduct && newProduct.status) {
           setListProducts([newProduct.data, ...listProducts]);
-          setSeveritySnackbar('success');
-          setSnackbarMessage('Thêm sản phẩm thành công!');
-          // setOpenSnackbar(true);
-          showAlert();
+
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Thêm sản phẩm thành công!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
         } else {
-          setSeveritySnackbar('error');
-          setSnackbarMessage('Lỗi!!! Thêm sản phẩm không thành công!');
-          // setOpenSnackbar(true);
-          showAlert();
+          Swal.fire({
+            title: 'Oops...',
+            text: 'Xảy ra lỗi vui lòng thử lại sau',
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 1500
+          });
         }
       }
       handleCloseDialog();
@@ -772,24 +813,34 @@ const InventoryManagement = () => {
       if (response.status) {
         setListProducts((prevProducts) => prevProducts.map((product) => (product._id === id ? { ...product, status: status } : product)));
         setOpen(false);
-        setSeveritySnackbar('success');
-        setSnackbarMessage('Cập nhật trạng thái thành công');
-        // setOpenSnackbar(true);
-        showAlert();
+
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Cập nhật trạng thái thành công',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
         setOpen(false);
-        setSeveritySnackbar('error');
-        setSnackbarMessage('Cập nhật trạng thái thất bại');
-        // setOpenSnackbar(true);
-        showAlert();
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Xảy ra lỗi vui lòng thử lại sau',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       setOpen(false);
       console.log('Lỗi khi cập nhật sp: ', error);
-      setSeveritySnackbar('error');
-      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau.');
-      // setOpenSnackbar(true);
-      showAlert();
+      Swal.fire({
+        title: 'Oops...',
+        text: 'Xảy ra lỗi vui lòng thử lại sau',
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     }
   };
 
@@ -922,9 +973,13 @@ const InventoryManagement = () => {
 
   const handleDeleteCate = async () => {
     if (selectedCate?.products?.length !== 0) {
-      setSeveritySnackbar('error');
-      setSnackbarMessage(`Danh mục ${selectedCate.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
-      setOpenSnackbar(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Danh mục ${selectedCate.name} đang có sản phẩm. Vui lòng kiểm tra lại!`,
+        icon: 'warning',
+        showConfirmButton: false,
+        timer: 1500
+      });
       handleCloseModalConfirmDelete();
       return;
     }
@@ -933,15 +988,21 @@ const InventoryManagement = () => {
       const response = await deleteCate(selectedCate._id);
       if (response.status) {
         setCategories((prevCategories) => prevCategories.filter((category) => category._id !== selectedCate._id));
-        setSeveritySnackbar('success');
-        setSnackbarMessage(`Danh mục ${selectedCate.name} đã được xóa!`);
-        // setOpenSnackbar(true);
-        showAlert();
+        Swal.fire({
+          title: 'Thông báo!',
+          text: `Danh mục ${selectedCate.name} đã được xóa!`,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
-        setSeveritySnackbar('error');
-        setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-        // setOpenSnackbar(true);
-        showAlert();
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Xảy ra lỗi vui lòng thử lại sau',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       console.log('Xay ra loi khi xoa danh muc: ', error);
@@ -966,9 +1027,13 @@ const InventoryManagement = () => {
 
   const handleDeleteBrand = async () => {
     if (selectedBrand?.products?.length !== 0) {
-      setSeveritySnackbar('error');
-      setSnackbarMessage(`Thương hiệu ${selectedBrand.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
-      showAlert();
+      Swal.fire({
+        title: 'Oops...',
+        text: `Thương hiệu ${selectedBrand.name} đang có sản phẩm. Vui lòng kiểm tra lại!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
       handleCloseModalConfirmBrand();
       return;
     }
@@ -977,13 +1042,24 @@ const InventoryManagement = () => {
       const response = await deleteBrand(selectedBrand._id);
       if (response.status) {
         setBrands((prevCategories) => prevCategories.filter((category) => category._id !== selectedBrand._id));
-        setSeveritySnackbar('success');
-        setSnackbarMessage(`Thương hiệu ${selectedBrand.name} đã được xóa!`);
-        showAlert();
+
+        Swal.fire({
+          title: 'Thông báo!',
+          text: `Thương hiệu ${selectedBrand.name} đã được xóa!`,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
         setSeveritySnackbar('error');
-        setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-        showAlert();
+        setSnackbarMessage();
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       console.log('Xay ra loi khi xoa thuong hieu: ', error);
@@ -1037,10 +1113,13 @@ const InventoryManagement = () => {
 
   const handleDeleteSize = async () => {
     if (selectSizeDel?.products?.length !== 0) {
-      setSeveritySnackbar('error');
-      setSnackbarMessage(`Kích thước ${selectSizeDel.name} đang có sản phẩm. Vui lòng kiểm tra lại!`);
-      // setOpenSnackbar(true);
-      showAlert();
+      Swal.fire({
+        title: 'Oops...',
+        text: `Kích thước ${selectSizeDel.name} đang có sản phẩm. Vui lòng kiểm tra lại!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
       handleCloseModalConfirmSize();
       return;
     }
@@ -1058,33 +1137,37 @@ const InventoryManagement = () => {
 
         setSizes(sortedListSizes);
         setSeveritySnackbar('success');
-        setSnackbarMessage(`Kích thước ${selectSizeDel.name} đã được xóa!`);
-        showAlert();
+        setSnackbarMessage();
+        Swal.fire({
+          title: 'Thông báo',
+          text: `Kích thước ${selectSizeDel.name} đã được xóa!`,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleCloseModalConfirmSize();
       } else {
-        setSeveritySnackbar('error');
-        setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-        showAlert();
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleCloseModalConfirmSize();
       }
     } catch (error) {
-      setSeveritySnackbar('error');
-      setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
-      showAlert();
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
       handleCloseModalConfirmSize();
       console.log('Xay ra loi khi xoa kích thước: ', error);
     }
   };
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     // ?page=1&limit=10
-  //     const response = await AxiosInstance().get(`/products/lst-products/?page=${1}&limit=${10}`);
-  //     console.log('sp co phân trang: ', response);
-  //   };
-
-  //   fetchData();
-  // }, []);
 
   return (
     <MainCard title="QUẢN LÝ KHO HÀNG" style={{ padding: 20 }}>
@@ -1168,15 +1251,15 @@ const InventoryManagement = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell style={{ textAlign: 'center' }}>ID</TableCell>
-                          <TableCell style={{ width: '15%', textAlign: 'center', flex: 1 }}>Tên</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>Giá (VNĐ)</TableCell>
+                          <TableCell>Tên</TableCell>
+                          <TableCell>Giá (VNĐ)</TableCell>
                           <TableCell>Kích thước</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>Số lượng</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>Danh mục</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>Thương hiệu</TableCell>
-                          <TableCell style={{ textAlign: 'center' }}>Đã bán</TableCell>
-                          <TableCell style={{ width: '13%', textAlign: 'center' }}>Trạng thái</TableCell>
-                          <TableCell style={{ textAlign: 'center', flex: 1 }}>Hoạt động</TableCell>
+                          <TableCell>Số lượng</TableCell>
+                          <TableCell>Danh mục</TableCell>
+                          <TableCell>Thương hiệu</TableCell>
+                          <TableCell>Đã bán</TableCell>
+                          <TableCell>Trạng thái</TableCell>
+                          <TableCell>Hoạt động</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1184,11 +1267,9 @@ const InventoryManagement = () => {
                           listProducts.map((product, index) => {
                             return (
                               <TableRow key={product._id}>
-                                <TableCell style={{ textAlign: 'center' }}>
-                                  {(currentPageProduct - 1) * itemsPerPageProduct + index + 1}
-                                </TableCell>
+                                <TableCell>{(currentPageProduct - 1) * itemsPerPageProduct + index + 1}</TableCell>
                                 <TableCell>{product?.name || 'N/A'}</TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
+                                <TableCell style={{ textAlign: 'center', width: '1%' }}>{product.price.toLocaleString('vi-VN')}</TableCell>
                                 <TableCell>
                                   {product?.size && product?.size.length > 0
                                     ? product?.size.map((s) => <TableRow key={s._id}>{s.sizeId && s.sizeId.name}</TableRow>)
@@ -1199,22 +1280,18 @@ const InventoryManagement = () => {
                                     ? product?.size.map((s) => <TableRow key={s._id}>{s && s.quantity}</TableRow>)
                                     : 'Không có số lượng'}
                                 </TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>
-                                  {product.category ? product.category.name : 'Không có danh mục'}
-                                </TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>
-                                  {product.brand ? product.brand.name : 'Không có thương hiệu'}
-                                </TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>{product.sold}</TableCell>
+                                <TableCell>{product.category ? product.category.name : 'Không có danh mục'}</TableCell>
+                                <TableCell>{product.brand ? product.brand.name : 'Không có thương hiệu'}</TableCell>
+                                <TableCell>{product.sold}</TableCell>
                                 {/* <TableCell >{product.status}</TableCell> */}
-                                <TableCell>
+                                <TableCell style={{ width: '15%' }}>
                                   {product?.size && product?.size.length > 0
                                     ? product?.size.map((s) => (
                                         <TableRow key={s._id}>{s && s.quantity > 0 ? 'Còn hàng' : 'Hết hàng'}</TableRow>
                                       ))
                                     : 'Không có số lượng'}
                                 </TableCell>
-                                <TableCell style={{ textAlign: 'center' }}>
+                                <TableCell>
                                   {product.status === 'Ngừng bán' ? (
                                     <>
                                       <Typography>Sản phẩm này đã tạm ngừng bán</Typography>
@@ -1928,11 +2005,14 @@ const InventoryManagement = () => {
           </div>
 
           <div style={{ padding: 10 }}>
-            <Typography>Logo mới:</Typography>
+            {newBrandLogo && <Typography>Logo mới:</Typography>}
             <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
-              <Button variant="outlined" component="span">
-                Chọn ảnh
-              </Button>
+              {!newBrandLogo && (
+                <Button variant="outlined" component="span">
+                  Chọn ảnh
+                </Button>
+              )}
+
               <input
                 id="image-upload"
                 type="file"
@@ -1956,7 +2036,7 @@ const InventoryManagement = () => {
 
         {/* Dialog for Adding New Brand */}
         <Dialog open={openBrandDialog} onClose={handleCloseBrandDialog}>
-          <DialogTitle>Thêm thương hiệu mới</DialogTitle>
+          <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Thêm thương hiệu mới</DialogTitle>
           <DialogContent>
             <TextField label="Tên thương hiệu" fullWidth value={newBrand} onChange={(e) => setNewBrand(e.target.value)} />
             <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
