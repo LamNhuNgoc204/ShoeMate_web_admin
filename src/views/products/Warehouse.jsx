@@ -247,6 +247,7 @@ const InventoryManagement = () => {
     setopenCateEditDialog(true);
   };
   const handleCloseEditCateDialog = async () => {
+    setNewCatelogo('');
     setopenCateEditDialog(false);
   };
 
@@ -1897,22 +1898,28 @@ const InventoryManagement = () => {
               <p>Logo hiện tại</p>
               <img style={{ width: '100px', height: '100px' }} src={selectedCateImg} />
             </div>
-            <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
-              <Button variant="outlined" component="span">
-                Chọn ảnh
-              </Button>
-              <input
-                id="image-upload"
-                type="file"
-                accept="image/*"
-                onChange={(event) => handleImageChange(event, 'newCateLogo')}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <div style={{ padding: 10 }}>
-              <p>Logo mới</p>
-              <img style={{ width: '100px', height: '100px' }} src={newCatelogo} />
-            </div>
+            {!newCatelogo && (
+              <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+                <Button variant="outlined" component="span">
+                  Chọn ảnh mới
+                </Button>
+
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleImageChange(event, 'newCateLogo')}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            )}
+            {newCatelogo && (
+              <div style={{ padding: 10 }}>
+                <p>Logo mới</p>
+                <img style={{ width: '100px', height: '100px' }} src={newCatelogo} />
+              </div>
+            )}
+
             <Button variant="contained" color="primary" onClick={() => handleEditCate()}>
               Lưu
             </Button>

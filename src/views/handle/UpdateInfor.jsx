@@ -34,6 +34,7 @@ import { uploadToCloundinary } from 'functions/processingFunction';
 import { getPayments, getShips } from 'api/getAllData';
 import { formatDate } from 'utils/date';
 import { addShipping, createNewMethod } from 'api/createNew';
+import Swal from 'sweetalert2';
 
 const AccountSettings = () => {
   const state = useSelector((state) => state.users);
@@ -59,7 +60,7 @@ const AccountSettings = () => {
 
     // Kiểm tra Phone
     const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(phone)) {
+    if (phone && !phoneRegex.test(phone)) {
       newErrors.phone = 'Số điện thoại phải đủ 10 số!';
       isValid = false;
     }
@@ -78,15 +79,23 @@ const AccountSettings = () => {
         };
         const response = await updateInfor(body);
         if (response.status) {
-          setSeveritySnackbar('success');
-          setSnackbarMessage('Cập nhật thông tin thành công!');
-          setOpenSnackbar(true);
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Cập nhật thông tin thành công!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
         }
       } catch (error) {
         console.log('Lỗi cập nhật: ', error);
-        setSeveritySnackbar('error');
-        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     }
   };
@@ -96,9 +105,6 @@ const AccountSettings = () => {
     if (file) {
       const newavatar = await uploadToCloundinary(file);
       setAvatar(newavatar);
-      // const reader = new FileReader();
-      // reader.onload = () => setAvatar(reader.result);
-      // reader.readAsDataURL(file);
     }
   };
 
@@ -188,25 +194,40 @@ const AccountSettings = () => {
           setlstShip((prevState) =>
             prevState.map((shipping) => (shipping._id === id ? { ...shipping, name, deliveryTime, cost } : shipping))
           );
-          setSnackbarMessage('Cập nhật đơn vị vận chuyển thành công!');
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Cập nhật đơn vị vận chuyển thành công!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
         }
       } else {
         // Add Shipping
         const delivery = deliveryTime + ' ngày';
         const response = await addShipping({ name, delivery, cost });
         if (response.status) {
-          setSnackbarMessage('Thêm đơn vị vận chuyển thành công!');
+          Swal.fire({
+            title: 'Thông báo!',
+            text: 'Thêm đơn vị vận chuyển thành công!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+          });
         }
       }
-      setSeveritySnackbar('success');
-      setOpenSnackbar(true);
+
       setOpenDialog(false);
       fetchShip();
     } catch (error) {
       console.error('Lỗi:', error);
-      setSnackbarMessage('Có lỗi xảy ra, vui lòng thử lại!');
-      setSeveritySnackbar('error');
-      setOpenSnackbar(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     }
   };
 
@@ -233,16 +254,24 @@ const AccountSettings = () => {
         setlstShip((prevState) =>
           prevState.map((shipping) => (shipping._id === shippingToConfirm._id ? { ...shipping, isActive: false } : shipping))
         );
-        setSnackbarMessage('Đơn vị vận chuyển đã ngừng hợp tác thành công!');
-        setSeveritySnackbar('success');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Đơn vị vận chuyển đã ngừng hợp tác thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
       handleConfirmDialogClose();
     } catch (error) {
       console.error('Lỗi:', error);
-      setSnackbarMessage('Có lỗi xảy ra, vui lòng thử lại!');
-      setSeveritySnackbar('error');
-      setOpenSnackbar(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
       handleConfirmDialogClose();
     }
   };
@@ -346,19 +375,26 @@ const AccountSettings = () => {
 
       if (response.status) {
         fetchPayment();
-        setSnackbarMessage(paymentMethodToEdit ? 'Cập nhật phương thức thanh toán thành công!' : 'Thêm phương thức thanh toán thành công!');
-        setSeveritySnackbar('success');
+        Swal.fire({
+          title: 'Thông báo!',
+          text: paymentMethodToEdit ? 'Cập nhật phương thức thanh toán thành công!' : 'Thêm phương thức thanh toán thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleClose();
         return;
-      } else {
-        setSnackbarMessage(response.message);
       }
     } catch (error) {
-      setSeveritySnackbar('error');
-      setSnackbarMessage('Lỗi server, vui lòng thử lại sau.');
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
       setLoading(false);
-      setOpenSnackbar(true);
       handleClose();
     }
   };
@@ -387,18 +423,25 @@ const AccountSettings = () => {
       const response = await updatePaymentStatus(paymentToDeactivate._id, { isActive: newActiveStatus });
       if (response.status) {
         fetchPayment();
-        setSnackbarMessage(
-          paymentToDeactivate.isActive
+
+        Swal.fire({
+          title: 'Thông báo!',
+          text: paymentToDeactivate.isActive
             ? `Đã tắt phương thức thanh toán bằng ${paymentToDeactivate.payment_method}`
-            : `Đã bậc phương thức thanh toán bằng ${paymentToDeactivate.payment_method}`
-        );
-        setSeveritySnackbar('success');
-        setOpenSnackbar(true);
+            : `Đã bậc phương thức thanh toán bằng ${paymentToDeactivate.payment_method}`,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleDialogCloseDialogPayment();
       } else {
-        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau!');
-        setSeveritySnackbar('error');
-        setOpenSnackbar(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleDialogCloseDialogPayment();
       }
     }
@@ -493,14 +536,20 @@ const AccountSettings = () => {
                       <TableCell>{shipping?.cost?.toLocaleString('vi-VN')} VNĐ</TableCell>
                       <TableCell>{shipping?.createdAt && formatDate(shipping?.createdAt)}</TableCell>
                       <TableCell style={{ width: '30%' }}>
-                        <TableRow style={{ width: '30%' }}>
-                          <Button variant="outlined" style={{ marginRight: 5 }} onClick={() => handleDialogOpen(shipping)}>
-                            Sửa
-                          </Button>
-                          <Button variant="outlined" onClick={() => handleConfirmDialogOpen(shipping)}>
-                            Ngừng hợp tác
-                          </Button>
-                        </TableRow>
+                        {shipping?.isActive ? (
+                          <TableRow style={{ width: '30%' }}>
+                            <Button variant="outlined" style={{ marginRight: 5 }} onClick={() => handleDialogOpen(shipping)}>
+                              Sửa
+                            </Button>
+                            <Button variant="outlined" onClick={() => handleConfirmDialogOpen(shipping)}>
+                              Ngừng hợp tác
+                            </Button>
+                          </TableRow>
+                        ) : (
+                          <Typography style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>
+                            Đã ngừng hợp tác với đơn vị vận chuyển này!
+                          </Typography>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -551,7 +600,7 @@ const AccountSettings = () => {
                           <Button variant="outlined" style={{ marginRight: 5 }} onClick={() => handleOpenDialogPayment(payment)}>
                             Sửa
                           </Button>
-                          <Button variant="outlined" onClick={() => handleDialogOpenDialogPayment(payment)}>
+                          <Button variant="outlined" color="error" onClick={() => handleDialogOpenDialogPayment(payment)}>
                             {payment?.isActive ? 'Tắt phương thức' : 'Bậc phương thức'}
                           </Button>
                         </TableRow>

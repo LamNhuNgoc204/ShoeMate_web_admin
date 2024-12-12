@@ -13,8 +13,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Snackbar,
-  Alert,
   Select,
   MenuItem,
   InputLabel,
@@ -33,9 +31,6 @@ const PromotionManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState({});
   const [vouchers, setVouchers] = useState([]);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     discount_value: 0,
@@ -293,6 +288,8 @@ const PromotionManagement = () => {
       }
     }
   };
+
+  console.log('selectedPromotion', selectedPromotion);
 
   return (
     <MainCard title="QUẢN LÝ KHUYẾN MÃI">
@@ -552,7 +549,7 @@ const PromotionManagement = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <input value={formData.voucher_image} onChange={handleInputChange} accept="image/*" type="file" style={{ width: '100%' }} />
+              <input onChange={handleInputChange} accept="image/*" type="file" style={{ width: '100%' }} />
             </Grid>
           </Grid>
         </DialogContent>
@@ -565,13 +562,6 @@ const PromotionManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Snackbar Thông Báo */}
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </MainCard>
   );
 };
