@@ -23,7 +23,8 @@ import {
   CircularProgress,
   FormControlLabel,
   Checkbox,
-  DialogContentText
+  DialogContentText,
+  FormControl
 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import { useSelector } from 'react-redux';
@@ -667,7 +668,9 @@ const AccountSettings = () => {
       </Dialog>
 
       <Dialog open={openPaymentDialog} onClose={handleClose}>
-        <DialogTitle>{paymentMethodToEdit ? 'Chỉnh Sửa Phương Thức Thanh Toán' : 'Thêm Phương Thức Thanh Toán'}</DialogTitle>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>
+          {paymentMethodToEdit ? 'Chỉnh Sửa Phương Thức Thanh Toán' : 'Thêm Phương Thức Thanh Toán'}
+        </DialogTitle>
         <DialogContent>
           <TextField
             label="Tên Phương Thức Thanh Toán"
@@ -689,10 +692,16 @@ const AccountSettings = () => {
           />
           {image && (
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <img src={image} alt="Preview" style={{ maxWidth: '100%', maxHeight: 200 }} />
+              <img src={image} alt="Preview" style={{ maxWidth: 200, maxHeight: 200 }} />
             </div>
           )}
-          <input type="file" accept="image/*" onChange={handleUploadimg} style={{ display: 'block', marginBottom: 16 }} />
+          <label htmlFor="image-upload" style={{ display: 'block', marginRight: 10, marginTop: 10, marginBottom: 10 }}>
+            <Button variant="outlined" component="span">
+              Chọn ảnh
+            </Button>
+            <input id="image-upload" type="file" accept="image/*" onChange={handleUploadimg} style={{ display: 'none' }} />
+          </label>
+
           <FormControlLabel
             control={<Checkbox checked={isActive} onChange={(e) => setIsActive(e.target.checked)} name="isActive" color="primary" />}
             label="Kích Hoạt"
@@ -703,10 +712,10 @@ const AccountSettings = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="secondary">
+          <Button onClick={handleClose} variant="contained" color="primary">
             Hủy
           </Button>
-          <Button onClick={handleSavePayment} color="primary" disabled={loading}>
+          <Button onClick={handleSavePayment} variant="contained" color="primary" disabled={loading}>
             {loading ? <CircularProgress size={24} color="primary" /> : 'Lưu'}
           </Button>
         </DialogActions>
