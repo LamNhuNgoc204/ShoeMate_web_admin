@@ -47,16 +47,6 @@ const Review = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  const showAlert = () => {
-    Swal.fire({
-      title: 'Thông báo!',
-      text: snackbarMessage,
-      icon: snackbarSeverity,
-      showConfirmButton: false,
-      timer: 1500
-    });
-  };
-
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
@@ -114,23 +104,33 @@ const Review = () => {
         );
       }
       if (status === 'approved') {
-        setSnackbarMessage('Đánh giá đã được duyệt!');
-        setSnackbarSeverity('success');
-        showAlert();
-        // setSnackbarOpen(true);
-        return;
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Đánh giá đã được duyệt!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
       if (status === 'rejected') {
-        setSnackbarMessage('Đánh giá đã bị ẩn !');
-        setSnackbarSeverity('success');
-        // setSnackbarOpen(true);
-        showAlert();
-        return;
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Đánh giá đã bị ẩn!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
-      setSnackbarMessage('Lỗi server!');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } finally {
+      handleCloseDialog();
     }
   };
 
@@ -141,13 +141,26 @@ const Review = () => {
       });
 
       if (response.status) {
+        const updatedReview = {
+          ...selectedReview,
+          response: {
+            ...selectedReview.response,
+            content: content
+          }
+        };
+
+        setSelectedReview(updatedReview);
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            review._id === selectedReview._id ? { ...review, response: { ...review.response, content: content } } : review
+          )
+        );
         setSnackbarMessage('Phản hồi thành công!');
         setSnackbarSeverity('success');
-        showAlert();
-        // setSnackbarOpen(true);
+        setSnackbarOpen(true);
       }
     } catch (error) {
-      setSnackbarMessage('Lỗi server!');
+      setSnackbarMessage(`Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
