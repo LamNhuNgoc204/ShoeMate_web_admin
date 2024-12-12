@@ -20,9 +20,9 @@ import {
   Select,
   MenuItem,
   TablePagination,
-  Modal,
   DialogContentText,
-  CircularProgress
+  CircularProgress,
+  Pagination
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { ROLE } from 'constants/mockData';
@@ -30,6 +30,7 @@ import { getAllUsers } from 'api/getAllData';
 import { updateRole } from 'api/updateData';
 import { createNewUser } from 'api/createNew';
 import AxiosInstance from 'helper/AxiosInstance';
+import Swal from 'sweetalert2';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -45,6 +46,8 @@ const UserManagement = () => {
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newRole, setNewRole] = useState('');
+  const [nameError, setNameError] = useState(false);
+  const [nameHelperText, setNameHelperText] = useState('');
   const [emailHelperText, setEmailHelperText] = useState('');
   const [emailError, setEmailError] = useState(false);
   const [passwordHelperText, setPasswordHelperText] = useState('');
@@ -53,28 +56,28 @@ const UserManagement = () => {
   const [phoneHelperText, setPhoneHelperText] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
   const [loading, setloading] = useState(false);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setloading(true);
-        const response = await getAllUsers();
-        if (!response) {
-          setSnackbarSeverity('error');
-          setSnackbarMessage('Xảy ta lỗi khi lấy danh sách người dùng!');
-          setSnackbarOpen(true);
-        }
-        setUsers(response.data);
-        setFilteredUsers(response.data);
-      } catch (error) {
-        console.log('Lỗi: ', error);
+  const fetchUserData = async () => {
+    try {
+      setloading(true);
+      const response = await getAllUsers();
+      if (!response) {
+        setSnackbarSeverity('error');
+        setSnackbarMessage('Xảy ta lỗi khi lấy danh sách người dùng!');
+        setSnackbarOpen(true);
       }
-      setloading(false);
-    };
+      setUsers(response.data);
+      setFilteredUsers(response.data);
+    } catch (error) {
+      console.log('Lỗi: ', error);
+    }
+    setloading(false);
+  };
 
+  useEffect(() => {
     fetchUserData();
   }, []);
 
@@ -89,11 +92,20 @@ const UserManagement = () => {
     setNewName('');
     setNewPhone('');
     setNewRole('');
+    setPasswordHelperText('');
+    setEmailHelperText('');
+    setPhoneHelperText('');
+    setNameHelperText('');
   };
 
   const checkEmailExists = (email) => {
     const user = users.find((user) => user.email === email);
     return !!user;
+  };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const checkEmailRegex = (email) => {
+    return emailRegex.test(email);
   };
 
   const checkPass = (password) => {
@@ -106,27 +118,71 @@ const UserManagement = () => {
     return phoneRegex.test(phone);
   };
 
+  const validateName = (name) => {
+    if (!name) {
+      return 'Tên không được để trống!';
+    } else if (name.length < 3) {
+      return 'Tên phải có ít nhất 3 ký tự!';
+    } else if (/[^a-zA-Z\s]/.test(name)) {
+      return 'Tên không được chứa số hoặc ký tự đặc biệt!';
+    }
+    return '';
+  };
+
+  const handleBlur = () => {
+    const error = validateName(newName);
+    if (error) {
+      setNameError(true);
+      setNameHelperText(error);
+    } else {
+      setNameError(false);
+      setNameHelperText('');
+    }
+  };
+
   const handleSaveUser = async () => {
-    if (!newEmail || !newPass || !newRole) {
-      setSnackbarMessage('Vui lòng không để trống các trường!');
+    if (!newEmail || !newPass || !newName) {
+      setSnackbarMessage('Vui lòng không để trống email, tên, mật khẩu và vai trò!');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+      return;
+    }
+    if (!newRole) {
+      setSnackbarMessage('Vui lòng chọn vai trò!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
     }
 
     try {
       const response = await createNewUser(newEmail, newPass, newName, newPhone, newRole);
       if (response.status) {
-        setSnackbarMessage('Thêm người dùng thành công!');
-        setSnackbarSeverity('success');
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Thêm người dùng thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        fetchUserData();
       } else {
-        setSnackbarMessage('Thêm người dùng failed!');
-        setSnackbarSeverity('error');
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
-      setSnackbarMessage('Xay ra loi, thu lai sau!');
-      setSnackbarSeverity('success');
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
-      setSnackbarOpen(true);
       handleCloseDialog();
     }
   };
@@ -141,18 +197,34 @@ const UserManagement = () => {
     try {
       const response = await updateRole(userId, role);
       if (response.status) {
-        setSnackbarMessage('Cập nhật thông tin thành công');
-        setSnackbarSeverity('success');
+        setSnackbarMessage();
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Cập nhật vai trò thành công',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
       } else {
-        setSnackbarMessage('Bạn không có quyền hạn sử dụng chức năng này!');
-        setSnackbarSeverity('error');
+        setSnackbarMessage();
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Bạn không có quyền hạn sử dụng chức năng này!',
+          icon: 'warning',
+          showConfirmButton: false,
+          timer: 1500
+        });
       }
     } catch (error) {
       console.error('Error updating role:', error);
-      setSnackbarMessage('Xảy ra lỗi khi cập nhật vai trò');
-      setSnackbarSeverity('error');
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
-      setSnackbarOpen(true);
       setOpenDialogRole(false);
     }
   };
@@ -165,16 +237,7 @@ const UserManagement = () => {
         user.email.toLowerCase().includes(e.target.value.toLowerCase()) || user.name.toLowerCase().includes(e.target.value.toLowerCase())
     );
     setFilteredUsers(filtered);
-  };
-
-  // Xử lý phân trang
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(1);
   };
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -195,21 +258,34 @@ const UserManagement = () => {
     try {
       const response = await AxiosInstance().put(`/users/lock-accound/${user._id}`);
       if (response.status) {
-        setSnackbarMessage(`Tải khoản của ${user.name} đã bị khóa`);
-        setSnackbarSeverity('success');
+        Swal.fire({
+          title: 'Thông báo!',
+          text: `Tài khoản của ${user.name} đã bị khóa`,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
         const updatedUsers = users.map((u) => (u._id === user._id ? { ...u, isActive: false } : u));
         setUsers(updatedUsers);
         setFilteredUsers(updatedUsers);
         handleDialogClose();
       }
     } catch (error) {
-      setSnackbarMessage('Xảy ra lỗi khi cập nhật vai trò');
-      setSnackbarSeverity('error');
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } finally {
-      setSnackbarOpen(true);
       setOpenDialogRole(false);
       handleDialogClose();
     }
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
   };
 
   return (
@@ -238,16 +314,19 @@ const UserManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user, index) => (
+                {filteredUsers.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((user, index) => (
                   <TableRow key={index + 1}>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.phoneNumber || 'No phone number'}</TableCell>
-                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.phoneNumber || 'Chưa có số điện thoại'}</TableCell>
+                    <TableCell>{user.role === 'user' ? 'Khách hàng' : user.role === 'employee' ? 'Nhân viên' : 'Quản lý'}</TableCell>
                     <TableCell>
-                      <Button variant="outlined" color="primary" onClick={() => handleOpenDialogRole(user)}>
-                        Sửa
-                      </Button>
+                      {user.isActive === true && (
+                        <Button variant="outlined" color="primary" onClick={() => handleOpenDialogRole(user)}>
+                          Sửa
+                        </Button>
+                      )}
+
                       {user.isActive === true ? (
                         <>
                           <Button variant="outlined" color="error" style={{ marginLeft: 10 }} onClick={() => handleDialogOpen(user)}>
@@ -255,14 +334,21 @@ const UserManagement = () => {
                           </Button>
                         </>
                       ) : (
-                        <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 10 }}>Đã khóa</span>
+                        <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 10, textAlign: 'center' }}>Tài khoản đã bị khóa</span>
                       )}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            <TablePagination
+            <Pagination
+              count={Math.ceil(filteredUsers.length / rowsPerPage)}
+              page={page}
+              onChange={handleChangePage}
+              color="primary"
+              style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}
+            />
+            {/* <TablePagination
               component="div"
               count={filteredUsers.length}
               page={page}
@@ -270,14 +356,14 @@ const UserManagement = () => {
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               labelRowsPerPage="Số dòng mỗi trang"
-            />
+            /> */}
           </TableContainer>
         )}
       </>
 
       {/* Dialog cho thêm/chỉnh sửa người dùng */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Thêm Người Dùng</DialogTitle>
+        <DialogTitle style={{ textAlign: 'center', fontSize: '30px', fontWeight: 'bold' }}>Thêm Người Dùng</DialogTitle>
         <DialogContent>
           <TextField
             label="Email"
@@ -285,6 +371,9 @@ const UserManagement = () => {
               if (checkEmailExists(newEmail)) {
                 setEmailError(true);
                 setEmailHelperText('Email đã tồn tại trong hệ thống!');
+              } else if (!checkEmailRegex(newEmail)) {
+                setEmailError(true);
+                setEmailHelperText('Email không đúng định dạng!');
               } else {
                 setEmailError(false);
                 setEmailHelperText('');
@@ -314,7 +403,16 @@ const UserManagement = () => {
             onChange={(e) => setNewPass(e.target.value)}
             style={{ marginTop: '10px' }}
           />
-          <TextField label="Tên" fullWidth value={newName} onChange={(e) => setNewName(e.target.value)} style={{ marginTop: '10px' }} />
+          <TextField
+            label="Tên"
+            onBlur={handleBlur}
+            error={nameError}
+            helperText={nameHelperText}
+            fullWidth
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            style={{ marginTop: '10px' }}
+          />
           <TextField
             label="Số Điện Thoại"
             fullWidth
@@ -322,9 +420,11 @@ const UserManagement = () => {
             onChange={(e) => setNewPhone(e.target.value)}
             style={{ marginTop: '10px' }}
             onBlur={() => {
-              if (!checkPhoneNumber(newPhone)) {
-                setPhoneError(true);
-                setPhoneHelperText('Số điện thoại không hợp lệ!');
+              if (newPhone) {
+                if (!checkPhoneNumber(newPhone)) {
+                  setPhoneError(true);
+                  setPhoneHelperText('Số điện thoại không hợp lệ!');
+                }
               } else {
                 setPhoneError(false);
                 setPhoneHelperText('');
@@ -337,7 +437,7 @@ const UserManagement = () => {
             <InputLabel>Vai Trò</InputLabel>
             <Select label="Vai Trò" value={newRole} onChange={(e) => setNewRole(e.target.value)}>
               {ROLE.map((item) => {
-                return <MenuItem value={item}>{item}</MenuItem>;
+                return <MenuItem value={item}>{item === 'user' ? 'Người dùng' : item === 'employee' ? 'Nhân viên' : 'Quản lý'}</MenuItem>;
               })}
             </Select>
           </FormControl>
@@ -359,8 +459,9 @@ const UserManagement = () => {
           <FormControl fullWidth style={{ marginTop: '10px' }}>
             <InputLabel>Vai Trò</InputLabel>
             <Select label="Vai Trò" value={role} onChange={(e) => setRole(e.target.value)}>
+              {/* 'admin', 'user', 'employee' */}
               {ROLE.map((item) => {
-                return <MenuItem value={item}>{item}</MenuItem>;
+                return <MenuItem value={item}>{item === 'user' ? 'Người dùng' : item === 'employee' ? 'Nhân viên' : 'Quản lý'}</MenuItem>;
               })}
             </Select>
           </FormControl>
