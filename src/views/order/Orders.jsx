@@ -264,6 +264,7 @@ const OrderManagement = () => {
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="pending">Chờ xác nhận</MenuItem>
                 <MenuItem value="processing">Đang vận chuyển</MenuItem>
+                <MenuItem value="delivered">Đã giao hàng</MenuItem>
                 <MenuItem value="completed">Đã hoàn thành</MenuItem>
                 <MenuItem value="cancelled">Đã hủy</MenuItem>
                 <MenuItem value="refunded">Hoàn hàng</MenuItem>
@@ -308,17 +309,19 @@ const OrderManagement = () => {
                         ? 'Chờ xác nhận'
                         : order?.status === 'processing'
                           ? 'Đang vận chuyển'
-                          : order?.status === 'completed'
-                            ? 'Đã hoàn thành'
-                            : order?.status === 'cancelled'
-                              ? 'Đã hủy'
-                              : order?.returnRequest?.status === 'pending'
-                                ? 'Đang yêu cầu hoàn hàng'
-                                : order?.returnRequest?.status === 'accepted'
-                                  ? 'Yêu cầu hoàn hàng đã được chấp nhận'
-                                  : order?.returnRequest?.status === 'rejected'
-                                    ? 'Yêu cầu hoàn hàng đã bị từ chối'
-                                    : 'Đã trả hàng - hoàn tiền'}
+                          : order?.status === 'delivered'
+                            ? 'Đã giao hàng'
+                            : order?.status === 'completed'
+                              ? 'Đã hoàn thành'
+                              : order?.status === 'cancelled'
+                                ? 'Đã hủy'
+                                : order?.returnRequest?.status === 'pending'
+                                  ? 'Đang yêu cầu hoàn hàng'
+                                  : order?.returnRequest?.status === 'accepted'
+                                    ? 'Yêu cầu hoàn hàng đã được chấp nhận'
+                                    : order?.returnRequest?.status === 'rejected'
+                                      ? 'Yêu cầu hoàn hàng đã bị từ chối'
+                                      : 'Đã trả hàng - hoàn tiền'}
                     </TableCell>
                     <TableCell>{order.timestamps && order.timestamps.placedAt && formatDate(order.timestamps.placedAt)}</TableCell>
                     <TableCell>
@@ -384,17 +387,19 @@ const OrderManagement = () => {
                       ? 'Chờ xác nhận'
                       : selectedOrder?.status === 'processing'
                         ? 'Đang vận chuyển'
-                        : selectedOrder?.status === 'completed'
-                          ? 'Đã hoàn thành'
-                          : selectedOrder?.status === 'cancelled'
-                            ? 'Đã hủy'
-                            : selectedOrder?.returnRequest?.status === 'pending'
-                              ? 'Đang yêu cầu hoàn hàng'
-                              : selectedOrder?.returnRequest?.status === 'accepted'
-                                ? 'Yêu cầu hoàn hàng đã được chấp nhận'
-                                : selectedOrder?.returnRequest?.status === 'rejected'
-                                  ? 'Yêu cầu hoàn hàng đã bị từ chối'
-                                  : 'Đã trả hàng - hoàn tiền'
+                        : selectedOrder?.status === 'delivered'
+                          ? 'Đơn hàng đã được giao'
+                          : selectedOrder?.status === 'completed'
+                            ? 'Đã hoàn thành'
+                            : selectedOrder?.status === 'cancelled'
+                              ? 'Đã hủy'
+                              : selectedOrder?.returnRequest?.status === 'pending'
+                                ? 'Đang yêu cầu hoàn hàng'
+                                : selectedOrder?.returnRequest?.status === 'accepted'
+                                  ? 'Yêu cầu hoàn hàng đã được chấp nhận'
+                                  : selectedOrder?.returnRequest?.status === 'rejected'
+                                    ? 'Yêu cầu hoàn hàng đã bị từ chối'
+                                    : 'Đã trả hàng - hoàn tiền'
                   }
                   disabled
                 />
@@ -407,6 +412,16 @@ const OrderManagement = () => {
                   disabled
                 />
               </Grid>
+              {selectedOrder?.timestamps?.deliveredAt ? (
+                <Grid item xs={12}>
+                  <TextField
+                    label="Ngày Giao"
+                    fullWidth
+                    value={new Date(selectedOrder?.timestamps?.deliveredAt).toLocaleDateString()}
+                    disabled
+                  />
+                </Grid>
+              ) : null}
               {selectedOrder?.timestamps?.cancelledAt ? (
                 <Grid item xs={12}>
                   <TextField

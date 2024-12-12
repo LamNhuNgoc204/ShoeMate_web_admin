@@ -27,6 +27,7 @@ import {
 import MainCard from 'ui-component/cards/MainCard';
 import { addVoucher, getListVoucher, updateVoucher } from 'api/voucher';
 import { formatDate } from 'utils/date';
+import Swal from 'sweetalert2';
 
 const PromotionManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -243,21 +244,24 @@ const PromotionManagement = () => {
       const response = await updateVoucher(selectedPromotion._id, formData);
       if (response.status) {
         setVouchers((prevVouchers) =>
-          prevVouchers.map((voucher) =>
-            voucher._id === selectedPromotion._id
-              ? { ...voucher, ...response.data } // Thay voucher cũ bằng dữ liệu mới
-              : voucher
-          )
+          prevVouchers.map((voucher) => (voucher._id === selectedPromotion._id ? { ...voucher, ...response.data } : voucher))
         );
-        // setVouchers((prevVouchers) => prevVouchers.map((voucher) => (voucher._id === selectedPromotion._id ? response.data : voucher)));
-        setSnackbarMessage('Cập nhật mã giảm giá thành công!');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Cập nhật mã giảm giá thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleCloseDialog();
       } else {
-        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleCloseDialog();
       }
     } else {
@@ -268,15 +272,23 @@ const PromotionManagement = () => {
 
       const response = await addVoucher(formData);
       if (response.status) {
-        setSnackbarMessage('Thêm mã giảm giá thành công!');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Thêm mã giảm giá thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
         setVouchers([response.data, ...vouchers]);
         handleCloseDialog();
       } else {
-        setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+        Swal.fire({
+          title: 'Oops...',
+          text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500
+        });
         handleCloseDialog();
       }
     }
