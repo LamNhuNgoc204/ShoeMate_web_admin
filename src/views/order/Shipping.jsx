@@ -86,7 +86,7 @@ const ShippingManagement = () => {
 
   // Tính toán thống kê
   const totalOrders = data.length;
-  const deliveredOrders = data.filter((order) => order.status === 'delivered').length;
+  const deliveredOrders = data.filter((order) => order.status === 'delivered' || order.status === 'completed').length;
   const shippingOrders = data.filter((order) => order.status === 'processing').length;
 
   const fetchData = async () => {
@@ -234,7 +234,13 @@ const ShippingManagement = () => {
                     <TableCell>{shipment._id && shipment._id.slice(0, 8) && shipment._id.slice(0, 8).toUpperCase()}</TableCell>
                     <TableCell>{shipment.receiver}</TableCell>
                     <TableCell>{shipment.address}</TableCell>
-                    <TableCell style={{ textAlign: 'center' }}>{shipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}</TableCell>
+                    <TableCell style={{ textAlign: 'center' }}>
+                      {shipment.status === 'processing' && !shipment?.returnRequest
+                        ? 'Đang giao'
+                        : shipment.status === 'processing' && shipment?.returnRequest?.status === 'accepted'
+                          ? 'Đang giao về shop'
+                          : 'Đã giao'}
+                    </TableCell>
                     <TableCell>
                       {new Date(
                         shipment.status === 'processing'
@@ -282,7 +288,13 @@ const ShippingManagement = () => {
                 <TextField
                   label="Trạng Thái"
                   fullWidth
-                  value={selectedShipment.status === 'processing' ? 'Đang giao' : 'Đã giao'}
+                  value={
+                    selectedShipment.status === 'processing' && !selectedShipment?.returnRequest
+                      ? 'Đang giao'
+                      : selectedShipment.status === 'processing' && selectedShipment?.returnRequest?.status === 'accepted'
+                        ? 'Đang hoàn hàng về shop'
+                        : 'Đã giao'
+                  }
                   disabled
                 />
               </Grid>
@@ -339,7 +351,7 @@ const ShippingManagement = () => {
               </Grid>
 
               <Grid item xs={12}>
-                {!selectedShipment?.returnRequest && selectedShipment.status !== 'delivered' ? (
+                {!selectedShipment?.returnRequest && selectedShipment.status !== 'delivered' && selectedShipment.status !== 'completed' ? (
                   <Button
                     variant="contained"
                     color="primary"
@@ -360,7 +372,7 @@ const ShippingManagement = () => {
                   </Button>
                 ) : (
                   <Typography variant="h4" align="center">
-                    Đơn hàng đã được hoàn về shop
+                    {selectedShipment?.returnRequest?.status === 'refunded' && 'Đơn hàng đã được hoàn về shop'}
                   </Typography>
                 )}
               </Grid>
