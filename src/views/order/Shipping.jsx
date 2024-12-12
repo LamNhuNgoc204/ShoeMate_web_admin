@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import AxiosInstance from 'helper/AxiosInstance';
+import Swal from 'sweetalert2';
 
 const ShippingManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -33,6 +34,16 @@ const ShippingManagement = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const showAlert = () => {
+    Swal.fire({
+      title: 'Thông báo!',
+      text: snackbarMessage,
+      icon: snackbarSeverity,
+      showConfirmButton: false,
+      timer: 1500
+    });
+  };
+
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterShip, setfilterShip] = useState('all');
   const [ships, setShips] = useState([]);
@@ -96,20 +107,13 @@ const ShippingManagement = () => {
       if (response.status) {
         const data = response.data;
         setData(data.reverse());
-
-        // // ["processing", "delivered"]
-        // // Lọc lại các đơn hàng có trạng thái "processing" hoặc "delivered"
-        // const filteredData = data.filter((order) => ['processing', 'delivered'].includes(order.status));
-
-        // // Đảo ngược và set vào data
-        // setData(filteredData.reverse());
       }
     } catch (error) {
       console.log('Get order failed: ', error);
     }
     setloading(false);
   };
-  console.log('data=============>', data);
+  // console.log('data=============>', data);
 
   const fetchShipData = async () => {
     try {
@@ -138,24 +142,28 @@ const ShippingManagement = () => {
     try {
       const response = await AxiosInstance().put(`/orders/confirm-order/${selectedShipment._id}`, { status: status });
       if (response.status) {
-        console.log('response: ', response.data);
+        // console.log('response: ', response.data);
 
         setData((prevShipments) =>
           prevShipments.map((shipment) => (shipment._id === selectedShipment._id ? { ...shipment, status } : shipment))
         );
 
         handleCloseDialog();
+        setSnackbarSeverity('success');
         setSnackbarMessage('Cập nhật trạng thái thành công!');
       }
     } catch (error) {
+      setSnackbarSeverity('error');
+      setSnackbarMessage('Xảy ra lỗi. Vui lòng thử lại sau!');
       console.log('error update status order: ', error);
     } finally {
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
+      // setSnackbarOpen(true);
+      showAlert();
+      handleCloseDialog();
     }
   };
 
-  console.log('selectedShipment===>', selectedShipment);
+  // console.log('selectedShipment===>', selectedShipment);
 
   return (
     <MainCard title="QUẢN LÝ VẬN CHUYỂN">

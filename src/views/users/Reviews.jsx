@@ -50,8 +50,10 @@ const Review = () => {
   const showAlert = () => {
     Swal.fire({
       title: 'Thông báo!',
-      text: { snackbarMessage },
-      icon: { snackbarSeverity }
+      text: snackbarMessage,
+      icon: snackbarSeverity,
+      showConfirmButton: false,
+      timer: 1500
     });
   };
 
