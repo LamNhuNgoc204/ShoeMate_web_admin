@@ -99,6 +99,7 @@ const TotalGrowthLineChart = ({ isLoading }) => {
 
   return (
     <>
+    
       {isLoading ? (
         <SkeletonTotalGrowthBarChart />
       ) : (
