@@ -158,6 +158,33 @@ const ShippingManagement = () => {
     }
   };
 
+  const handleReturnOrder = async (orderId) => {
+    try {
+      ///return-order/:orderId
+      const response = await AxiosInstance().put(`/orders/return-order/${orderId}`);
+      if (response.status) {
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Đơn hàng đã được hoàn trả về shop!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+    } catch (error) {
+      console.log('Lỗi cập nhật trạng thái: ', error);
+      Swal.fire({
+        title: 'Oops...',
+        text: `Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } finally {
+      handleCloseDialog();
+    }
+  };
+
   // console.log('selectedShipment===>', selectedShipment);
 
   return (
@@ -183,6 +210,7 @@ const ShippingManagement = () => {
             </Paper>
           </Grid>
         </Grid>
+
         <FormControl fullWidth style={{ marginTop: 10 }}>
           <Grid container spacing={2} style={{ marginBlock: 20 }}>
             <Grid item xs={12} md={6}>
@@ -370,7 +398,12 @@ const ShippingManagement = () => {
                 )}
 
                 {selectedShipment?.returnRequest?.status === 'accepted' ? (
-                  <Button variant="contained" color="primary" style={{ marginRight: '10px', marginTop: 10 }}>
+                  <Button
+                    onProgress={() => handleReturnOrder(selectedShipment._id)}
+                    variant="contained"
+                    color="primary"
+                    style={{ marginRight: '10px', marginTop: 10 }}
+                  >
                     Đã Hoàn Hàng
                   </Button>
                 ) : (
