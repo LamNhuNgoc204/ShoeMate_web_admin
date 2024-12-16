@@ -23,7 +23,7 @@ import {
   Pagination
 } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
-import { addVoucher, getListVoucher, updateVoucher } from 'api/voucher';
+import { addVoucher, getListVoucher, updateVoucher,deleteVoucher } from 'api/voucher';
 import { formatDate } from 'utils/date';
 import Swal from 'sweetalert2';
 
@@ -226,6 +226,53 @@ const PromotionManagement = () => {
     setSelectedPromotion(null);
     setOpenDialog(false);
   };
+  const handleDeleteVoucher = async (id) => {
+    console.log('id', id);
+    // Hiển thị hộp thoại xác nhận
+    const result = await Swal.fire({
+      title: 'Bạn có chắc muốn xóa?',
+      text: 'Hành động này không thể hoàn tác!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      reverseButtons: true,
+    });
+  
+    if (result.isConfirmed) {
+      // Nếu người dùng xác nhận xóa
+      const response = await deleteVoucher(id);
+      if (response.status) {
+        setVouchers((prevVouchers) =>
+          prevVouchers.filter((voucher) => voucher._id !== id)
+        );
+        Swal.fire({
+          title: 'Thông báo!',
+          text: 'Xóa mã giảm giá thành công!',
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } else {
+        Swal.fire({
+          title: 'Oops...',
+          text: 'Xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên!',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    } else {
+      Swal.fire({
+        title: 'Đã hủy!',
+        text: 'Voucher không bị xóa.',
+        icon: 'info',
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  };
+  
 
   const handleSavePromotion = async () => {
     if (selectedPromotion) {
@@ -397,12 +444,14 @@ const PromotionManagement = () => {
                       >
                         Sửa
                       </Button>
+                      <Button variant="outlined" color="error" onClick={() => handleDeleteVoucher(voucher._id)}>
+                        Xóa
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-
             <Pagination
               count={lstVC?.totalPages}
               page={page}

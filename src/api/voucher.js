@@ -26,3 +26,13 @@ export const updateVoucher = async (id, body) => {
     console.log('add vourcher error: ', error);
   }
 };
+
+
+export const deleteVoucher = async (id) => {
+  try {
+    const response = await AxiosInstance().put(`/vouchers/delete/${id}`);
+    return response;
+  } catch (error) {
+    console.log('add vourcher error: ', error);
+  }
+};
