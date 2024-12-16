@@ -165,7 +165,7 @@ const ShippingManagement = () => {
       if (response.status) {
         Swal.fire({
           title: 'Thông báo!',
-          text: 'Đơn hàng đã được hoàn trả về shop!',
+          text: 'Đơn hàng đã được hoàn trả về shop! Hoàn tất hoàn hàng.',
           icon: 'success',
           showConfirmButton: false,
           timer: 1500

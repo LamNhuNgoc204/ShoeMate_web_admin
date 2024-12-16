@@ -36,7 +36,6 @@ const PromotionManagement = () => {
     discount_value: 0,
     voucher_name: '',
     quantity: 1,
-    voucher_image: '',
     voucher_code: '',
     expiry_date: '',
     start_date: '',
@@ -109,7 +108,6 @@ const PromotionManagement = () => {
       discount_value: 0,
       voucher_name: '',
       quantity: 1,
-      voucher_image: '',
       voucher_code: '',
       expiry_date: '',
       start_date: '',
@@ -546,10 +544,6 @@ const PromotionManagement = () => {
                 error={!!error.usage_scopeError}
                 helperText={error.usage_scopeError}
               />
-            </Grid>
-
-            <Grid item xs={12}>
-              <input onChange={handleInputChange} accept="image/*" type="file" style={{ width: '100%' }} />
             </Grid>
           </Grid>
         </DialogContent>
