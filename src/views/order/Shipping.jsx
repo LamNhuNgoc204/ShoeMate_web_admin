@@ -159,6 +159,8 @@ const ShippingManagement = () => {
   };
 
   const handleReturnOrder = async (orderId) => {
+    console.log('hoàn hàng nè-------------------');
+
     try {
       ///return-order/:orderId
       const response = await AxiosInstance().put(`/orders/return-order/${orderId}`);
@@ -399,7 +401,7 @@ const ShippingManagement = () => {
 
                 {selectedShipment?.returnRequest?.status === 'accepted' ? (
                   <Button
-                    onProgress={() => handleReturnOrder(selectedShipment._id)}
+                    onClick={() => handleReturnOrder(selectedShipment._id)}
                     variant="contained"
                     color="primary"
                     style={{ marginRight: '10px', marginTop: 10 }}
