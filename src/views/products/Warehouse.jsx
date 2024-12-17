@@ -1170,6 +1170,19 @@ const InventoryManagement = () => {
     }
   };
 
+  const priceOptions = [
+    { label: '100k', value: 100000 },
+    { label: '500k', value: 500000 },
+    { label: '1tr', value: 1000000 },
+    { label: '2tr', value: 2000000 },
+    { label: '5tr', value: 5000000 },
+    { label: '10tr', value: 10000000 },
+    { label: '20tr', value: 20000000 },
+    { label: '50tr', value: 50000000 },
+    { label: '100tr', value: 100000000 },
+    { label: '200tr', value: 200000000 }
+  ];
+
   return (
     <MainCard title="QUẢN LÝ KHO HÀNG" style={{ padding: 20 }}>
       <Box sx={{ width: '100%' }}>
@@ -1191,20 +1204,46 @@ const InventoryManagement = () => {
 
               {/* Filter Section */}
               <div style={{ display: 'flex', marginTop: 20, alignItems: 'center' }}>
-                <TextField
+                {/* <TextField
                   label="Giá nhỏ nhất"
                   type="number"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
                   style={{ marginRight: 20, width: '170px' }}
-                />
-                <TextField
+                /> */}
+                {/* Dropdown cho giá nhỏ nhất */}
+                <FormControl style={{ width: '170px', marginRight: 20 }}>
+                  <InputLabel id="min-price-label">Giá nhỏ nhất</InputLabel>
+                  <Select labelId="min-price-label" value={minPrice} onChange={(e) => setMinPrice(e.target.value)}>
+                    <MenuItem value="">-- Chọn giá nhỏ nhất --</MenuItem>
+                    {priceOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* <TextField
                   label="Giá lớn nhất"
                   type="number"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                   style={{ marginRight: 20, width: '170px' }}
-                />
+                /> */}
+
+                {/* Dropdown cho giá lớn nhất */}
+                <FormControl style={{ width: '170px', marginRight: 20 }}>
+                  <InputLabel id="max-price-label">Giá lớn nhất</InputLabel>
+                  <Select labelId="max-price-label" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)}>
+                    <MenuItem value="">-- Chọn giá lớn nhất --</MenuItem>
+                    {priceOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
                 <FormControl style={{ width: '170px', marginRight: '20px', marginBottom: '15px' }} margin="normal">
                   <InputLabel>Danh mục</InputLabel>
