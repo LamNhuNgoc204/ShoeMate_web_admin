@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
-import { Box, Typography, List, ListItem, ListItemAvatar, Avatar, ListItemText, TextField, Button, Paper, Divider } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemAvatar, Avatar, ListItemText, TextField, Button, Paper, Divider, CircularProgress } from '@mui/material';
 import AxiosInstance from 'helper/AxiosInstance';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -61,6 +61,7 @@ const Customer = () => {
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const userState = useSelector((state) => state.users);
+  const [sending, setSending] = useState(false);
 
   const conversationsRef = useRef(conversations);
   const selectedConversationRef = useRef({
@@ -112,13 +113,16 @@ const Customer = () => {
     if (!newMessage.trim()) return;
 
     try {
+      setSending(true);
       await AxiosInstance().post('/messages/send-message', {
         conversationId: selectedConversation._id,
         text: newMessage.trim(),
         senderId: userState.users.user._id
       });
       setNewMessage('');
+      setSending(false);
     } catch (error) {
+      setSending(false);
       console.error('Lỗi khi gửi tin nhắn: ', error);
     }
   };
@@ -304,8 +308,8 @@ const Customer = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
             />
-            <Button variant="contained" color="primary" onClick={handleSendMessage} style={{ marginLeft: '8px' }}>
-              Gửi
+            <Button disabled={sending} variant="contained" color="primary" onClick={handleSendMessage} style={{ marginLeft: '8px' }}>
+              {sending ? <CircularProgress/> : 'Gửi'}
             </Button>
           </Box>
         </Box>
