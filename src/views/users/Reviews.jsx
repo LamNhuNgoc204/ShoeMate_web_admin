@@ -290,7 +290,15 @@ const Review = () => {
                 <TextField label="Tên Khách Hàng" fullWidth value={selectedReview?.reviewer_id?.name} disabled />
               </Grid>
               <Grid item xs={12}>
-                <TextField label="Nội dung" fullWidth value={selectedReview?.comment || 'Không có nội dung'} disabled />
+                <TextField
+                  multiline
+                  rows={4}
+                  maxRows={8}
+                  label="Nội dung"
+                  fullWidth
+                  value={selectedReview?.comment || 'Không có nội dung'}
+                  disabled
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField label="Rating" fullWidth value={selectedReview?.rating} disabled />
